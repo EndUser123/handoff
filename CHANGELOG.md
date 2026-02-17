@@ -1,0 +1,52 @@
+# Changelog
+
+All notable changes to the handoff package will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+- **Checkpoint-chain architecture** with parent/child linking (checkpoint_id, parent_checkpoint_id, chain_id)
+- **Transcript offset tracking** (character position + entry count) for precise handoff resume
+- **Pending operations tracking** for fault tolerance across session interruptions
+- **CheckpointChain class** with chain traversal methods (get_chain, get_latest, get_previous, get_next)
+- **HandoffCheckpoint dataclass** with all typed fields and to_dict/from_dict methods
+- **PendingOperation dataclass** with type validation
+- **Migration support** for backward compatibility with old handoffs (migrate_checkpoint_chain_fields)
+- SHA256-validated JSON handoff persistence system
+- Terminal-aware handoff isolation (double underscore separator)
+- Automatic cleanup with configurable 7-day retention
+- Version tracking with "latest" alias support
+- Thread-safe concurrent handoff operations
+- 45-minute timeout release for stuck tasks
+- CLI with list, delete, restore, cleanup, and status commands
+- PreCompact and SessionStart hooks for automatic handoff capture/restore
+- Handoff trash recovery system
+- Atomic write operations with temp file pattern
+- Checksum validation on handoff load
+- **21 passing tests** including checkpoint-chain traversal coverage
+
+### Changed
+- Replaced broken CKS-only system with JSON-based persistence
+- Improved terminal isolation to prevent handoff bleeding
+- Enhanced task context tracking with progress and next steps
+
+### Fixed
+- Terminal handoff bleeding across sessions
+- Stuck task state persistence issues
+- Missing task context on session resume
+
+## [0.1.0] - 2026-01-30
+
+### Added
+- Initial release
+- Core handoff management (save, load, delete)
+- CLI with list, delete, restore, cleanup, status commands
+- Terminal isolation for multi-terminal safety
+- Version rotation and trash recovery
+- Zero-dependency configuration
+- MIT License
+- GitHub Actions CI/CD workflow
+- Comprehensive test suite (18 test files)

@@ -1,0 +1,455 @@
+# handoff
+
+> Session handoff management for AI coding environments - capture, restore, and manage conversation state across compaction events
+
+[![Python Version](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://github.com/csf-nip/handoff)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![CI](https://img.shields.io/badge/CI-passing-brightgreen.svg)](.github/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-21%20passing-brightgreen.svg)](tests/)
+[![Coverage](https://img.shields.io/badge/coverage-29.5%25-yellow.svg)](tests/)
+
+## Quick Start
+
+```bash
+# 1. Install the package
+pip install -e packages/handoff/
+
+# 2. Create junction for Claude Code skill
+powershell -Command "New-Item -ItemType Junction -Path 'P:\.claude\skills\handoff' -Target 'P:\packages\andoff\skill'"
+
+# 3. Run tests to verify
+pytest packages/handoff/tests/ -v
+
+# 4. Use the /hod skill in Claude Code
+/hod "summarize my current work"
+```
+
+**That's it!** The handoff system will now automatically capture your session state before transcript compaction and restore it when you resume.
+
+## Overview
+
+**handoff** provides automatic session state capture and restoration for Claude Code. It preserves conversation context across transcript compaction events, ensuring work continuity with full user intent, visual evidence, and incomplete operations.
+
+### Key Features
+
+- **Automatic State Capture**: Hook-based capture before transcript compaction
+- **Automatic State Restoration**: Seamless restoration on session resume
+- **Checkpoint Chains**: Parent/child linking for traversing related states
+- **Fault Tolerance**: Tracks incomplete operations (edit, test, read, command, skill)
+- **Visual Context Preservation**: Screenshots and image analysis survive compaction
+- **Full User Message**: Never truncated - the authentic source of user intent
+- **Terminal Isolation**: Per-terminal state prevents cross-contamination
+- **SHA256 Validation**: Checksums ensure data integrity
+- **Zero External Dependencies**: Pure Python standard library
+
+## Installation
+
+### As Python Package (Production)
+
+```bash
+# Install from source
+pip install packages/handoff/
+
+# Or editable mode for development
+pip install -e packages/handoff/
+```
+
+### As Claude Code Skill (Development)
+
+For local development, create a junction from Claude skills to the package:
+
+**Windows (Junction - Recommended)**
+```powershell
+# Create junction from Claude skills to package
+New-Item -ItemType Junction -Path "P:\.claude\skills\handoff" -Target "P:\packages\handoff\skill"
+```
+
+**Linux/Mac (Symlink)**
+```bash
+# Create symlink from Claude skills to package
+ln -s "P:/packages/handoff/skill" "~/.claude/skills/handoff"
+```
+
+### From GitHub
+
+```bash
+# Clone to local packages directory
+git clone https://github.com/csf-nip/handoff.git P:/packages/handoff
+
+# Then create junction/symlink as shown above
+```
+
+## Architecture
+
+### System Overview
+
+```mermaid
+sequenceDiagram
+    participant User as 👤 User
+    participant Claude as 🤖 Claude Code
+    participant PreCompact as 🔒 PreCompact Hook
+    participant TaskTracker as 📁 Task Tracker
+    participant SessionStart as 🔓 SessionStart Hook
+
+    User->>Claude: Working on task...
+    Claude->>Claude: Transcript grows
+    Note over Claude: ⚠️ Compaction triggered!
+
+    PreCompact->>PreCompact: Detect task identity
+    PreCompact->>PreCompact: Parse transcript
+    PreCompact->>PreCompact: Build handoff metadata
+    PreCompact->>TaskTracker: Store handoff in task file
+    Note over TaskTracker: Saved with checkpoint_id,<br/>chain_id, pending_operations
+
+    Claude->>Claude: Compaction completes
+    Note over Claude: Session lost context
+
+    User->>Claude: Resume session
+    SessionStart->>TaskTracker: Load active_session
+    SessionStart->>SessionStart: Validate SHA256 checksum
+    SessionStart->>Claude: Inject restoration prompt
+    Note over Claude: ✅ Full context restored:<br/>original_user_request,<br/>pending_operations,<br/>visual_context
+```
+
+### Package Structure
+
+```
+handoff/
+├── src/handoff/
+│   ├── __init__.py              # Package exports
+│   ├── protocol.py               # HandoffStorage Protocol interface
+│   ├── config.py                 # Configuration and paths
+│   ├── models.py                 # HandoffCheckpoint, PendingOperation dataclasses
+│   ├── migrate.py                # Checksum computation, migration utilities
+│   ├── checkpoint_chain.py       # CheckpointChain traversal
+│   └── hooks/
+│       └── __lib/
+│           ├── transcript.py      # TranscriptParser, TranscriptLines
+│           ├── handoff_store.py  # HandoffStore (build_handoff_data)
+│           ├── handover.py       # HandoverBuilder
+│           ├── task_identity_manager.py  # 6-source task identity recovery
+│           └── bridge_tokens.py  # Cross-session continuity tokens
+├── tests/                        # 21 tests, all passing
+└── skill/SKILL.md               # /hod skill documentation
+```
+
+## Core Components
+
+### HandoffStorage Protocol
+
+Type-safe interface for storage systems:
+
+```python
+from handoff.protocol import HandoffStorage
+from typing import runtime_checkable
+
+@runtime_checkable
+class HandoffStorage(Protocol):
+    def save_handoff(self, task_name: str, terminal_id: str, data: dict) -> Path: ...
+    def load_handoff(self, task_name: str, terminal_id: str, strict: bool = True) -> dict | None: ...
+    def list_handoffs(self, task_name: str, terminal_id: str) -> list[Path]: ...
+    def delete_handoff(self, task_name: str, terminal_id: str, version: int) -> bool: ...
+```
+
+### TranscriptParser
+
+Extract session data from Claude Code transcript JSON:
+
+```python
+from handoff.hooks.__lib.transcript import TranscriptParser
+
+parser = TranscriptParser(transcript_path="~/.claude/projects/P--/transcript.json")
+
+# Extract various session elements
+blocker = parser.extract_current_blocker()
+modifications = parser.extract_modifications()
+last_message = parser.extract_last_user_message()  # FULL, untruncated
+decisions = parser.extract_session_decisions()
+patterns = parser.extract_session_patterns()
+visual_context = parser.extract_visual_context()
+pending_ops = parser.extract_pending_operations()
+
+# Resume capability
+offset = parser.get_transcript_offset()  # Character position
+count = parser.get_transcript_entry_count()  # Entry count
+```
+
+### HandoffStore
+
+Build handoff metadata with checkpoint chain support:
+
+```python
+from handoff.hooks.__lib.handoff_store import HandoffStore
+from pathlib import Path
+
+store = HandoffStore(
+    project_root=Path("P:/"),
+    terminal_id="term_abc123"
+)
+
+# Build complete handoff data
+handoff_data = store.build_handoff_data(
+    task_name="implement-feature-x",
+    progress_pct=45,
+    blocker={"description": "Need to clarify requirements"},
+    files_modified=["src/main.py"],
+    next_steps=["1. Write tests", "2. Implement core logic"],
+    handover={"decisions": [...], "patterns_learned": [...]},
+    modifications=[...],
+    pending_operations=[
+        {"type": "edit", "target": "src/main.py", "state": "in_progress"}
+    ]
+)
+
+# Returns dict with checkpoint_id, parent_checkpoint_id, chain_id, etc.
+```
+
+### CheckpointChain
+
+Traverse related checkpoints:
+
+```python
+from handoff.checkpoint_chain import CheckpointChain
+from pathlib import Path
+
+chain = CheckpointChain(
+    task_tracker_dir=Path(".claude/state/task_tracker"),
+    terminal_id="term_abc123"
+)
+
+# Get all checkpoints in a chain
+checkpoints = chain.get_chain(chain_id="abc-123-def")
+
+# Get latest checkpoint
+latest = chain.get_latest(chain_id="abc-123-def")
+
+# Navigate
+previous = chain.get_previous(checkpoint_id="xyz-789")
+next_cp = chain.get_next(checkpoint_id="xyz-789")
+```
+
+### Data Models
+
+```python
+from handoff.models import HandoffCheckpoint, PendingOperation
+
+# Create typed checkpoint
+checkpoint = HandoffCheckpoint(
+    checkpoint_id="abc-123",
+    parent_checkpoint_id=None,
+    chain_id="chain-456",
+    created_at="2025-02-17T12:00:00Z",
+    transcript_offset=12345,
+    transcript_entry_count=42,
+    task_name="implement-feature-x",
+    task_type="feature",
+    progress_percent=50,
+    blocker=None,
+    next_steps="Complete the work",
+    git_branch="main",
+    active_files=["src/main.py"],
+    recent_tools=[],
+    transcript_path="/transcript.json",
+    handover=None,
+    open_conversation_context=None,
+    visual_context=None,
+    resolved_issues=[],
+    modifications=[],
+    original_user_request="Add feature X",
+    first_user_request="Add feature X",
+    saved_at="2025-02-17T12:00:00Z",
+    version=1,
+    implementation_status=None,
+    pending_operations=[
+        PendingOperation(
+            type="edit",
+            target="src/main.py",
+            state="in_progress",
+            details={"line": 42}
+        )
+    ],
+    checksum="sha256:abc123..."
+)
+
+# Serialize/deserialize
+data_dict = checkpoint.to_dict()
+restored = HandoffCheckpoint.from_dict(data_dict)
+```
+
+## Claude Code Hook Integration
+
+The handoff system integrates with Claude Code via two hooks:
+
+### PreCompact Hook
+
+Captures session state before transcript compaction:
+
+**Location**: `.claude/hooks/PreCompact_handoff_capture.py`
+
+**Flow**:
+1. Detect current task (6-source resilience chain)
+2. Parse transcript for session data
+3. Build handoff metadata with checkpoint chain IDs
+4. Create `continue_session` task in terminal-scoped task tracker
+
+**Output**: Handoff stored in `.claude/state/task_tracker/{terminal_id}_tasks.json`
+
+### SessionStart Hook
+
+Restores session state on resume:
+
+**Location**: `.claude/hooks/SessionStart_handoff_restore.py`
+
+**Flow**:
+1. Load `active_session` task from task tracker
+2. Validate schema and SHA256 checksum
+3. Build restoration prompt with full context
+4. Inject into conversation via JSON output
+
+**Critical**: `original_user_request` is displayed WITHOUT truncation - this is the authentic source of user intent.
+
+## Configuration
+
+Environment variables:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `HANDOFF_PROJECT_ROOT` | `P:/` | Project root directory |
+| `HANDOFF_RETENTION_DAYS` | `90` | Days before auto-cleanup |
+| `MAX_VERSIONS` | `20` | Max versions to retain |
+
+## Data Flow
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      SESSION ACTIVE                             │
+├─────────────────────────────────────────────────────────────────┤
+│  User works → Transcript grows → Files modified                │
+└────────────────────────────┬────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                  COMPACTION TRIGGERED                           │
+├─────────────────────────────────────────────────────────────────┤
+│  PreCompact_handoff_capture.py:                                 │
+│  1. Detect task identity                                       │
+│  2. Parse transcript → extract blocker, mods, visual context   │
+│  3. Build handoff with checkpoint_id, chain_id                │
+│  4. Store in task tracker metadata                             │
+└────────────────────────────┬────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                  AFTER COMPACTION                               │
+├─────────────────────────────────────────────────────────────────┤
+│  SessionStart_handoff_restore.py:                               │
+│  1. Load active_session task                                    │
+│  2. Validate checksum                                           │
+│  3. Build restoration prompt:                                   │
+│     - Full original_user_request (NOT truncated)                │
+│     - Pending operations                                        │
+│     - Visual context                                            │
+│     - Handover decisions/patterns                               │
+│  4. Inject into conversation                                    │
+└────────────────────────────┬────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    SESSION RESUMED                                │
+├─────────────────────────────────────────────────────────────────┤
+│  LLM has full context of what user was working on              │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## Testing
+
+```bash
+cd packages/handoff
+
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=handoff --cov-report=term-missing
+
+# Run specific test file
+pytest tests/test_checkpoint_chain.py -v
+```
+
+**Test Coverage**: 21 tests covering:
+- PendingOperation creation and validation
+- HandoffCheckpoint serialization
+- Checkpoint chain linking and traversal
+- Backward compatibility with old handoffs
+- Migration idempotency
+
+## Development
+
+### Examples
+
+See [examples/](examples/) for usage examples:
+- **[basic_usage.py](examples/basic_usage.py)** - Basic handoff save/load, checkpoint chains, and serialization
+
+### Setup Development Environment
+
+```bash
+cd packages/handoff
+
+# Create virtual environment
+python -m venv venv
+venv\Scripts\activate  # Windows
+
+# Install with dev dependencies
+pip install -e ".[dev,test,docs]"
+```
+
+### Code Quality
+
+```bash
+# Format code
+black src/ tests/
+
+# Lint code
+ruff check src/ tests/
+
+# Type checking
+mypy src/
+```
+
+## Key Design Decisions
+
+### 1. Hook-Based Architecture (No CLI)
+
+The package is hook-only - no CLI commands. All capture and restoration happens automatically via Claude Code hooks.
+
+### 2. Task-Based Storage
+
+Handoff data is stored directly in task tracker metadata, eliminating dual storage redundancy.
+
+### 3. Full User Message Preservation
+
+`original_user_request` is NEVER truncated. This is the authentic source of user intent and must survive compaction unchanged.
+
+### 4. Terminal Isolation
+
+Each terminal gets its own task file (`{terminal_id}_tasks.json`), preventing cross-terminal handoff contamination.
+
+### 5. Checkpoint Chains
+
+Handoffs form chains via `checkpoint_id`, `parent_checkpoint_id`, `chain_id`, enabling traversal through related states.
+
+### 6. Fault Tolerance
+
+`pending_operations` tracks incomplete work, enabling recovery after compaction or interruption.
+
+## License
+
+MIT License - see [LICENSE](LICENSE) file for details.
+
+## Contributing
+
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+## Version
+
+0.2.0

@@ -1,0 +1,611 @@
+#!/usr/bin/env python3
+"""Handoff storage module for session state persistence.
+
+This module provides handoff storage functionality including:
+- atomic_write_with_retry: Atomic file writes with Windows file locking handling
+- atomic_write_with_validation: Atomic write with data size validation (QUAL-009)
+- HandoffStore: Main class for handoff data management and storage
+
+Note: Renamed from checkpoint_store.py to avoid Claude Code checkpoint naming conflict.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import tempfile
+import time
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
+from uuid import uuid4
+
+# Import bridge token utilities
+try:
+    from handoff.hooks.__lib.bridge_tokens import (
+        BRIDGE_TOKEN_PREFIX,
+        generate_bridge_token,
+    )
+except ImportError:
+    # Fallback if bridge_tokens module not available
+    def generate_bridge_token(topic: str, timestamp: str) -> str:
+        """Fallback bridge token generator."""
+        return f"BRIDGE_{datetime.fromisoformat(timestamp).strftime('%Y%m%d-%H%M%S')}_{topic[:20].upper().replace(' ', '_')}"
+    BRIDGE_TOKEN_PREFIX = "BRIDGE_"
+
+# Constants for continue_session task creation
+CONTINUE_SESSION_TASK_ID = "continue_session"
+CONTINUE_SESSION_SUBJECT_PREFIX = "Continue: "
+CONTINUE_SESSION_STATUS_PENDING = "pending"
+CONTINUE_SESSION_RESTORED_FROM = "compaction"
+SUBJECT_MAX_LENGTH = 80
+
+# Constants for size validation (QUAL-009)
+MAX_HANDOFF_SIZE_BYTES = 500_000  # 500 KB
+MAX_NEXT_STEPS_LENGTH = 10_000
+MAX_ACTIVE_FILES = 100
+MAX_MODIFICATIONS = 50
+MAX_RECENT_TOOLS = 30
+MAX_HANDOVER_DECISIONS = 10
+MAX_HANDOVER_PATTERNS = 10
+
+# Quality scoring weights (from /hod skill)
+QUALITY_WEIGHT_COMPLETION = 0.30  # Completion tracking
+QUALITY_WEIGHT_OUTCOMES = 0.25   # Action-outcome correlation
+QUALITY_WEIGHT_DECISIONS = 0.20   # Decision documentation
+QUALITY_WEIGHT_ISSUES = 0.15      # Issue resolution
+QUALITY_WEIGHT_KNOWLEDGE = 0.10   # Knowledge contribution
+
+# Quality score thresholds
+QUALITY_SCORE_EXCELLENT = 0.90  # 0.9-1.0: Excellent
+QUALITY_SCORE_GOOD = 0.70       # 0.7-0.8: Good
+QUALITY_SCORE_ACCEPTABLE = 0.50 # 0.5-0.6: Acceptable
+
+
+def atomic_write_with_retry(
+    temp_path: str, target_path: str | Path, max_retries: int = 5
+) -> None:
+    """Perform atomic file write with retry logic for Windows file locking.
+
+    On Windows, os.replace() can fail with PermissionError (WinError 5) when multiple
+    processes/threads try to replace same file concurrently. This function adds
+    retry logic with exponential backoff to handle this issue.
+
+    Args:
+        temp_path: Path to temporary file to write from
+        target_path: Path to target file to write to
+        max_retries: Maximum number of retry attempts (default: 5)
+
+    Raises:
+        PermissionError: If all retry attempts fail
+        OSError: For other OS errors during file operations
+    """
+    target_path_str = str(target_path)
+    base_delay = 0.005  # 5ms
+
+    for attempt in range(max_retries):
+        try:
+            os.replace(temp_path, target_path_str)
+            # Success - break out of retry loop
+            return
+        except PermissionError:
+            # Windows-specific file locking error
+            if attempt == max_retries - 1:
+                # Last attempt failed, clean up and raise
+                try:
+                    os.unlink(temp_path)
+                except OSError:
+                    pass
+                raise
+            # Exponential backoff: 5ms, 10ms, 20ms, 40ms
+            delay = base_delay * (2 ** attempt)
+            time.sleep(delay)
+        except OSError:
+            # Other OS errors - don't retry, clean up and raise
+            try:
+                os.unlink(temp_path)
+            except OSError:
+                pass
+            raise
+
+
+def atomic_write_with_validation(
+    data: dict[str, Any], target_path: str | Path, max_retries: int = 5
+) -> dict[str, Any]:
+    """Perform atomic file write with data size validation.
+
+    Validates and truncates handoff data before writing to prevent files
+    from exceeding size limit (500KB). This addresses QUAL-009.
+
+    Args:
+        data: Dictionary data to write as JSON
+        target_path: Path to target file to write to
+        max_retries: Maximum number of retry attempts (default: 5)
+
+    Returns:
+        Dict with size information:
+        - original_size: Original data size in bytes
+        - final_size: Final data size after validation in bytes
+        - truncated: Whether data was truncated
+
+    Raises:
+        PermissionError: If all retry attempts fail
+        OSError: For other OS errors during file operations
+    """
+    # Calculate original size
+    original_data = json.dumps(data, indent=2)
+    original_size = len(original_data.encode('utf-8'))
+
+    # Validate and truncate if necessary
+    validated_data = _validate_handoff_data_size(data.copy())
+
+    # Calculate final size
+    final_data = json.dumps(validated_data, indent=2)
+    final_size = len(final_data.encode('utf-8'))
+
+    # Check if truncation occurred
+    truncated = original_size != final_size
+
+    # Log warning if data was truncated
+    if truncated:
+        print(f"[HandoffStore] Warning: Handoff data truncated from {original_size} to {final_size} bytes")
+
+    # Create temp file and write validated data
+    target_path_str = str(target_path)
+    target_dir = os.path.dirname(target_path_str)
+    fd, temp_path = tempfile.mkstemp(suffix=".tmp", dir=target_dir)
+
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(final_data)
+
+        # Use atomic_write_with_retry for actual write
+        atomic_write_with_retry(temp_path, target_path_str, max_retries)
+
+    except OSError:
+        # Clean up temp file if write fails
+        try:
+            os.unlink(temp_path)
+        except OSError:
+            pass
+        raise
+
+    return {
+        "original_size": original_size,
+        "final_size": final_size,
+        "truncated": truncated,
+    }
+
+
+def _validate_handoff_data_size(handoff_data: dict[str, Any]) -> dict[str, Any]:
+    """Validate and truncate handoff data to enforce size limits.
+
+    Args:
+        handoff_data: Handoff data to validate
+
+    Returns:
+        Validated handoff data with size limits applied
+
+    Note:
+        Limits (QUAL-009):
+        - next_steps: Max 10,000 characters
+        - active_files: Max 100 files
+        - modifications: Max 50 entries
+        - recent_tools: Max 30 entries
+        - handover decisions/patterns: Max 10 each
+        - Total metadata: Max 500 KB
+    """
+    validated = handoff_data.copy()
+
+    # Truncate next_steps to 10,000 characters
+    next_steps = validated.get("next_steps", "")
+    if isinstance(next_steps, str) and len(next_steps) > MAX_NEXT_STEPS_LENGTH:
+        validated["next_steps"] = next_steps[:MAX_NEXT_STEPS_LENGTH - 50] + "\n\n...[truncated]"
+
+    # Truncate active_files to 100 items
+    active_files = validated.get("active_files", [])
+    if isinstance(active_files, list) and len(active_files) > MAX_ACTIVE_FILES:
+        validated["active_files"] = active_files[:MAX_ACTIVE_FILES]
+        validated["active_files"].append(f"...and {len(active_files) - MAX_ACTIVE_FILES} more")
+
+    # Truncate files_modified (alias for active_files in some contexts)
+    files_modified = validated.get("files_modified", [])
+    if isinstance(files_modified, list) and len(files_modified) > MAX_ACTIVE_FILES:
+        validated["files_modified"] = files_modified[:MAX_ACTIVE_FILES]
+        validated["files_modified"].append(f"...and {len(files_modified) - MAX_ACTIVE_FILES} more")
+
+    # Truncate modifications to 50 entries (keep most recent)
+    modifications = validated.get("modifications", [])
+    if isinstance(modifications, list) and len(modifications) > MAX_MODIFICATIONS:
+        validated["modifications"] = modifications[-MAX_MODIFICATIONS:]
+
+    # Limit recent_tools to 30 entries (keep most recent)
+    recent_tools = validated.get("recent_tools", [])
+    if isinstance(recent_tools, list) and len(recent_tools) > MAX_RECENT_TOOLS:
+        validated["recent_tools"] = recent_tools[-MAX_RECENT_TOOLS:]
+
+    # Truncate handover patterns/decisions
+    handover = validated.get("handover")
+    if isinstance(handover, dict):
+        handover = handover.copy()
+        if isinstance(handover.get("decisions"), list) and len(handover["decisions"]) > MAX_HANDOVER_DECISIONS:
+            handover["decisions"] = handover["decisions"][:MAX_HANDOVER_DECISIONS]
+        if isinstance(handover.get("patterns_learned"), list) and len(handover["patterns_learned"]) > MAX_HANDOVER_PATTERNS:
+            handover["patterns_learned"] = handover["patterns_learned"][:MAX_HANDOVER_PATTERNS]
+        validated["handover"] = handover
+
+    # Compute final size and warn if still exceeds 500 KB
+    estimated_size = len(json.dumps(validated).encode('utf-8'))
+    if estimated_size > MAX_HANDOFF_SIZE_BYTES:
+        print(f"[HandoffStore] Warning: Handoff still exceeds {MAX_HANDOFF_SIZE_BYTES} bytes: {estimated_size} bytes")
+        # Last resort: truncate task_aware section if present
+        task_aware = validated.get("task_aware")
+        if isinstance(task_aware, dict):
+            # Remove some verbose fields to reduce size
+            for field in ["REASONS", "CONTEXT_FILES", "KNOWN_RISKS"]:
+                if field in task_aware and task_aware[field]:
+                    task_aware[field] = []
+            validated["task_aware"] = task_aware
+            print("[HandoffStore] Truncated task_aware fields to reduce size")
+
+    return validated
+
+
+def calculate_quality_score(handoff_data: dict[str, Any]) -> float:
+    """Calculate session quality score (0-1) based on /hod algorithm.
+
+    Scoring weights:
+    - 30% Completion Tracking: resolved issues vs total modifications
+    - 25% Action-Outcome Correlation: blocker presence indicates incomplete work
+    - 20% Decision Documentation: number of decisions captured
+    - 15% Issue Resolution: absence of blocker indicates resolution
+    - 10% Knowledge Contribution: patterns learned captured
+
+    Args:
+        handoff_data: Handoff metadata dict
+
+    Returns:
+        Quality score between 0.0 and 1.0
+    """
+    scores = {
+        "completion": 0.0,
+        "outcomes": 0.0,
+        "decisions": 0.0,
+        "issues": 0.0,
+        "knowledge": 0.0,
+    }
+
+    # 30% Completion: resolved issues vs total modifications
+    modifications = handoff_data.get("modifications", [])
+    resolved_issues = handoff_data.get("resolved_issues", [])
+    if modifications:
+        scores["completion"] = min(1.0, len(resolved_issues) / len(modifications)) * QUALITY_WEIGHT_COMPLETION
+    else:
+        # No modifications means no work done - neutral score
+        scores["completion"] = 0.5 * QUALITY_WEIGHT_COMPLETION
+
+    # 25% Outcomes: blocker presence indicates incomplete work
+    blocker = handoff_data.get("blocker")
+    if blocker:
+        scores["outcomes"] = 0.5 * QUALITY_WEIGHT_OUTCOMES  # Half credit for having blocker documented
+    else:
+        scores["outcomes"] = 1.0 * QUALITY_WEIGHT_OUTCOMES  # Full credit for no blocker
+
+    # 20% Decisions: number of decisions captured (target: 3+)
+    handover = handoff_data.get("handover", {})
+    decisions = handover.get("decisions", [])
+    if isinstance(decisions, list):
+        scores["decisions"] = min(1.0, len(decisions) / 3) * QUALITY_WEIGHT_DECISIONS
+
+    # 15% Issues: absence of blocker indicates resolution progress
+    if blocker:
+        scores["issues"] = 0.5 * QUALITY_WEIGHT_ISSUES  # Half credit with blocker
+    else:
+        scores["issues"] = 1.0 * QUALITY_WEIGHT_ISSUES  # Full credit without blocker
+
+    # 10% Knowledge: patterns learned captured (target: 2+)
+    patterns = handover.get("patterns_learned", [])
+    if isinstance(patterns, list):
+        scores["knowledge"] = min(1.0, len(patterns) / 2) * QUALITY_WEIGHT_KNOWLEDGE
+
+    total_score = sum(scores.values())
+
+    # Clamp to [0, 1]
+    return max(0.0, min(1.0, total_score))
+
+
+def get_quality_rating(score: float) -> str:
+    """Get quality rating label from score.
+
+    Args:
+        score: Quality score between 0 and 1
+
+    Returns:
+        Rating label: "Excellent", "Good", "Acceptable", or "Needs Improvement"
+    """
+    if score >= QUALITY_SCORE_EXCELLENT:
+        return "Excellent"
+    elif score >= QUALITY_SCORE_GOOD:
+        return "Good"
+    elif score >= QUALITY_SCORE_ACCEPTABLE:
+        return "Acceptable"
+    else:
+        return "Needs Improvement"
+
+
+def enrich_handoff_with_bridge_tokens(handoff_data: dict[str, Any]) -> dict[str, Any]:
+    """Add bridge tokens to handoff decisions for cross-session continuity.
+
+    Bridge tokens allow tracking specific decisions across compacts.
+    Format: BRIDGE_YYYYMMDD-HHMMSS_TOPIC_KEYWORD
+
+    Args:
+        handoff_data: Handoff metadata dict
+
+    Returns:
+        Enriched handoff data with bridge tokens added to decisions
+    """
+    enriched = handoff_data.copy()
+    handover = enriched.get("handover", {}).copy()
+    decisions = handover.get("decisions", []).copy()
+
+    # Add bridge token to each decision
+    for i, decision in enumerate(decisions):
+        if isinstance(decision, dict):
+            decision_copy = decision.copy()
+            # Generate bridge token from topic and timestamp
+            topic = decision_copy.get("topic", "unknown")
+            timestamp = decision_copy.get("timestamp", datetime.now(UTC).isoformat())
+            bridge_token = generate_bridge_token(topic, timestamp)
+            decision_copy["bridge_token"] = bridge_token
+            decisions[i] = decision_copy
+
+    handover["decisions"] = decisions
+    enriched["handover"] = handover
+
+    return enriched
+
+
+class HandoffStore:
+    """Store handoffs to JSON and Tasks list.
+
+    Handles handoff storage operations including:
+    - Building handoff data structure
+    - Creating continue_session tasks
+
+    Note: Renamed from CheckpointStore to avoid Claude Code naming conflicts.
+    """
+
+    def __init__(self, project_root: Path, terminal_id: str):
+        """Initialize handoff store.
+
+        Args:
+            project_root: Path to project root directory
+            terminal_id: Terminal identifier for task tracking
+        """
+        self.project_root = project_root
+        self.terminal_id = terminal_id
+        self._parsed_entries_cache: list[dict[str, Any]] | None = None
+        self._cache_transcript_mtime: float | None = None
+        self._cache_lines_key: tuple[str, ...] | None = None
+        # Track current checkpoint for parent linking
+        self._current_checkpoint_id: str | None = None
+        self._current_chain_id: str | None = None
+
+    def build_handoff_data(
+        self,
+        task_name: str,
+        progress_pct: int,
+        blocker: dict[str, Any] | None,
+        files_modified: list[str],
+        next_steps: list[str],
+        handover: dict[str, Any],
+        modifications: list[dict[str, Any]],
+        add_bridge_tokens: bool = True,
+        calculate_quality: bool = True,
+        pending_operations: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
+        """Assemble complete handoff from extracted data.
+
+        Args:
+            task_name: Name of task
+            progress_pct: Progress percentage
+            blocker: Current blocker dict (if any)
+            files_modified: List of modified file paths
+            next_steps: List of next step descriptions
+            handover: Handover data with decisions and patterns
+            modifications: List of modification details
+            add_bridge_tokens: Add bridge tokens to decisions (default: True)
+            calculate_quality: Calculate and add quality score (default: True)
+            pending_operations: List of incomplete operations (default: None)
+
+        Returns:
+            Complete handoff data dict with optional quality score and bridge tokens
+        """
+        # Generate checkpoint chain identifiers
+        checkpoint_id = str(uuid4())
+
+        # Determine parent checkpoint_id (null for first in chain)
+        parent_checkpoint_id = self._current_checkpoint_id
+
+        # Generate or reuse chain_id (groups all checkpoints in same session)
+        if self._current_chain_id is None:
+            self._current_chain_id = str(uuid4())
+        chain_id = self._current_chain_id
+
+        # Update current checkpoint for next call
+        self._current_checkpoint_id = checkpoint_id
+
+        session_id = f"session_{int(datetime.now().timestamp())}_{task_name.lower()}"
+
+        handoff_data = {
+            # Checkpoint chain fields (NEW)
+            "checkpoint_id": checkpoint_id,
+            "parent_checkpoint_id": parent_checkpoint_id,
+            "chain_id": chain_id,
+            # Existing fields
+            "task_name": task_name,
+            "session_id": session_id,
+            "timestamp": datetime.now().isoformat(),
+            "progress_pct": progress_pct,
+            "blocker": blocker,
+            "files_modified": files_modified,
+            "next_steps": next_steps,
+            "session_summary": f"Handoff captured before compaction at {datetime.now().isoformat()}",
+            "handover": handover,
+            "modifications": modifications,
+            # NEW: Pending operations for fault tolerance
+            "pending_operations": pending_operations or [],
+        }
+
+        # Add bridge tokens to decisions for cross-session continuity
+        if add_bridge_tokens:
+            handoff_data = enrich_handoff_with_bridge_tokens(handoff_data)
+
+        # Calculate and add quality score
+        if calculate_quality:
+            quality_score = calculate_quality_score(handoff_data)
+            handoff_data["quality_score"] = quality_score
+            handoff_data["quality_rating"] = get_quality_rating(quality_score)
+
+        return handoff_data
+
+    def create_continue_session_task(
+        self,
+        task_name: str,
+        task_id: str,
+        handoff_metadata: dict[str, Any],
+    ) -> None:
+        """Create a continue_session task in task tracker with handoff in metadata.
+
+        This task captures current work in progress, allowing users to
+        continue their session after compaction. The handoff data is stored
+        directly in task metadata, eliminating need for separate JSON files.
+
+        Args:
+            task_name: The name of current task.
+            task_id: The unique task identifier.
+            handoff_metadata: Complete handoff metadata dict with all data
+                needed for session restoration (progress, blocker, next_steps, etc.)
+
+        Side effects:
+            - Creates/updates task tracker JSON file
+            - Adds active_session and continue_session tasks with handoff in metadata
+            - Prints status messages to stdout
+        """
+        # Get session_id from current_session.json for proper file naming
+        task_file_path = None
+        try:
+            current_session_file = Path("P:/.claude/current_session.json")
+            if current_session_file.exists():
+                import json as json_import
+                session_data = json_import.loads(current_session_file.read_text())
+                session_id = session_data.get("session_id")
+                if session_id:
+                    task_tracker_dir = Path("P:/.claude/state/task_tracker")
+                    task_file_path = task_tracker_dir / f"{session_id}_tasks.json"
+                else:
+                    task_tracker_dir = Path("P:/.claude/state/task_tracker")
+                    task_file_path = task_tracker_dir / f"{self.terminal_id}_tasks.json"
+            else:
+                task_tracker_dir = Path("P:/.claude/state/task_tracker")
+                task_file_path = task_tracker_dir / f"{self.terminal_id}_tasks.json"
+        except (OSError, json.JSONDecodeError):
+            task_tracker_dir = Path("P:/.claude/state/task_tracker")
+            task_file_path = task_tracker_dir / f"{self.terminal_id}_tasks.json"
+
+        # QUAL-009: Validate and truncate handoff metadata before use
+        validated_metadata = _validate_handoff_data_size(handoff_metadata)
+
+        # Derive subject from next_steps or task_name
+        next_steps = validated_metadata.get("next_steps", "")
+        if next_steps:
+            lines = next_steps.split("\n")
+            subject_source = lines[0][:SUBJECT_MAX_LENGTH]
+        else:
+            subject_source = task_name
+        subject = f"{CONTINUE_SESSION_SUBJECT_PREFIX}{subject_source}"
+
+        # Build active_session task with full handoff in metadata
+        active_session_task = {
+            "id": "active_session",
+            "subject": "Session Restore",
+            "status": "pending",
+            "created_at": datetime.now().timestamp(),
+            "terminal": self.terminal_id,
+            "metadata": {
+                "handoff": validated_metadata,
+                "task_id": task_id,
+                "task_name": task_name,
+                "pid": os.getpid(),
+                "restore_pending": True,
+            },
+        }
+
+        # Build continue_session task (legacy user-visible task)
+        continue_task = {
+            "id": CONTINUE_SESSION_TASK_ID,
+            "subject": subject,
+            "status": CONTINUE_SESSION_STATUS_PENDING,
+            "created_at": datetime.now().timestamp(),
+            "terminal": self.terminal_id,
+            "metadata": {
+                "handoff": validated_metadata,
+                "original_task_id": task_id,
+                "restored_from": CONTINUE_SESSION_RESTORED_FROM,
+            },
+        }
+
+        # Load existing task data or create new structure
+        task_tracker_dir.mkdir(parents=True, exist_ok=True)
+
+        def _create_empty_task_data() -> dict[str, Any]:
+            """Create empty task data structure."""
+            return {
+                "terminal_id": self.terminal_id,
+                "tasks": {},
+                "last_update": datetime.now().timestamp(),
+            }
+
+        if task_file_path.exists():
+            try:
+                with open(task_file_path, encoding="utf-8") as f:
+                    task_data = json.load(f)
+            except (json.JSONDecodeError, OSError):
+                task_data = _create_empty_task_data()
+        else:
+            task_data = _create_empty_task_data()
+
+        # Add metadata field to existing tasks that don't have it
+        for task_id_key, task in task_data["tasks"].items():
+            if "metadata" not in task:
+                task["metadata"] = {}
+
+        # Add active_session task for SessionStart restore detection
+        task_data["tasks"]["active_session"] = active_session_task
+
+        # Add continue_session task to tasks dict (user-visible)
+        task_data["tasks"][CONTINUE_SESSION_TASK_ID] = continue_task
+        task_data["last_update"] = datetime.now().timestamp()
+
+        # Atomic write: temp file + rename
+        fd, temp_path = tempfile.mkstemp(
+            suffix=".tmp", dir=str(task_tracker_dir), prefix=f"{self.terminal_id}_tasks_"
+        )
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                json.dump(task_data, f, indent=2)
+
+            # Atomic rename with retry for Windows PermissionError (WinError 5)
+            atomic_write_with_retry(temp_path, task_file_path)
+
+            print(
+                f"[HandoffStore] active_session task added to {task_file_path.name} (PID {os.getpid()})"
+            )
+            print(f"[HandoffStore] continue_session task added to {task_file_path.name}")
+        except OSError as write_error:
+            try:
+                os.unlink(temp_path)
+            except OSError:
+                pass
+            raise write_error

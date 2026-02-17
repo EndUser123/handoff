@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install ruff
+      - run: ruff check src/
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pytest pytest-cov
+      - run: pip install -e .
+      - run: pytest --cov=handoff --cov-report=xml
+      - uses: codecov/codecov-action@v4
+
+  skill-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install PyYAML
+        run: pip install pyyaml
+      - name: Validate SKILL.md YAML frontmatter
+        run: |
+          python -c "
+          import re
+          import yaml
+
+          with open('skill/SKILL.md', 'r') as f:
+              content = f.read()
+
+          # Extract YAML frontmatter
+          match = re.match(r'^---\n(.*?)\n---', content, re.DOTALL)
+          if not match:
+              raise ValueError('No YAML frontmatter found')
+
+          frontmatter = match.group(1)
+          data = yaml.safe_load(frontmatter)
+
+          # Validate required fields
+          required = ['name', 'description', 'version', 'triggers']
+          for field in required:
+              if field not in data:
+                  raise ValueError(f'Missing required field: {field}')
+
+          print('SKILL.md validation passed')
+          print(f\"Name: {data['name']}\")
+          print(f\"Version: {data['version']}\")
+          print(f\"Triggers: {data['triggers']}\")
+          "
