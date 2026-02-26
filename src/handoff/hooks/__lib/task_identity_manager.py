@@ -33,17 +33,15 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import TypeAlias
 
-# For package-based hooks, resolve hooks_dir relative to package
-# Path: task_identity_manager.py → __lib → hooks → handoff → src → packages → P:
-hooks_base = Path(__file__).resolve().parent.parent.parent.parent.parent.parent / ".claude" / "hooks"
-# If running from local hooks directory, use current file's parent
-if not hooks_base.exists():
-    hooks_base = Path(__file__).resolve().parent.parent
-
-# Add hooks to path for imports
+# For package-based hooks, add P:/.claude/hooks to path for terminal_detection import
+# Path: P:/packages/handoff/src/handoff/hooks/__lib/task_identity_manager.py
+# Need to reach: P:/.claude/hooks/terminal_detection.py
 import sys
-if str(hooks_base) not in sys.path:
-    sys.path.insert(0, str(hooks_base))
+_hooks_project_root = Path(__file__).resolve().parent.parent.parent.parent.parent.parent  # Up to packages/handoff
+_hooks_claude_root = _hooks_project_root.parent  # Up to P:/
+hooks_dir = _hooks_claude_root / ".claude" / "hooks"
+if str(hooks_dir) not in sys.path:
+    sys.path.insert(0, str(hooks_dir))
 
 # Type aliases
 TaskMetadataDict: TypeAlias = dict[str, str]
