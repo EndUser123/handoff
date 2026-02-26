@@ -34,10 +34,16 @@ from pathlib import Path
 from typing import TypeAlias
 
 # For package-based hooks, resolve hooks_dir relative to package
-hooks_dir = Path(__file__).resolve().parent.parent.parent.parent.parent / ".claude" / "hooks" / "__lib"
+# Path: task_identity_manager.py → __lib → hooks → handoff → src → packages → P:
+hooks_base = Path(__file__).resolve().parent.parent.parent.parent.parent.parent / ".claude" / "hooks"
 # If running from local hooks directory, use current file's parent
-if not hooks_dir.exists():
-    hooks_dir = Path(__file__).resolve().parent
+if not hooks_base.exists():
+    hooks_base = Path(__file__).resolve().parent.parent
+
+# Add hooks to path for imports
+import sys
+if str(hooks_base) not in sys.path:
+    sys.path.insert(0, str(hooks_base))
 
 # Type aliases
 TaskMetadataDict: TypeAlias = dict[str, str]
