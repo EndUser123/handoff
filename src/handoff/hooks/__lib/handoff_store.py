@@ -493,26 +493,10 @@ class HandoffStore:
             - Adds active_session and continue_session tasks with handoff in metadata
             - Prints status messages to stdout
         """
-        # Get session_id from current_session.json for proper file naming
-        task_file_path = None
-        try:
-            current_session_file = Path("P:/.claude/current_session.json")
-            if current_session_file.exists():
-                import json as json_import
-                session_data = json_import.loads(current_session_file.read_text())
-                session_id = session_data.get("session_id")
-                if session_id:
-                    task_tracker_dir = Path("P:/.claude/state/task_tracker")
-                    task_file_path = task_tracker_dir / f"{session_id}_tasks.json"
-                else:
-                    task_tracker_dir = Path("P:/.claude/state/task_tracker")
-                    task_file_path = task_tracker_dir / f"{self.terminal_id}_tasks.json"
-            else:
-                task_tracker_dir = Path("P:/.claude/state/task_tracker")
-                task_file_path = task_tracker_dir / f"{self.terminal_id}_tasks.json"
-        except (OSError, json.JSONDecodeError):
-            task_tracker_dir = Path("P:/.claude/state/task_tracker")
-            task_file_path = task_tracker_dir / f"{self.terminal_id}_tasks.json"
+        # CRITICAL: Always use terminal_id for task file naming to prevent cross-terminal contamination
+        # Session ID is global across terminals and would cause context leakage between concurrent sessions
+        task_tracker_dir = Path("P:/.claude/state/task_tracker")
+        task_file_path = task_tracker_dir / f"{self.terminal_id}_tasks.json"
 
         # QUAL-009: Validate and truncate handoff metadata before use
         validated_metadata = _validate_handoff_data_size(handoff_metadata)
