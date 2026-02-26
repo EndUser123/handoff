@@ -1,0 +1,149 @@
+{
+  "name": "Handoff System",
+  "children": [
+    {
+      "name": "Overview",
+      "children": [
+        {
+          "name": "Session continuity for Claude Code"
+        },
+        {
+          "name": "Context capture and restoration"
+        },
+        {
+          "name": "Transcript compaction management"
+        }
+      ]
+    },
+    {
+      "name": "Key Features",
+      "children": [
+        {
+          "name": "Bridge Tokens"
+        },
+        {
+          "name": "Quality Scoring (0-1.0 scale)"
+        },
+        {
+          "name": "Checkpoint Chains"
+        },
+        {
+          "name": "Fault Tolerance"
+        },
+        {
+          "name": "Visual Context Preservation"
+        },
+        {
+          "name": "Terminal Isolation"
+        },
+        {
+          "name": "SHA256 Validation"
+        }
+      ]
+    },
+    {
+      "name": "Core Components",
+      "children": [
+        {
+          "name": "HandoffStore"
+        },
+        {
+          "name": "HandoverBuilder"
+        },
+        {
+          "name": "TaskIdentityManager"
+        },
+        {
+          "name": "TranscriptParser"
+        },
+        {
+          "name": "HandoffStorage Protocol"
+        }
+      ]
+    },
+    {
+      "name": "Hook Integration",
+      "children": [
+        {
+          "name": "PreCompact Hook",
+          "children": [
+            {
+              "name": "Captures state before compaction"
+            },
+            {
+              "name": "Detects current task"
+            },
+            {
+              "name": "Builds metadata"
+            }
+          ]
+        },
+        {
+          "name": "SessionStart Hook",
+          "children": [
+            {
+              "name": "Restores state on resume"
+            },
+            {
+              "name": "Validates checksums"
+            },
+            {
+              "name": "Injects restoration prompt"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "HOD Skill (CLI Wrapper)",
+      "children": [
+        {
+          "name": "/hod command"
+        },
+        {
+          "name": "Markdown output"
+        },
+        {
+          "name": "Manual handoff generation"
+        },
+        {
+          "name": "Quality assessment"
+        }
+      ]
+    },
+    {
+      "name": "Configuration & Storage",
+      "children": [
+        {
+          "name": "90-day retention policy"
+        },
+        {
+          "name": "Terminal-scoped JSON storage"
+        },
+        {
+          "name": "Environment variables (ROOT, RETENTION)"
+        }
+      ]
+    },
+    {
+      "name": "Quality Metrics",
+      "children": [
+        {
+          "name": "Completion Tracking (30%)"
+        },
+        {
+          "name": "Action-Outcome Correlation (25%)"
+        },
+        {
+          "name": "Decision Documentation (20%)"
+        },
+        {
+          "name": "Issue Resolution (15%)"
+        },
+        {
+          "name": "Knowledge Contribution (10%)"
+        }
+      ]
+    }
+  ]
+}
