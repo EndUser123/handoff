@@ -15,7 +15,7 @@
 pip install -e packages/handoff/
 
 # 2. Create junction for Claude Code skill
-powershell -Command "New-Item -ItemType Junction -Path 'P:\.claude\skills\handoff' -Target 'P:\packages\andoff\skill'"
+powershell -Command "New-Item -ItemType Junction -Path 'P:\.claude\skills\handoff' -Target 'P:\packages\handoff\skill'"
 
 # 3. Run tests to verify
 pytest packages/handoff/tests/ -v
@@ -279,6 +279,24 @@ restored = HandoffCheckpoint.from_dict(data_dict)
 ## Claude Code Hook Integration
 
 The handoff system integrates with Claude Code via two hooks:
+
+### Development Setup
+
+For local development, hook source files live in the package and are symlinked to Claude's hooks directory:
+
+**Windows (Symlink - Requires Admin)**
+```powershell
+# Create symlink from Claude hooks to package source
+# Run PowerShell as Administrator
+New-Item -ItemType SymbolicLink -Path "P:\.claude\hooks\PreCompact_handoff_capture.py" -Target "P:\packages\handoff\src\handoff\hooks\PreCompact_handoff_capture.py"
+New-Item -ItemType SymbolicLink -Path "P:\.claude\hooks\SessionStart_handoff_restore.py" -Target "P:\packages\handoff\src\handoff\hooks\SessionStart_handoff_restore.py"
+```
+
+**Why this pattern?**
+- Source of truth is in the package (`src/handoff/hooks/`)
+- Edit files in the package, hooks automatically pick up changes
+- Enables version control and distribution of hook code
+- Matches the skill junction pattern (see "As Claude Code Skill" above)
 
 ### PreCompact Hook
 
