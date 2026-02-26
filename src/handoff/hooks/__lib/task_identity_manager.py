@@ -38,8 +38,8 @@ from typing import TypeAlias
 # Need to reach: P:/.claude/hooks/terminal_detection.py
 import sys
 _hooks_project_root = Path(__file__).resolve().parent.parent.parent.parent.parent.parent  # Up to packages/handoff
-_hooks_claude_root = _hooks_project_root.parent  # Up to P:/
-hooks_dir = _hooks_claude_root / ".claude" / "hooks"
+claude_root = _hooks_project_root.parent  # Up to P:/
+hooks_dir = claude_root / ".claude" / "hooks"
 if str(hooks_dir) not in sys.path:
     sys.path.insert(0, str(hooks_dir))
 
