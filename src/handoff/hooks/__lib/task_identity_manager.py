@@ -31,7 +31,7 @@ from contextlib import suppress
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Self, TypeAlias
+from typing import TypeAlias
 
 # For package-based hooks, resolve hooks_dir relative to package
 hooks_dir = Path(__file__).resolve().parent.parent.parent.parent.parent / ".claude" / "hooks" / "__lib"
@@ -43,12 +43,7 @@ if not hooks_dir.exists():
 TaskMetadataDict: TypeAlias = dict[str, str]
 
 # Import terminal detection for multi-terminal isolation
-try:
-    from terminal_detection import detect_terminal_id
-except ImportError:
-    # Fallback if terminal_detection not available
-    def detect_terminal_id() -> str:
-        return "fallback_1"
+from terminal_detection import detect_terminal_id
 
 logger = logging.getLogger(__name__)
 

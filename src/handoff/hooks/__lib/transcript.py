@@ -530,6 +530,9 @@ class TranscriptParser:
                     if isinstance(content, list):
                         # Find actual text content, skip tool results and meta tags
                         for item in content:
+                            # Skip dict items (tool_result, thinking, etc.) - only extract user text
+                            if isinstance(item, dict):
+                                continue
                             if isinstance(item, str):
                                 item = item.strip()
                                 # Skip meta tags and system messages
@@ -991,6 +994,9 @@ class TranscriptParser:
                     # Handle list content (most common case)
                     if isinstance(content, list):
                         for item in content:
+                            # Skip dict items (tool_result, thinking, etc.) - only extract user text
+                            if isinstance(item, dict):
+                                continue
                             if isinstance(item, str):
                                 item = item.strip()
                                 # Skip meta tags and system messages
