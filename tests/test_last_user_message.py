@@ -140,11 +140,61 @@ def test_last_user_message_untruncated():
         os.unlink(temp_path)
 
 
+def test_last_user_message_skips_dict_items():
+    """Test that dict items (tool_result, thinking blocks) are skipped - only strings extracted."""
+
+    # Simulate a user message with mixed content: tool_result dict + actual string
+    # This is the bug case: assistant thinking embedded in user message via tool_result
+    synthetic_entries = [
+        {
+            "type": "user",
+            "message": {
+                "content": [
+                    {
+                        "tool_use_id": "call_abc123",
+                        "type": "tool_result",
+                        "content": "why is it called arch-skill? shouldn't it just be arch?",  # Assistant thinking in tool result
+                        "is_error": False
+                    },
+                    "this is the actual user text that should be extracted"  # Real user input
+                ]
+            }
+        }
+    ]
+
+    import tempfile
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".jsonl", delete=False) as f:
+        for entry in synthetic_entries:
+            f.write(json.dumps(entry) + "\n")
+        temp_path = f.name
+
+    try:
+        parser = TranscriptParser(temp_path)
+        last_message = parser.extract_last_user_message()
+
+        print("\nDict item filtering test (fix for handoff bug):")
+        print(f"  Result: {last_message}")
+
+        # Should extract the user text, NOT the tool_result content
+        if last_message == "this is the actual user text that should be extracted":
+            print("  ✓ PASS: Correctly skipped dict items (tool_result) and extracted user text")
+            print("    (Fixed bug where assistant thinking in tool_result was extracted)")
+            return True
+        else:
+            print(f"  ✗ FAIL: Got '{last_message}' instead of expected user text")
+            print(f"    (BUG: Dict items not being skipped properly)")
+            return False
+    finally:
+        import os
+        os.unlink(temp_path)
+
+
 if __name__ == "__main__":
     results = [
         test_last_user_message_full_transcript(),
         test_last_user_message_skips_meta_tags(),
         test_last_user_message_untruncated(),
+        test_last_user_message_skips_dict_items(),  # New test for the fix
     ]
 
     print(f"\n{'='*50}")
