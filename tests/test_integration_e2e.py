@@ -264,7 +264,7 @@ class TestHandoffIntegration:
                 PendingOperation(type=t, target=f"file_{t}", state="pending")
                 for t in valid_types
             ],
-            checksum="sha256:7a2b8c9d0e1f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f700000"
+            checksum="sha256:7a2b8c9d0e1f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7000"
         )
 
         assert len(checkpoint.pending_operations) == len(valid_types)
