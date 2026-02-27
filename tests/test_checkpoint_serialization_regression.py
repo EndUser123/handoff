@@ -421,6 +421,44 @@ class TestCheckpointSerializationFromDict:
         with pytest.raises(ValueError, match="checksum"):
             HandoffCheckpoint.from_dict(data)
 
+    def test_from_dict_invalid_progress_percent_raises_error(self):
+        """
+        Test that from_dict() validates progress_percent is within 0-100 range.
+
+        Given: A dict with progress_percent set to 150 (out of range)
+        When: from_dict() is called
+        Then: ValueError is raised about invalid progress_percent
+        """
+        data = {
+            "checkpoint_id": str(uuid4()),
+            "chain_id": str(uuid4()),
+            "created_at": "2026-02-27T10:30:00Z",
+            "task_name": "Test",
+            "task_type": "informal",
+            "progress_percent": 150,  # Invalid: must be 0-100
+            "blocker": None,
+            "next_steps": "Start",
+            "git_branch": None,
+            "active_files": [],
+            "recent_tools": [],
+            "transcript_path": None,
+            "handover": None,
+            "open_conversation_context": None,
+            "visual_context": None,
+            "resolved_issues": [],
+            "modifications": [],
+            "original_user_request": None,
+            "first_user_request": None,
+            "saved_at": "2026-02-27T10:30:00Z",
+            "version": 1,
+            "implementation_status": None,
+            "pending_operations": [],
+            "checksum": "valid_checksum_abc123"
+        }
+
+        with pytest.raises(ValueError, match="progress_percent"):
+            HandoffCheckpoint.from_dict(data)
+
 
 class TestCheckpointRoundTripSerialization:
     """Tests for round-trip serialization (to_dict -> from_dict)."""
