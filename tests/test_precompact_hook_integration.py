@@ -323,52 +323,48 @@ class TestPreCompactHookHandoffStorage:
 
         This verifies requirement 3: Hook stores handoff in task tracker metadata.
         """
-        # RED PHASE: This test is expected to FAIL until implementation is complete
-        assert False, "RED PHASE: This test is expected to FAIL. Implementation needs to verify task file creation and metadata storage."
-
-        # The following assertions show what SHOULD happen after implementation:
         # Arrange: Prepare handoff metadata
-        # task_name = "test_task_feature_implementation"
-        # task_id = "task_test_task_feature_implementation"
-        # handoff_metadata = {
-        #     "task_name": task_name,
-        #     "task_type": "feature",
-        #     "progress_percent": 60,
-        #     "blocker": None,
-        #     "next_steps": "Complete implementation\nAdd unit tests",
-        #     "git_branch": "feature/test",
-        #     "active_files": ["src/feature.py"],
-        #     "recent_tools": [],
-        #     "transcript_path": "/transcript.json",
-        #     "handover": {"decisions": [], "patterns_learned": []},
-        #     "open_conversation_context": None,
-        #     "visual_context": None,
-        #     "resolved_issues": [],
-        #     "modifications": [],
-        #     "original_user_request": "Implement test feature",
-        #     "first_user_request": "Implement test feature",
-        #     "saved_at": datetime.now(UTC).isoformat(),
-        #     "version": 1,
-        #     "implementation_status": None,
-        # }
-        #
-        # # Act: Create continue_session task
-        # handoff_store.create_continue_session_task(task_name, task_id, handoff_metadata)
-        #
-        # # Assert: Task file should exist with correct structure
-        # task_file = Path("P:/.claude/state/task_tracker") / f"{handoff_store.terminal_id}_tasks.json"
-        # assert task_file.exists(), "Task tracker file should be created"
-        # task_data = json.loads(task_file.read_text())
-        # assert "continue_session" in task_data["tasks"], "continue_session task should exist"
-        # assert "active_session" in task_data["tasks"], "active_session task should exist"
-        #
-        # # Verify handoff metadata is stored
-        # continue_task = task_data["tasks"]["continue_session"]
-        # assert "metadata" in continue_task, "Task should have metadata"
-        # assert "handoff" in continue_task["metadata"], "Metadata should contain handoff"
-        # stored_handoff = continue_task["metadata"]["handoff"]
-        # assert stored_handoff["task_name"] == task_name, "Handoff should preserve task_name"
-        # assert stored_handoff["progress_percent"] == 60, "Handoff should preserve progress_percent"
+        task_name = "test_task_feature_implementation"
+        task_id = "task_test_task_feature_implementation"
+        handoff_metadata = {
+            "task_name": task_name,
+            "task_type": "feature",
+            "progress_percent": 60,
+            "blocker": None,
+            "next_steps": "Complete implementation\nAdd unit tests",
+            "git_branch": "feature/test",
+            "active_files": ["src/feature.py"],
+            "recent_tools": [],
+            "transcript_path": "/transcript.json",
+            "handover": {"decisions": [], "patterns_learned": []},
+            "open_conversation_context": None,
+            "visual_context": None,
+            "resolved_issues": [],
+            "modifications": [],
+            "original_user_request": "Implement test feature",
+            "first_user_request": "Implement test feature",
+            "saved_at": datetime.now(UTC).isoformat(),
+            "version": 1,
+            "implementation_status": None,
+        }
+
+        # Act: Create continue_session task
+        handoff_store.create_continue_session_task(task_name, task_id, handoff_metadata)
+
+        # Assert: Task file should exist with correct structure
+        task_file = temp_project_root / ".claude" / "state" / "task_tracker" / f"{handoff_store.terminal_id}_tasks.json"
+        assert task_file.exists(), "Task tracker file should be created"
+        task_data = json.loads(task_file.read_text())
+        assert "continue_session" in task_data["tasks"], "continue_session task should exist"
+        assert "active_session" in task_data["tasks"], "active_session task should exist"
+
+        # Verify handoff metadata is stored
+        continue_task = task_data["tasks"]["continue_session"]
+        assert "metadata" in continue_task, "Task should have metadata"
+        assert "handoff" in continue_task["metadata"], "Metadata should contain handoff"
+        stored_handoff = continue_task["metadata"]["handoff"]
+        assert stored_handoff["task_name"] == task_name, "Handoff should preserve task_name"
+        assert stored_handoff["progress_percent"] == 60, "Handoff should preserve progress_percent"
 
     def test_handoff_metadata_contains_checkpoint_chain_fields(self, handoff_store):
         """
