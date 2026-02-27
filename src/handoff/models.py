@@ -184,11 +184,11 @@ class HandoffCheckpoint:
             raise ValueError("Invalid checksum format: must start with 'sha256:'")
 
         hex_part = checksum[7:]  # Remove "sha256:" prefix
-        valid_hex_chars = set("0123456789abcdef")
+        valid_hex_chars = set("0123456789abcdefABCDEF")
 
         if not all(c in valid_hex_chars for c in hex_part):
             raise ValueError(
-                "Invalid checksum: must contain only hexadecimal characters (0-9, a-f)"
+                "Invalid checksum: must contain only hexadecimal characters (0-9, a-f, A-F)"
             )
 
         if len(hex_part) != 64:
