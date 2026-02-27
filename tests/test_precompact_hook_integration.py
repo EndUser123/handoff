@@ -438,73 +438,77 @@ class TestPreCompactHookIntegration:
 
         This is the comprehensive integration test covering all requirements.
         """
-        # RED PHASE: Test is expected to FAIL
-        assert False, "RED PHASE: This test will fail until PreCompactHandoffCapture is fully integrated with test fixtures."
+        # Arrange: Set up test environment
+        task_name = "E2E_TEST_TASK"
+        os.environ["TASK_NAME"] = task_name
 
-        # The following code shows what SHOULD happen after implementation:
-        # # Arrange: Set up test environment
-        # task_name = "E2E_TEST_TASK"
-        # os.environ["TASK_NAME"] = task_name
-        #
-        # # Create minimal transcript
-        # transcript_path = temp_project_root / "session.jsonl"
-        # transcript_path.write_text('{"type": "user", "message": {"content": "Test request"}}\n')
-        #
-        # # Create progress file
-        # progress_file = temp_project_root / ".claude" / "progress.txt"
-        # progress_file.parent.mkdir(parents=True, exist_ok=True)
-        # progress_file.write_text("50%")
-        #
-        # # Initialize components
-        # task_manager = TaskIdentityManager(
-        #     project_root=temp_project_root,
-        #     terminal_id=mock_terminal_id
-        # )
-        # transcript_parser = TranscriptParser(transcript_path=str(transcript_path))
-        # handover_builder = HandoverBuilder(
-        #     project_root=temp_project_root,
-        #     transcript_parser=transcript_parser
-        # )
-        # handoff_store = HandoffStore(
-        #     project_root=temp_project_root,
-        #     terminal_id=mock_terminal_id
-        # )
-        #
-        # # Act: Run the workflow
-        # # 1. Capture task identity
-        # captured_task = task_manager.get_current_task()
-        # assert captured_task == task_name, "Task identity should be captured"
-        #
-        # # 2. Build handoff metadata
-        # handoff_data = handoff_store.build_handoff_data(
-        #     task_name=captured_task,
-        #     progress_pct=50,
-        #     blocker=None,
-        #     files_modified=[],
-        #     next_steps=["Continue implementation"],
-        #     handover=handover_builder.build(captured_task),
-        #     modifications=[]
-        # )
-        #
-        # # Verify checkpoint chain fields
-        # assert "checkpoint_id" in handoff_data, "Should have checkpoint_id"
-        # assert "chain_id" in handoff_data, "Should have chain_id"
-        #
-        # # 3. Store handoff in task tracker
-        # task_id = f"task_{captured_task.lower()}"
-        # handoff_metadata = {
-        #     "task_name": captured_task,
-        #     "progress_percent": handoff_data["progress_pct"],
-        #     "checkpoint_id": handoff_data["checkpoint_id"],
-        #     "chain_id": handoff_data["chain_id"],
-        #     "saved_at": datetime.now(UTC).isoformat(),
-        # }
-        # handoff_store.create_continue_session_task(captured_task, task_id, handoff_metadata)
-        #
-        # # Verify: Check task tracker file
-        # # (This would require patching the hardcoded path as shown in earlier test)
-        # task_file = Path("P:/.claude/state/task_tracker") / f"{mock_terminal_id}_tasks.json"
-        # assert task_file.exists(), "Task file should be created"
-        #
-        # # Cleanup
-        # del os.environ["TASK_NAME"]
+        # Create minimal transcript
+        transcript_path = temp_project_root / "session.jsonl"
+        transcript_path.write_text('{"type": "user", "message": {"content": "Test request"}}\n')
+
+        # Create progress file
+        progress_file = temp_project_root / ".claude" / "progress.txt"
+        progress_file.parent.mkdir(parents=True, exist_ok=True)
+        progress_file.write_text("50%")
+
+        # Initialize components
+        task_manager = TaskIdentityManager(
+            project_root=temp_project_root,
+            terminal_id=mock_terminal_id
+        )
+        transcript_parser = TranscriptParser(transcript_path=str(transcript_path))
+        handover_builder = HandoverBuilder(
+            project_root=temp_project_root,
+            transcript_parser=transcript_parser
+        )
+        handoff_store = HandoffStore(
+            project_root=temp_project_root,
+            terminal_id=mock_terminal_id
+        )
+
+        # Act: Run the workflow
+        # 1. Capture task identity
+        captured_task = task_manager.get_current_task()
+        assert captured_task == task_name, "Task identity should be captured"
+
+        # 2. Build handoff metadata
+        handoff_data = handoff_store.build_handoff_data(
+            task_name=captured_task,
+            progress_pct=50,
+            blocker=None,
+            files_modified=[],
+            next_steps=["Continue implementation"],
+            handover=handover_builder.build(captured_task),
+            modifications=[]
+        )
+
+        # Verify checkpoint chain fields
+        assert "checkpoint_id" in handoff_data, "Should have checkpoint_id"
+        assert "chain_id" in handoff_data, "Should have chain_id"
+
+        # 3. Store handoff in task tracker
+        task_id = f"task_{captured_task.lower()}"
+        handoff_metadata = {
+            "task_name": captured_task,
+            "progress_percent": handoff_data["progress_pct"],
+            "checkpoint_id": handoff_data["checkpoint_id"],
+            "chain_id": handoff_data["chain_id"],
+            "saved_at": datetime.now(UTC).isoformat(),
+        }
+        handoff_store.create_continue_session_task(captured_task, task_id, handoff_metadata)
+
+        # Verify: Check task tracker file
+        task_file = temp_project_root / ".claude" / "state" / "task_tracker" / f"{mock_terminal_id}_tasks.json"
+        assert task_file.exists(), "Task file should be created"
+
+        # Verify handoff metadata in task file
+        task_data = json.loads(task_file.read_text())
+        assert "active_session" in task_data["tasks"], "active_session should exist"
+        active_session = task_data["tasks"]["active_session"]
+        assert "metadata" in active_session, "active_session should have metadata"
+        assert "handoff" in active_session["metadata"], "metadata should contain handoff"
+        assert active_session["metadata"]["handoff"]["checkpoint_id"] == handoff_data["checkpoint_id"], "checkpoint_id should match"
+        assert active_session["metadata"]["handoff"]["chain_id"] == handoff_data["chain_id"], "chain_id should match"
+
+        # Cleanup
+        del os.environ["TASK_NAME"]
