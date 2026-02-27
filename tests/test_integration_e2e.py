@@ -129,7 +129,7 @@ class TestHandoffIntegration:
                                 "task_name": "Step 3: Test",
                                 "transcript_offset": 200,
                                 "transcript_entry_count": 3,
-                                "checksum": "checksum_3"
+                                "checksum": "sha256:checksum_300000000000000000000000000000000000000000000000000000000000000"
                             }
                         }
                     }
