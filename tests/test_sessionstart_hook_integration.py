@@ -71,19 +71,17 @@ class TestSessionStartHookIntegration:
 
             from SessionStart_handoff_restore import _load_active_session_task
 
-            def mock_load_active_session(terminal_id):
-                """Mock version that returns test data directly."""
-                # Return the test data we created
-                return {
-                    "id": "active_session",
-                    "subject": "Handoff: Implement feature X",
-                    "status": "pending",
-                    "metadata": {
-                        "handoff": handoff_data
-                    }
+            # Create mock return value
+            mock_return_value = {
+                "id": "active_session",
+                "subject": "Handoff: Implement feature X",
+                "status": "pending",
+                "metadata": {
+                    "handoff": handoff_data
                 }
+            }
 
-            with patch('SessionStart_handoff_restore._load_active_session_task', new_callable=mock_load_active_session):
+            with patch('SessionStart_handoff_restore._load_active_session_task', return_value=mock_return_value):
                 loaded_task = _load_active_session_task(terminal_id)
 
             # Assert
