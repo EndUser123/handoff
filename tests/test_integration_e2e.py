@@ -59,7 +59,7 @@ class TestHandoffIntegration:
                     state="pending"
                 )
             ],
-            checksum="abc123integration"
+            checksum="sha256:abc123integration000000000000000000000000000000000000000000000000000000"
         )
 
         # Test serialization
