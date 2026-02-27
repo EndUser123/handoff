@@ -73,7 +73,7 @@ class TestCheckpointSerializationToDict:
                     details={"line": 42}
                 )
             ],
-            checksum="sha256:abc123def45600000000000000000000000000000000000000000000000000000000000000"
+            checksum="sha256:1db7d2e73b4ddb5c25bc94d41aa45269bac1b132eb85f2de6aef0b4ffce3ae24"
         )
 
         result = checkpoint.to_dict()
