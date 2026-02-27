@@ -328,7 +328,7 @@ class TestHandoffIntegration:
             transcript_offset=0,
             transcript_entry_count=1,
             pending_operations=[],  # Empty list
-            checksum="sha256:54f2b668fca59b4c72cf552fe35202fab27e31d74f4f01b7fb2dd662c80b7acc000"
+            checksum="sha256:54f2b668fca59b4c72cf552fe35202fab27e31d74f4f01b7fb2dd662c80b7acc"
         )
 
         assert len(checkpoint.pending_operations) == 0
