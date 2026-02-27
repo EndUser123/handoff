@@ -59,7 +59,7 @@ class TestHandoffIntegration:
                     state="pending"
                 )
             ],
-            checksum="sha256:d1f3deabf7b60a1bacb8ffe241a0f00272f1dbf13cf7bae6a721a1660d696eef000"
+            checksum="sha256:d1f3deabf7b60a1bacb8ffe241a0f00272f1dbf13cf7bae6a721a1660d696eef"
         )
 
         # Test serialization
