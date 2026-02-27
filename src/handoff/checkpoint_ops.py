@@ -105,19 +105,17 @@ class PendingOperation:
         if "type" not in data or "target" not in data or "state" not in data:
             raise ValueError("Missing required fields: type, target, state")
 
-        # Validate type field
-        valid_types = {"edit", "test", "read", "command", "skill"}
-        if data["type"] not in valid_types:
-            raise ValueError(f"Invalid type: {data['type']}. Must be one of {valid_types}")
+        # Validate target field
+        target = data["target"]
+        if target is None:
+            raise ValueError("target cannot be None")
+        if not isinstance(target, str):
+            raise ValueError("target must be a string")
 
-        # Validate state field
-        valid_states = {"pending", "in_progress", "failed"}
-        if data["state"] not in valid_states:
-            raise ValueError(f"Invalid state: {data['state']}. Must be one of {valid_states}")
-
+        # Create instance to trigger validation via __post_init__
         return cls(
             type=data["type"],
-            target=data["target"],
+            target=target,
             state=data["state"],
             details=data.get("details", {}),
             started_at=data.get("started_at"),
