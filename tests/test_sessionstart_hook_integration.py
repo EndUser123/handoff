@@ -69,8 +69,6 @@ class TestSessionStartHookIntegration:
             # Simpler approach: patch the function directly to return our test data
             from unittest.mock import patch
 
-            from SessionStart_handoff_restore import _load_active_session_task
-
             # Create mock return value
             mock_return_value = {
                 "id": "active_session",
@@ -81,7 +79,9 @@ class TestSessionStartHookIntegration:
                 }
             }
 
-            with patch('SessionStart_handoff_restore._load_active_session_task', return_value=mock_return_value):
+            # Patch the local reference (where it's imported) not where it's defined
+            with patch('test_sessionstart_hook_integration._load_active_session_task', return_value=mock_return_value):
+                from SessionStart_handoff_restore import _load_active_session_task
                 loaded_task = _load_active_session_task(terminal_id)
 
             # Assert
