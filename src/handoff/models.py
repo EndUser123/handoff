@@ -235,9 +235,7 @@ class HandoffCheckpoint:
             raise ValueError(f"Missing required fields: {missing}")
 
         # Validate progress_percent range (0-100)
-        progress_percent = data["progress_percent"]
-        if progress_percent is not None and (progress_percent < 0 or progress_percent > 100):
-            raise ValueError(f"progress_percent must be between 0 and 100, got {progress_percent}")
+        cls._validate_progress_percent(data["progress_percent"])
 
         # Validate checksum format
         cls._validate_checksum(data["checksum"])
