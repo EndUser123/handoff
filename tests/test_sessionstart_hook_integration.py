@@ -66,27 +66,51 @@ class TestSessionStartHookIntegration:
             hooks_dir = Path("P:/packages/handoff/src/handoff/hooks").resolve()
             sys.path.insert(0, str(hooks_dir))
 
-            # Patch the Path constructor to use our temp directory
-            with patch('handoff.hooks.SessionStart_handoff_restore.Path') as mock_path_cls:
-                # Configure mock to return real Path objects for our temp directory
-                def path_side_effect(*args, **kwargs):
+            # Patch both Path constructor AND file reading
+            import builtins
+            from unittest.mock import mock_open
+
+            # Create a mock that intercepts both Path construction and file reading
+            original_path = Path
+
+            class MockPath(original_path.__class__):
+                def __new__(cls, *args, **kwargs):
                     arg_str = str(args[0]) if args else ""
-                    # Redirect task tracker directory to temp
-                    if "task_tracker" in arg_str or arg_str.endswith("_tasks.json"):
-                        # If it's the task_tracker directory, return temp directory
-                        if arg_str.endswith("task_tracker") or arg_str.endswith("task_tracker/"):
-                            return task_tracker_dir
-                        # If it's a tasks.json file, return the temp file path
-                        if arg_str.endswith("_tasks.json"):
-                            return task_tracker_dir / args[0]
-                    return Path(*args, **kwargs)
+                    # Redirect task_tracker directory to temp
+                    if "task_tracker" in arg_str:
+                        # Return a special mock Path that redirects to temp
+                        result = original_path.__new__(cls, *args, **kwargs)
+                        result._temp_dir = task_tracker_dir
+                        result._is_mocked = True
+                        return result
+                    return original_path.__new__(cls, *args, **kwargs)
 
-                mock_path_cls.side_effect = path_side_effect
-                mock_path_cls.return_value = task_tracker_dir
+                def __truediv__(self, other):
+                    # Handle path joining for mocked paths
+                    if hasattr(self, '_is_mocked') and self._is_mocked:
+                        # Join with temp directory
+                        return self._temp_dir / other
+                    return original_path.__truediv__(self, other)
 
-                from SessionStart_handoff_restore import _load_active_session_task
+                def exists(self):
+                    # Check if the file exists in temp directory
+                    if hasattr(self, '_is_mocked') and self._is_mocked:
+                        # Check if the target file exists in temp
+                        target_path = self._temp_dir / self.name if self.name else self._temp_dir
+                        return original_path(target_path).exists()
+                    return original_path.exists(self)
 
-                loaded_task = _load_active_session_task(terminal_id)
+            # Patch Path, file operations, and _load_active_session_task
+            with patch('handoff.hooks.SessionStart_handoff_restore.Path', MockPath):
+                # Read the task file and mock the file operation
+                mock_file_data = None
+                with open(task_file, 'r') as f:
+                    mock_file_data = f.read()
+
+                with patch('builtins.open', mock_open(read_data=mock_file_data)):
+                    from SessionStart_handoff_restore import _load_active_session_task
+
+                    loaded_task = _load_active_session_task(terminal_id)
 
             # Assert
             assert loaded_task is not None, "active_session task should be loaded"
