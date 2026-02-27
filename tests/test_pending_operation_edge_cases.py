@@ -350,7 +350,7 @@ class TestPendingOperationInvalidEnums:
             "target": "test.py",
             "state": "cancelled"  # Not a valid state
         }
-        with pytest.raises(ValueError, match="Invalid state.*pending.*in_progress.*failed"):
+        with pytest.raises(ValueError, match="Invalid state.*Must be one of"):
             PendingOperation.from_dict(data)
 
     def test_all_valid_types(self):
