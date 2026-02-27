@@ -9,6 +9,7 @@ Usage:
     chain = CheckpointChain(task_tracker_dir, terminal_id)
     checkpoints = chain.get_chain(chain_id)
     latest = chain.get_latest(chain_id)
+    length = chain.get_chain_length(chain_id)
 """
 
 from __future__ import annotations
