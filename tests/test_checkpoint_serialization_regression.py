@@ -670,7 +670,7 @@ class TestCheckpointRoundTripSerialization:
             version=1,
             implementation_status={},
             pending_operations=[],
-            checksum="checksum_empty"
+            checksum="sha256:checksum_empty0000000000000000000000000000000000000000000000000000000000000"
         )
 
         restored = HandoffCheckpoint.from_dict(original.to_dict())
