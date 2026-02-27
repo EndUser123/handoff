@@ -393,8 +393,8 @@ class TestPendingOperationInvalidEnums:
 class TestPendingOperationConstructorValidation:
     """Tests for direct constructor validation (vs from_dict).
 
-    Current behavior: Constructor has NO validation, only from_dict does.
-    These tests document this gap.
+    Current behavior: Constructor validates target field, but not type/state.
+    These tests document the validation behavior.
     """
 
     def test_constructor_skips_type_validation(self):
