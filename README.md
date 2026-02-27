@@ -30,7 +30,7 @@ pytest packages/handoff/tests/ -v
 
 **handoff** provides automatic session state capture and restoration for Claude Code. It preserves conversation context across transcript compaction events, ensuring work continuity with full user intent, visual evidence, and incomplete operations.
 
-### Key Features
+## Features
 
 - **Automatic State Capture**: Hook-based capture before transcript compaction
 - **Automatic State Restoration**: Seamless restoration on session resume
@@ -41,6 +41,14 @@ pytest packages/handoff/tests/ -v
 - **Terminal Isolation**: Per-terminal state prevents cross-contamination
 - **SHA256 Validation**: Checksums ensure data integrity
 - **Zero External Dependencies**: Pure Python standard library
+
+## Key Capabilities
+
+- **Session Continuity**: Maintain work context across compaction events
+- **Image Preservation**: Screenshots and visual evidence retained
+- **Operation Tracking**: Detect incomplete edits, tests, reads, commands
+- **Seamless Restoration**: Resume work exactly where you left off
+- **Hook Integration**: Automatic capture via PostToolUse and SessionStart hooks
 
 ## Installation
 
