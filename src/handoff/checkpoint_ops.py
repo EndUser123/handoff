@@ -55,7 +55,20 @@ class PendingOperation:
     started_at: str | None = None
 
     def __post_init__(self):
-        """Validate target field after initialization."""
+        """Validate the target field after initialization.
+
+        This validation runs automatically when a PendingOperation is instantiated
+        via the constructor. Validation ensures the target meets filesystem and
+        security constraints before the object is considered valid.
+
+        Note:
+            Validation occurs only for direct constructor instantiation. When loading
+            from dict via from_dict(), that method handles validation separately.
+
+        Raises:
+            ValueError: If target field violates validation rules (empty, too long,
+                        or contains null bytes)
+        """
         if isinstance(self.target, str):
             self._validate_target(self.target)
 
