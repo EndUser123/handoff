@@ -460,6 +460,77 @@ Handoffs form chains via `checkpoint_id`, `parent_checkpoint_id`, `chain_id`, en
 
 `pending_operations` tracks incomplete work, enabling recovery after compaction or interruption.
 
+## Troubleshooting
+
+### Common Issues
+
+**Issue: "Handoff not capturing before compaction"**
+- **Cause**: Hooks not installed or not triggered
+- **Fix**:
+  ```bash
+  # Verify hooks are installed
+  ls P:/.claude/hooks/PreCompact_*.py
+
+  # Check hook configuration in CLAUDE.md
+  grep -A5 "PreCompact" P:/.claude/CLAUDE.md
+  ```
+
+**Issue: "Restoration creates duplicate state"**
+- **Cause**: Multiple terminals restoring same checkpoint
+- **Fix**: Each terminal should restore independently. The system uses terminal isolation to prevent conflicts.
+
+**Issue: "Checkpoint file not found on restore"**
+- **Cause**: Checkpoint expired or was cleaned up
+- **Fix**:
+  - Check `.claude/handoffs/` directory for available checkpoints
+  - Use `/hod list` to see available checkpoints
+  - Recent checkpoints are prioritized in restoration
+
+**Issue: "Images not preserved in handoff"**
+- **Cause**: Image paths not captured or images too large
+- **Fix**:
+  - Verify image analysis is enabled in configuration
+  - Check file size limits for embedded images
+  - Use `--include-visual-context` flag when capturing
+
+**Issue: "Terminal ID not detected"**
+- **Cause**: Running in environment without terminal identification
+- **Fix**:
+  - Ensure CLAUDE_CODE_TERMINAL_ID environment variable is set
+  - Check session context includes terminal identification
+  - Fall back to session-based handoff if terminal ID unavailable
+
+### Debug Mode
+
+Enable verbose logging for troubleshooting:
+
+```bash
+# Set environment variable before starting Claude Code
+export HANDOFF_DEBUG=true
+export HANDOFF_LOG_LEVEL=DEBUG
+
+# Or modify configuration in CLAUDE.md
+```
+
+### Verification Commands
+
+```bash
+# List all checkpoints
+/hod list
+
+# Show checkpoint details
+/hod show <checkpoint-id>
+
+# Verify hooks are installed
+ls -la P:/.claude/hooks/PreCompact_*.py
+```
+
+### Getting Help
+
+- **Documentation**: See CONTRIBUTING.md for development setup
+- **Issues**: Report bugs at https://github.com/csf-nip/handoff/issues
+- **Security**: See SECURITY.md for vulnerability reporting
+
 ## License
 
 MIT License - see [LICENSE](LICENSE) file for details.
