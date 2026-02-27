@@ -104,7 +104,7 @@ class TestCheckpointSerializationToDict:
         assert result["saved_at"] == saved_at
         assert result["version"] == 1
         assert result["implementation_status"]["stage"] == "in_progress"
-        assert result["checksum"] == "abc123def456"
+        assert result["checksum"] == "sha256:abc123def45600000000000000000000000000000000000000000000000000000000000"
 
     def test_to_dict_serializes_pending_operations(self):
         """
