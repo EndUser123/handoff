@@ -374,7 +374,7 @@ class TestHandoffIntegration:
             transcript_offset=0,
             transcript_entry_count=1,
             pending_operations=[],
-            checksum="checksum_visual"
+            checksum="sha256:checksum_visual000000000000000000000000000000000000000000000000000000000000000"
         )
 
         # Serialize
