@@ -111,8 +111,18 @@ class PendingOperation:
             raise ValueError("target cannot be None")
         if not isinstance(target, str):
             raise ValueError("target must be a string")
+        cls._validate_target(target)
 
-        # Create instance to trigger validation via __post_init__
+        # Validate type field
+        valid_types = {"edit", "test", "read", "command", "skill"}
+        if data["type"] not in valid_types:
+            raise ValueError(f"Invalid type: {data['type']}. Must be one of {valid_types}")
+
+        # Validate state field
+        valid_states = {"pending", "in_progress", "failed"}
+        if data["state"] not in valid_states:
+            raise ValueError(f"Invalid state: {data['state']}. Must be one of {valid_states}")
+
         return cls(
             type=data["type"],
             target=target,
