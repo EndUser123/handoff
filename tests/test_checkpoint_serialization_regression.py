@@ -154,7 +154,7 @@ class TestCheckpointSerializationToDict:
                     details={"test_name": "test_function"}
                 ),
             ],
-            checksum="checksum123"
+            checksum="sha256:checksum12300000000000000000000000000000000000000000000000000000000000"
         )
 
         result = checkpoint.to_dict()
