@@ -469,16 +469,28 @@ def main() -> int:
 
     # SESSION-BINDING: Only restore handoff if it's from the current session
     # This makes the system: multi-terminal friendly, no TTL, immune to stale data
-    current_session_id = os.environ.get("CLAUDE_SESSION_ID", "")
-    if current_session_id:
-        # Extract transcript path from handoff (format: ".../{session_id}.jsonl")
-        handoff_transcript = handoff_data.get("transcript_path", "")
-        handoff_session = Path(handoff_transcript).stem if handoff_transcript else ""
 
-        # Only restore if handoff belongs to CURRENT session
-        if handoff_session != current_session_id:
-            # Silent skip - handoff is from a different session, don't restore it
-            return 0
+    # Extract session ID from handoff's transcript_path
+    handoff_transcript = handoff_data.get("transcript_path", "")
+    handoff_session = Path(handoff_transcript).stem if handoff_transcript else ""
+
+    # Extract session ID from CURRENT session (not from stale active_task metadata)
+    # CRITICAL: Must use current_session.json to get ACTUAL current session, not old task data
+    current_session_file = Path("P:/.claude/current_session.json")
+    if current_session_file.exists():
+        try:
+            with open(current_session_file, encoding="utf-8") as f:
+                current_session_data = json.load(f)
+            current_session = current_session_data.get("session_id", "")
+        except (json.JSONDecodeError, OSError):
+            current_session = ""
+    else:
+        current_session = ""
+
+    # Only restore if handoff belongs to CURRENT session
+    if current_session and handoff_session != current_session:
+        # Silent skip - handoff is from a different session, don't restore it
+        return 0
 
     # Build restoration prompt
     restoration_prompt = _build_restoration_prompt(handoff_data)

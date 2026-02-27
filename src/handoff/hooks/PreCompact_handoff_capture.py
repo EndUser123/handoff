@@ -547,6 +547,38 @@ class PreCompactHandoffCapture:
             task_id = f"task_{task_name.lower()}"
             print(f"[PreCompact] Using task name: {task_name}")
 
+        # Validate session ownership before creating handoff
+        # This prevents wasted I/O creating handoffs that will be rejected
+        # by SessionStart due to session mismatch
+        current_session_file = self.project_root / ".claude" / "current_session.json"
+        current_session = ""
+
+        if current_session_file.exists():
+            try:
+                with open(current_session_file, encoding="utf-8") as f:
+                    current_session_data = json.load(f)
+                current_session = current_session_data.get("session_id", "")
+            except (json.JSONDecodeError, OSError):
+                current_session = ""
+
+        # Extract handoff session from transcript path
+        handoff_session = Path(self.transcript_path).stem
+
+        # Edge case: No current session (allow handoff creation)
+        if not current_session:
+            print("[PreCompact] ⚠️  No current session - creating handoff without validation")
+        else:
+            # Validate session ownership
+            if handoff_session != current_session:
+                print(f"[PreCompact] ⊘ Skipping handoff: '{task_name}' from stale session")
+                print(f"  Handoff session: {handoff_session}")
+                print(f"  Current session: {current_session}")
+                print("  Action: Preventing wasted I/O on cross-session handoff")
+                # Skip handoff creation - return early with success
+                return True
+
+            print(f"[PreCompact] ✓ Session validated: '{task_name}' belongs to current session")
+
         # Step 2: Extract handoff data using focused components
         progress_pct = self.extract_progress_percentage(task_name)
         blocker = self.parser.extract_current_blocker()
