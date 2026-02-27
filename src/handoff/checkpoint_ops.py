@@ -54,6 +54,32 @@ class PendingOperation:
     details: dict[str, Any]
     started_at: str | None = None
 
+    def __post_init__(self):
+        """Validate target field after initialization."""
+        if isinstance(self.target, str):
+            self._validate_target(self.target)
+
+    def _validate_target(self, target: str):
+        """Validate target field.
+
+        Args:
+            target: The target string to validate
+
+        Raises:
+            ValueError: If target is invalid
+        """
+        # Check for empty or whitespace-only strings
+        if not target or len(target.strip()) == 0:
+            raise ValueError("target cannot be empty or whitespace-only")
+
+        # Check for null bytes (security risk)
+        if "\x00" in target:
+            raise ValueError("target cannot contain null bytes")
+
+        # Check length (filesystem limit)
+        if len(target) > 255:
+            raise ValueError("target cannot exceed 255 characters")
+
     def to_dict(self) -> dict[str, Any]:
         """Convert to dict for JSON serialization.
 
