@@ -70,8 +70,15 @@ class TestSessionStartHookIntegration:
             with patch('handoff.hooks.SessionStart_handoff_restore.Path') as mock_path_cls:
                 # Configure mock to return real Path objects for our temp directory
                 def path_side_effect(*args, **kwargs):
-                    if args and str(args[0]).endswith("_tasks.json"):
-                        return task_tracker_dir / args[0]
+                    arg_str = str(args[0]) if args else ""
+                    # Redirect task tracker directory to temp
+                    if "task_tracker" in arg_str or arg_str.endswith("_tasks.json"):
+                        # If it's the task_tracker directory, return temp directory
+                        if arg_str.endswith("task_tracker") or arg_str.endswith("task_tracker/"):
+                            return task_tracker_dir
+                        # If it's a tasks.json file, return the temp file path
+                        if arg_str.endswith("_tasks.json"):
+                            return task_tracker_dir / args[0]
                     return Path(*args, **kwargs)
 
                 mock_path_cls.side_effect = path_side_effect
