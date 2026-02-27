@@ -68,6 +68,7 @@ class TestSessionStartHookIntegration:
 
             # Simpler approach: patch the function directly to return our test data
             from unittest.mock import patch
+
             from SessionStart_handoff_restore import _load_active_session_task
 
             def mock_load_active_session(terminal_id):
@@ -82,7 +83,7 @@ class TestSessionStartHookIntegration:
                     }
                 }
 
-            with patch('SessionStart_handoff_restore._load_active_session_task', side_effect=mock_load_active_session):
+            with patch('SessionStart_handoff_restore._load_active_session_task', new_callable=mock_load_active_session):
                 loaded_task = _load_active_session_task(terminal_id)
 
             # Assert
