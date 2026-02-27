@@ -49,9 +49,6 @@ class TestSessionStartHookIntegration:
             # Create task tracker directory if needed
             task_tracker_base.mkdir(parents=True, exist_ok=True)
 
-            terminal_id = "test_terminal_123"
-            task_file = task_tracker_base / f"{terminal_id}_tasks.json"
-
             handoff_data = {
                 "task_name": "Implement feature X",
                 "saved_at": "2026-02-27T10:30:00Z",
