@@ -28,13 +28,26 @@ class TestSessionStartHookIntegration:
         When: The hook runs
         Then: The active_session task is loaded successfully
         """
-        # Arrange
-        with tempfile.TemporaryDirectory() as tmpdir:
-            task_tracker_dir = Path(tmpdir)
-            terminal_id = "test_terminal_123"
+        # Arrange - Create task file at the hard-coded path used by the hook
+        import tempfile
+        import shutil
 
-            # Create task file with active_session containing handoff data
-            task_file = task_tracker_dir / f"{terminal_id}_tasks.json"
+        # Save current state if task_tracker exists
+        task_tracker_base = Path("P:/.claude/state/task_tracker")
+        backup_needed = task_tracker_base.exists()
+        backup_path = None
+
+        if backup_needed:
+            backup_path = task_tracker_base.with_suffix(".backup")
+            shutil.copy2(task_tracker_base, backup_path)
+
+        try:
+            # Create task tracker directory if needed
+            task_tracker_base.mkdir(parents=True, exist_ok=True)
+
+            terminal_id = "test_terminal_123"
+            task_file = task_tracker_base / f"{terminal_id}_tasks.json"
+
             handoff_data = {
                 "task_name": "Implement feature X",
                 "saved_at": "2026-02-27T10:30:00Z",
@@ -61,34 +74,30 @@ class TestSessionStartHookIntegration:
             with open(task_file, 'w') as f:
                 json.dump(task_data, f)
 
-            # Import the hook module functions
+            # Import and test
             import sys
             hooks_dir = Path("P:/packages/handoff/src/handoff/hooks").resolve()
             sys.path.insert(0, str(hooks_dir))
 
-            # Simpler approach: patch the function directly to return our test data
-            from unittest.mock import patch
+            from SessionStart_handoff_restore import _load_active_session_task
 
-            # Create mock return value
-            mock_return_value = {
-                "id": "active_session",
-                "subject": "Handoff: Implement feature X",
-                "status": "pending",
-                "metadata": {
-                    "handoff": handoff_data
-                }
-            }
-
-            # Patch the local reference (where it's imported) not where it's defined
-            with patch('test_sessionstart_hook_integration._load_active_session_task', return_value=mock_return_value):
-                from SessionStart_handoff_restore import _load_active_session_task
-                loaded_task = _load_active_session_task(terminal_id)
+            # Act - Call the actual function (it will read from the hard-coded path)
+            loaded_task = _load_active_session_task(terminal_id)
 
             # Assert
             assert loaded_task is not None, "active_session task should be loaded"
             assert loaded_task["id"] == "active_session"
             assert "handoff" in loaded_task["metadata"]
             assert loaded_task["metadata"]["handoff"]["task_name"] == "Implement feature X"
+
+        finally:
+            # Cleanup - restore backup
+            if backup_path and backup_needed:
+                shutil.copy2(backup_path, task_tracker_base)
+                backup_path.unlink()
+            # Remove test file if it still exists
+            if task_file.exists():
+                task_file.unlink()
 
     def test_hook_validates_sha256_checksum_before_restoration(self):
         """
