@@ -193,6 +193,11 @@ class HandoffCheckpoint:
         if missing:
             raise ValueError(f"Missing required fields: {missing}")
 
+        # Validate progress_percent range (0-100)
+        progress_percent = data["progress_percent"]
+        if progress_percent is not None and (progress_percent < 0 or progress_percent > 100):
+            raise ValueError(f"progress_percent must be between 0 and 100, got {progress_percent}")
+
         # Validate checksum format
         checksum = data["checksum"]
         if not checksum.startswith("sha256:"):
@@ -203,11 +208,6 @@ class HandoffCheckpoint:
             raise ValueError("Invalid checksum: must contain only hexadecimal characters (0-9, a-f)")
         if len(hex_part) != 64:
             raise ValueError("Invalid checksum: must be 64 hexadecimal characters after 'sha256:' prefix")
-
-        # Validate progress_percent range (0-100)
-        progress_percent = data["progress_percent"]
-        if progress_percent is not None and (progress_percent < 0 or progress_percent > 100):
-            raise ValueError(f"progress_percent must be between 0 and 100, got {progress_percent}")
 
         # Convert pending_operations dicts to PendingOperation objects
         pending_ops = []
