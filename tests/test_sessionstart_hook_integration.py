@@ -121,7 +121,7 @@ class TestSessionStartHookIntegration:
 
         # Test invalid checksum
         handoff_data_invalid = handoff_data.copy()
-        handoff_data_invalid["checksum"] = "sha256:invalidchecksum123456789"
+        handoff_data_invalid["checksum"] = "sha256:invalidchecksum00000000000000000000000000000000000000000000000000000000000000"
 
         is_valid, error = _verify_handoff_checksum(handoff_data_invalid)
         assert not is_valid, "Invalid checksum should fail verification"
