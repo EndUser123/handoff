@@ -339,7 +339,7 @@ class TestCheckpointSerializationFromDict:
             "recent_tools": [],
             "saved_at": "2026-02-27T10:30:00Z",
             "version": 1,
-            "checksum": "checksum"
+            "checksum": "sha256:checksum000000000000000000000000000000000000000000000000000000000000000"
         }
 
         with pytest.raises(ValueError, match="Missing required fields"):
