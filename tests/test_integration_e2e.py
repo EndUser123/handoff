@@ -101,7 +101,7 @@ class TestHandoffIntegration:
                                 "task_name": "Step 1: Design",
                                 "transcript_offset": 0,
                                 "transcript_entry_count": 1,
-                                "checksum": "checksum_1"
+                                "checksum": "sha256:checksum_100000000000000000000000000000000000000000000000000000000000000"
                             }
                         }
                     },
