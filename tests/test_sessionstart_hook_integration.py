@@ -236,17 +236,20 @@ class TestSessionStartHookIntegration:
         with tempfile.TemporaryDirectory() as tmpdir:
             task_tracker_dir = Path(tmpdir)
 
-            # Act - This is a placeholder assertion
-            # The actual implementation test would verify:
-            # 1. _load_active_session_task returns None
-            # 2. main() returns 0
-            # 3. No JSON output is produced
+            # Import the hook module functions
+            import sys
+            hooks_dir = Path("P:/packages/handoff/src/handoff/hooks").resolve()
+            sys.path.insert(0, str(hooks_dir))
 
-            # For now, just test the load function behavior
-            with patch('P:/packages/handoff/src/handoff/hooks/SessionStart_handoff_restore.Path') as mock_path:
-                mock_path.return_value = task_tracker_dir
-                import sys
-                sys.path.insert(0, str(Path("P:/packages/handoff/src/handoff/hooks").resolve()))
+            # Patch the Path constructor
+            with patch('handoff.hooks.SessionStart_handoff_restore.Path') as mock_path_cls:
+                def path_side_effect(*args, **kwargs):
+                    if args and str(args[0]).endswith("_tasks.json"):
+                        return task_tracker_dir / args[0]
+                    return Path(*args, **kwargs)
+
+                mock_path_cls.side_effect = path_side_effect
+                mock_path_cls.return_value = task_tracker_dir
 
                 from SessionStart_handoff_restore import _load_active_session_task
 
