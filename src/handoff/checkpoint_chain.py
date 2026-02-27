@@ -178,6 +178,18 @@ class CheckpointChain:
 
         return None
 
+    def get_chain_length(self, chain_id: str) -> int:
+        """Get the number of checkpoints in a chain.
+
+        Args:
+            chain_id: Chain identifier
+
+        Returns:
+            Number of checkpoints in the chain
+        """
+        chain = self.get_chain(chain_id)
+        return len(chain)
+
     def get_next(self, checkpoint_id: str) -> HandoffCheckpointRef | None:
         """Get the next checkpoint in chain (if any).
 
