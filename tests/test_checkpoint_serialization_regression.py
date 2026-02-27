@@ -154,7 +154,7 @@ class TestCheckpointSerializationToDict:
                     details={"test_name": "test_function"}
                 ),
             ],
-            checksum="sha256:checksum12300000000000000000000000000000000000000000000000000000000000"
+            checksum="sha256:5d5c98343bb2f85bba45db2e7cff9dcbb9befd95d72c4bec722a23f0bda50978000"
         )
 
         result = checkpoint.to_dict()
@@ -225,7 +225,7 @@ class TestCheckpointSerializationFromDict:
                     "details": {"line": 55}
                 }
             ],
-            "checksum": "sha256:validchecksum456000000000000000000000000000000000000000000000000000000000"
+            "checksum": "sha256:e9fa4f16b48c4d7fe9bae8bdf2e8cfcbe4c2f33e375c95aeb8f3d2f0d891da6"
         }
 
         checkpoint = HandoffCheckpoint.from_dict(data)
@@ -255,7 +255,7 @@ class TestCheckpointSerializationFromDict:
         assert checkpoint.saved_at == "2026-02-27T10:30:00Z"
         assert checkpoint.version == 1
         assert checkpoint.implementation_status["stage"] == "testing"
-        assert checkpoint.checksum == "sha256:validchecksum456000000000000000000000000000000000000000000000000000000000"
+        assert checkpoint.checksum == "sha256:e9fa4f16b48c4d7fe9bae8bdf2e8cfcbe4c2f33e375c95aeb8f3d2f0d891da6b0"
 
     def test_from_dict_deserializes_pending_operations(self):
         """
@@ -304,7 +304,7 @@ class TestCheckpointSerializationFromDict:
                     "details": {"args": "verbose"}
                 }
             ],
-            "checksum": "sha256:checksum78900000000000000000000000000000000000000000000000000000000000"
+            "checksum": "sha256:edd5def755d24a8e0c4c0f1c2050debefaa10ec6f82a44ae562caed851ffac0d"
         }
 
         checkpoint = HandoffCheckpoint.from_dict(data)
@@ -339,7 +339,7 @@ class TestCheckpointSerializationFromDict:
             "recent_tools": [],
             "saved_at": "2026-02-27T10:30:00Z",
             "version": 1,
-            "checksum": "sha256:checksum000000000000000000000000000000000000000000000000000000000000000"
+            "checksum": "sha256:d9be30135650ec8efebcc7ebefc976fdea664a0dfbfbc9cdfcedce9c9a929e51"
         }
 
         with pytest.raises(ValueError, match="Missing required fields"):
@@ -534,7 +534,7 @@ class TestCheckpointRoundTripSerialization:
                     details={"test_case": "test_process_data"}
                 ),
             ],
-            checksum="sha256:validchecksum123456000000000000000000000000000000000000000000000000000000"
+            checksum="sha256:fc7a6ef34f9dda6f2df39ff7ef931cba6eb2b0e8a985bdbcc8cf9ce0ea2bb7cc000000"
         )
 
         # Serialize to dict
@@ -615,7 +615,7 @@ class TestCheckpointRoundTripSerialization:
             version=1,
             implementation_status=None,
             pending_operations=[],
-            checksum="sha256:minimal_checksum00000000000000000000000000000000000000000000000000000000000000"
+            checksum="sha256:009ffcaa6e7608e9798acca3e33b2bc7d2b1b16fec5da1ed95a50edfbbfb3bec"
         )
 
         restored = HandoffCheckpoint.from_dict(original.to_dict())
@@ -670,7 +670,7 @@ class TestCheckpointRoundTripSerialization:
             version=1,
             implementation_status={},
             pending_operations=[],
-            checksum="sha256:checksum_empty0000000000000000000000000000000000000000000000000000000000000"
+            checksum="sha256:0f1bbde99cda865ef99c3aae6f4afcf0bdac26b0b2ffabd0909822c85e821f0f000"
         )
 
         restored = HandoffCheckpoint.from_dict(original.to_dict())

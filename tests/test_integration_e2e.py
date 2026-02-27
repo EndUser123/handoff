@@ -59,7 +59,7 @@ class TestHandoffIntegration:
                     state="pending"
                 )
             ],
-            checksum="sha256:abc123integration000000000000000000000000000000000000000000000000000000"
+            checksum="sha256:d1f3deabf7b60a1bacb8ffe241a0f00272f1dbf13cf7bae6a721a1660d696eef000"
         )
 
         # Test serialization
@@ -264,7 +264,7 @@ class TestHandoffIntegration:
                 PendingOperation(type=t, target=f"file_{t}", state="pending")
                 for t in valid_types
             ],
-            checksum="sha256:checksum_pending00000000000000000000000000000000000000000000000000000000000000"
+            checksum="sha256:7a2b8c9d0e1f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f700000"
         )
 
         assert len(checkpoint.pending_operations) == len(valid_types)
@@ -328,7 +328,7 @@ class TestHandoffIntegration:
             transcript_offset=0,
             transcript_entry_count=1,
             pending_operations=[],  # Empty list
-            checksum="sha256:checksum_empty0000000000000000000000000000000000000000000000000000000000000"
+            checksum="sha256:54f2b668fca59b4c72cf552fe35202fab27e31d74f4f01b7fb2dd662c80b7acc000"
         )
 
         assert len(checkpoint.pending_operations) == 0
@@ -374,7 +374,7 @@ class TestHandoffIntegration:
             transcript_offset=0,
             transcript_entry_count=1,
             pending_operations=[],
-            checksum="sha256:checksum_visual000000000000000000000000000000000000000000000000000000000000000"
+            checksum="sha256:3c8b7d7e7e9cf2d6bf7f3e8c5d2a1f9e8d3b4c7a6e5d2f1e8b3c9d4e2f1000000"
         )
 
         # Serialize
