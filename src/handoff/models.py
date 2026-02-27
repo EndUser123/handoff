@@ -155,6 +155,34 @@ class HandoffCheckpoint:
     # Validation
     checksum: str
 
+    @staticmethod
+    def _validate_checksum(checksum: str) -> None:
+        """Validate SHA256 checksum format.
+
+        Args:
+            checksum: Checksum string to validate
+
+        Raises:
+            ValueError: If checksum format is invalid. Valid format is:
+                'sha256:' prefix followed by exactly 64 hexadecimal characters
+                (lowercase 0-9, a-f)
+        """
+        if not checksum.startswith("sha256:"):
+            raise ValueError("Invalid checksum format: must start with 'sha256:'")
+
+        hex_part = checksum[7:]  # Remove "sha256:" prefix
+        valid_hex_chars = set("0123456789abcdef")
+
+        if not all(c in valid_hex_chars for c in hex_part):
+            raise ValueError(
+                "Invalid checksum: must contain only hexadecimal characters (0-9, a-f)"
+            )
+
+        if len(hex_part) != 64:
+            raise ValueError(
+                "Invalid checksum: must be 64 hexadecimal characters after 'sha256:' prefix"
+            )
+
     def to_dict(self) -> dict[str, Any]:
         """Convert to dict for storage.
 
