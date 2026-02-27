@@ -255,7 +255,7 @@ class TestCheckpointSerializationFromDict:
         assert checkpoint.saved_at == "2026-02-27T10:30:00Z"
         assert checkpoint.version == 1
         assert checkpoint.implementation_status["stage"] == "testing"
-        assert checkpoint.checksum == "sha256:e9fa4f16b48c4d7fe9bae8bdf2e8cfcbe4c2f33e375c95aeb8f3d2f0d891da6"
+        assert checkpoint.checksum == "sha256:e9fa4f16b48c4d7fe9bae8bdf2e8cfcbe4c2f33e375c95aeb8f3d2f0d891da60"
 
     def test_from_dict_deserializes_pending_operations(self):
         """
