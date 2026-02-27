@@ -59,7 +59,8 @@ class PendingOperation:
         if isinstance(self.target, str):
             self._validate_target(self.target)
 
-    def _validate_target(self, target: str):
+    @staticmethod
+    def _validate_target(target: str):
         """Validate target field.
 
         Args:
