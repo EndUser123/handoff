@@ -115,7 +115,7 @@ class TestPendingOperationLongPaths:
         When: Constructor is called with 255 character path
         Then: Should accept or validate (boundary case)
         """
-        path_255 = "a" * 251 + ".py"  # Exactly 255 chars
+        path_255 = "a" * 252 + ".py"  # Exactly 255 chars
         # This is the MAX length for many filesystems
         op = PendingOperation(
             type="edit",
