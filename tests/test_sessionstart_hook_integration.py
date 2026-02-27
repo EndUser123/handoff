@@ -41,7 +41,7 @@ class TestSessionStartHookIntegration:
                 "progress_percent": 50,
                 "next_steps": "Complete the implementation",
                 "original_user_request": "Please implement feature X",
-                "checksum": "sha256:abc12300000000000000000000000000000000000000000000000000000000000000000"
+                "checksum": "sha256:abc12300000000000000000000000000000000000000000000000000000000000000"
             }
 
             task_data = {
