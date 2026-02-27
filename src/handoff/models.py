@@ -156,6 +156,19 @@ class HandoffCheckpoint:
     checksum: str
 
     @staticmethod
+    def _validate_progress_percent(progress_percent: int) -> None:
+        """Validate progress_percent is within valid range.
+
+        Args:
+            progress_percent: Progress percentage value to validate
+
+        Raises:
+            ValueError: If progress_percent is not between 0 and 100
+        """
+        if progress_percent is not None and (progress_percent < 0 or progress_percent > 100):
+            raise ValueError(f"progress_percent must be between 0 and 100, got {progress_percent}")
+
+    @staticmethod
     def _validate_checksum(checksum: str) -> None:
         """Validate SHA256 checksum format.
 
