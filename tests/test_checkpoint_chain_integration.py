@@ -17,15 +17,13 @@ import tempfile
 from pathlib import Path
 from uuid import uuid4
 
-import pytest
-
 # Add handoff package to path
 HANDOFF_PACKAGE = Path(__file__).parent.parent / "src"
 if str(HANDOFF_PACKAGE) not in globals():
     import sys
     sys.path.insert(0, str(HANDOFF_PACKAGE))
 
-from handoff.checkpoint_chain import CheckpointChain, HandoffCheckpointRef
+from handoff.checkpoint_chain import CheckpointChain
 
 
 class TestCheckpointChainIntegration:
