@@ -225,7 +225,7 @@ class TestCheckpointSerializationFromDict:
                     "details": {"line": 55}
                 }
             ],
-            "checksum": "validchecksum456"
+            "checksum": "sha256:validchecksum456000000000000000000000000000000000000000000000000000000000"
         }
 
         checkpoint = HandoffCheckpoint.from_dict(data)
