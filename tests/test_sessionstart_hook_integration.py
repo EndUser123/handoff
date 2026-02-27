@@ -29,17 +29,21 @@ class TestSessionStartHookIntegration:
         Then: The active_session task is loaded successfully
         """
         # Arrange - Create task file at the hard-coded path used by the hook
-        import tempfile
         import shutil
 
-        # Save current state if task_tracker exists
+        # Save current state if specific task file exists (not the entire directory)
         task_tracker_base = Path("P:/.claude/state/task_tracker")
-        backup_needed = task_tracker_base.exists()
+        terminal_id = "test_terminal_123"
+        task_file = task_tracker_base / f"{terminal_id}_tasks.json"
+
+        backup_needed = task_file.exists()
         backup_path = None
+        backup_content = None
 
         if backup_needed:
-            backup_path = task_tracker_base.with_suffix(".backup")
-            shutil.copy2(task_tracker_base, backup_path)
+            # Backup only the specific task file content
+            backup_path = task_file.with_suffix(".backup")
+            backup_content = task_file.read_text()
 
         try:
             # Create task tracker directory if needed
