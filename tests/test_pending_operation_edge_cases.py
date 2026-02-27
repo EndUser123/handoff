@@ -429,18 +429,17 @@ class TestPendingOperationConstructorValidation:
         )
         assert op.state == "cancelled"  # Documents current behavior
 
-    def test_constructor_accepts_empty_target(self):
-        """Test that constructor accepts empty target (documenting current behavior).
+    def test_constructor_validates_target(self):
+        """Test that constructor validates target field.
 
         Given: Direct instantiation via constructor
         When: Empty target string is provided
-        Then: Currently succeeds (no validation in constructor)
+        Then: Should raise ValueError (target validation added to constructor)
         """
-        # This currently succeeds - no validation
-        op = PendingOperation(
-            type="edit",
-            target="",  # Invalid but accepted
-            state="pending",
-            details={}
-        )
-        assert op.target == ""  # Documents current behavior
+        with pytest.raises(ValueError, match="target"):
+            PendingOperation(
+                type="edit",
+                target="",  # Invalid and now rejected
+                state="pending",
+                details={}
+            )
