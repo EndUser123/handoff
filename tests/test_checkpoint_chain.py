@@ -204,7 +204,7 @@ class TestHandoffCheckpoint:
             "version": 1,
             "implementation_status": None,
             "pending_operations": [],
-            "checksum": "sha256:test"
+            "checksum": "sha256:" + "a" * 64
         }
 
         checkpoint = HandoffCheckpoint.from_dict(data)
@@ -250,7 +250,7 @@ class TestHandoffCheckpoint:
                     "details": {}
                 }
             ],
-            "checksum": "sha256:test"
+            "checksum": "sha256:" + "a" * 64
         }
 
         checkpoint = HandoffCheckpoint.from_dict(data)
