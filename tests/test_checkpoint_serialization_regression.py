@@ -453,7 +453,7 @@ class TestCheckpointSerializationFromDict:
             "version": 1,
             "implementation_status": None,
             "pending_operations": [],
-            "checksum": "sha256:valid_checksum_abc123000000000000000000000000000000000000000000000000000000"
+            "checksum": "sha256:4b8c7d7e7e9cf2d6bf7f3e8c5d2a1f9e8d3b4c7a6e5d2f1e8b3c9d4e2f1000"
         }
 
         with pytest.raises(ValueError, match="progress_percent"):
