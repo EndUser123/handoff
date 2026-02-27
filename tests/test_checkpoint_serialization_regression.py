@@ -534,7 +534,7 @@ class TestCheckpointRoundTripSerialization:
                     details={"test_case": "test_process_data"}
                 ),
             ],
-            checksum="sha256:fc7a6ef34f9dda6f2df39ff7ef931cba6eb2b0e8a985bdbcc8cf9ce0ea2bb7cc000000"
+            checksum="sha256:fc7a6ef34f9dda6f2df39ff7ef931cba6eb2b0e8a985bdbcc8cf9ce0ea2bb7c"
         )
 
         # Serialize to dict
