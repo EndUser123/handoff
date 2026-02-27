@@ -345,13 +345,13 @@ class TestCheckpointSerializationFromDict:
         with pytest.raises(ValueError, match="Missing required fields"):
             HandoffCheckpoint.from_dict(data)
 
-    def test_from_dict_invalid_checksum_format_is_rejected(self):
+    def test_from_dict_empty_checksum_raises_error(self):
         """
-        Test that from_dict() validates checksum format.
+        Test that from_dict() rejects empty checksum strings.
 
-        Given: A dict with a malformed checksum (e.g., empty string)
+        Given: A dict with an empty checksum string
         When: from_dict() is called
-        Then: ValueError is raised about invalid checksum format
+        Then: ValueError is raised about invalid checksum
         """
         data = {
             "checkpoint_id": str(uuid4()),
@@ -380,7 +380,45 @@ class TestCheckpointSerializationFromDict:
             "checksum": ""  # Invalid empty checksum
         }
 
-        with pytest.raises(ValueError, match="Invalid checksum"):
+        with pytest.raises(ValueError, match="checksum"):
+            HandoffCheckpoint.from_dict(data)
+
+    def test_from_dict_invalid_checksum_format_is_rejected(self):
+        """
+        Test that from_dict() validates checksum format (should be hex string).
+
+        Given: A dict with a malformed checksum (e.g., containing spaces)
+        When: from_dict() is called
+        Then: ValueError is raised about invalid checksum format
+        """
+        data = {
+            "checkpoint_id": str(uuid4()),
+            "chain_id": str(uuid4()),
+            "created_at": "2026-02-27T10:30:00Z",
+            "task_name": "Test",
+            "task_type": "informal",
+            "progress_percent": 0,
+            "blocker": None,
+            "next_steps": "Start",
+            "git_branch": None,
+            "active_files": [],
+            "recent_tools": [],
+            "transcript_path": None,
+            "handover": None,
+            "open_conversation_context": None,
+            "visual_context": None,
+            "resolved_issues": [],
+            "modifications": [],
+            "original_user_request": None,
+            "first_user_request": None,
+            "saved_at": "2026-02-27T10:30:00Z",
+            "version": 1,
+            "implementation_status": None,
+            "pending_operations": [],
+            "checksum": "not a valid hex checksum!"  # Invalid characters
+        }
+
+        with pytest.raises(ValueError, match="checksum"):
             HandoffCheckpoint.from_dict(data)
 
 

@@ -61,11 +61,21 @@ class TestSessionStartHookIntegration:
             with open(task_file, 'w') as f:
                 json.dump(task_data, f)
 
-            # Act - Simulate hook loading the active session task
-            with patch('P:/packages/handoff/src/handoff/hooks/SessionStart_handoff_restore.Path') as mock_path:
-                mock_path.return_value = task_tracker_dir
-                import sys
-                sys.path.insert(0, str(Path("P:/packages/handoff/src/handoff/hooks").resolve()))
+            # Import the hook module functions
+            import sys
+            hooks_dir = Path("P:/packages/handoff/src/handoff/hooks").resolve()
+            sys.path.insert(0, str(hooks_dir))
+
+            # Patch the Path constructor to use our temp directory
+            with patch('handoff.hooks.SessionStart_handoff_restore.Path') as mock_path_cls:
+                # Configure mock to return real Path objects for our temp directory
+                def path_side_effect(*args, **kwargs):
+                    if args and str(args[0]).endswith("_tasks.json"):
+                        return task_tracker_dir / args[0]
+                    return Path(*args, **kwargs)
+
+                mock_path_cls.side_effect = path_side_effect
+                mock_path_cls.return_value = task_tracker_dir
 
                 from SessionStart_handoff_restore import _load_active_session_task
 
