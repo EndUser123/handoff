@@ -204,6 +204,11 @@ class HandoffCheckpoint:
         if not all(c in valid_hex_chars for c in hex_part):
             raise ValueError("Invalid checksum: must contain only hexadecimal characters (0-9, a-f)")
 
+        # Validate progress_percent range (0-100)
+        progress_percent = data["progress_percent"]
+        if progress_percent is not None and (progress_percent < 0 or progress_percent > 100):
+            raise ValueError(f"progress_percent must be between 0 and 100, got {progress_percent}")
+
         # Convert pending_operations dicts to PendingOperation objects
         pending_ops = []
         for op_data in data.get("pending_operations", []):
