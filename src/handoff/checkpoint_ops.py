@@ -73,24 +73,55 @@ class PendingOperation:
             self._validate_target(self.target)
 
     @staticmethod
-    def _validate_target(target: str):
-        """Validate target field.
+    def _validate_target(target: str) -> None:
+        """Validate the target field against filesystem and security constraints.
+
+        This method enforces three critical validation rules to ensure targets are
+        safe for filesystem operations and free from security vulnerabilities.
+
+        Validation Rules:
+            1. **Non-empty**: Targets must contain at least one non-whitespace character.
+               Empty or whitespace-only targets indicate missing or invalid data and are
+               rejected to prevent ambiguous operations.
+
+            2. **No null bytes**: Null bytes (\\x00) are strictly prohibited. These can be
+               used in path traversal attacks (e.g., "safe.txt\\x00malicious.py") to bypass
+               file extension checks on some systems. Rejecting them prevents exploitation
+               of C string termination semantics in underlying filesystem calls.
+
+            3. **Length limit**: Targets cannot exceed 255 characters. This aligns with the
+               MAX_PATH limits on many filesystems (POSIX NAME_MAX, Windows historical
+               limits). Paths exceeding this may fail silently or cause truncation,
+               leading to data loss or incorrect operation targeting.
 
         Args:
-            target: The target string to validate
+            target: The target string to validate (typically a file path, test name,
+                    or operation identifier)
 
         Raises:
-            ValueError: If target is invalid
+            ValueError: If target is empty/whitespace-only, contains null bytes, or
+                        exceeds 255 characters. Error messages indicate specific failure.
+
+        Examples:
+            >>> PendingOperation._validate_target("src/main.py")  # Valid
+            >>> PendingOperation._validate_target("")  # Raises ValueError
+            >>> PendingOperation._validate_target("test\\x00.py")  # Raises ValueError
+            >>> PendingOperation._validate_target("a" * 300)  # Raises ValueError
         """
         # Check for empty or whitespace-only strings
+        # Empty targets indicate missing/invalid data and would lead to ambiguous operations
         if not target or len(target.strip()) == 0:
             raise ValueError("target cannot be empty or whitespace-only")
 
         # Check for null bytes (security risk)
+        # Null bytes can be used in path traversal attacks to bypass file extension checks
+        # Example: "safe.txt\x00malicious.py" may be treated as "safe.txt" by some APIs
         if "\x00" in target:
             raise ValueError("target cannot contain null bytes")
 
         # Check length (filesystem limit)
+        # Most filesystems have a 255-character limit for path components (POSIX NAME_MAX)
+        # Windows has similar limits. Exceeding this may cause silent failures or truncation.
         if len(target) > 255:
             raise ValueError("target cannot exceed 255 characters")
 
