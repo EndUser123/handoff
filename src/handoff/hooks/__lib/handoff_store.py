@@ -495,7 +495,7 @@ class HandoffStore:
         """
         # CRITICAL: Always use terminal_id for task file naming to prevent cross-terminal contamination
         # Session ID is global across terminals and would cause context leakage between concurrent sessions
-        task_tracker_dir = Path("P:/.claude/state/task_tracker")
+        task_tracker_dir = self.project_root / ".claude" / "state" / "task_tracker"
         task_file_path = task_tracker_dir / f"{self.terminal_id}_tasks.json"
 
         # QUAL-009: Validate and truncate handoff metadata before use
