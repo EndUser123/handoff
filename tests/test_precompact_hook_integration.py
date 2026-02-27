@@ -12,15 +12,15 @@ Run with: pytest tests/test_precompact_hook_integration.py -v
 
 import json
 import os
-import tempfile
-from datetime import UTC, datetime
-from pathlib import Path
-from unittest.mock import MagicMock, patch
-
-import pytest
 
 # Add src to path for imports
 import sys
+import tempfile
+from datetime import UTC, datetime
+from pathlib import Path
+
+import pytest
+
 HOOKS_DIR = Path(__file__).resolve().parent.parent / "src" / "handoff" / "hooks"
 sys.path.insert(0, str(HOOKS_DIR))
 sys.path.insert(0, str(HOOKS_DIR / "__lib"))

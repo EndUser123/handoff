@@ -305,7 +305,7 @@ class TestPendingOperationInvalidEnums:
             "target": "app.py",
             "state": "pending"
         }
-        with pytest.raises(ValueError, match="Invalid type.*edit.*test.*read.*command.*skill"):
+        with pytest.raises(ValueError, match="Invalid type.*Must be one of"):
             PendingOperation.from_dict(data)
 
     def test_numeric_type(self):

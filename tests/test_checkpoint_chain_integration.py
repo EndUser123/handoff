@@ -617,3 +617,74 @@ class TestCheckpointChainIntegration:
 
             assert latest_a.checkpoint_id == checkpoint_a2, f"Chain A latest should be checkpoint_a2, got {latest_a.checkpoint_id}"
             assert latest_b.checkpoint_id == checkpoint_b2, f"Chain B latest should be checkpoint_b2, got {latest_b.checkpoint_id}"
+
+    def test_get_chain_length_returns_count(self):
+        """
+        Test that get_chain_length() returns the number of checkpoints in a chain.
+
+        Given: A task tracker file with 3 checkpoints in a chain
+        When: get_chain_length() is called with the chain_id
+        Then: The count of checkpoints (3) is returned
+        """
+        # Arrange
+        chain_id = str(uuid4())
+        checkpoint_id_1 = str(uuid4())
+        checkpoint_id_2 = str(uuid4())
+        checkpoint_id_3 = str(uuid4())
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            task_file = Path(tmpdir) / "test_terminal_tasks.json"
+
+            # Create task file with 3 checkpoints in a chain
+            task_data = {
+                "tasks": {
+                    "task_1": {
+                        "metadata": {
+                            "handoff": {
+                                "checkpoint_id": checkpoint_id_1,
+                                "parent_checkpoint_id": None,
+                                "chain_id": chain_id,
+                                "saved_at": "2025-02-16T12:00:00Z",
+                                "transcript_offset": 0,
+                                "transcript_entry_count": 0
+                            }
+                        },
+                        "created_at": "2025-02-16T12:00:00Z"
+                    },
+                    "task_2": {
+                        "metadata": {
+                            "handoff": {
+                                "checkpoint_id": checkpoint_id_2,
+                                "parent_checkpoint_id": checkpoint_id_1,
+                                "chain_id": chain_id,
+                                "saved_at": "2025-02-16T12:05:00Z",
+                                "transcript_offset": 1000,
+                                "transcript_entry_count": 10
+                            }
+                        },
+                        "created_at": "2025-02-16T12:05:00Z"
+                    },
+                    "task_3": {
+                        "metadata": {
+                            "handoff": {
+                                "checkpoint_id": checkpoint_id_3,
+                                "parent_checkpoint_id": checkpoint_id_2,
+                                "chain_id": chain_id,
+                                "saved_at": "2025-02-16T12:10:00Z",
+                                "transcript_offset": 2000,
+                                "transcript_entry_count": 20
+                            }
+                        },
+                        "created_at": "2025-02-16T12:10:00Z"
+                    }
+                }
+            }
+
+            task_file.write_text(json.dumps(task_data))
+
+            # Act
+            chain = CheckpointChain(Path(tmpdir), "test_terminal")
+            length = chain.get_chain_length(chain_id)
+
+            # Assert
+            assert length == 3, f"Expected chain length of 3, got {length}"
