@@ -52,6 +52,11 @@ from terminal_detection import detect_terminal_id
 
 logger = logging.getLogger(__name__)
 
+# Constants
+COMPACT_METADATA_FRESHNESS_SECONDS = 300  # 5 minutes
+DEFAULT_CLEANUP_MAX_AGE_HOURS = 24
+SECONDS_PER_HOUR = 3600
+
 
 @dataclass(slots=True)
 class TaskMetadata:
