@@ -32,8 +32,12 @@ PROJECT_ROOT = HOOKS_DIR.parent
 SESSION_MODULE_PATH = PROJECT_ROOT / "__csf" / "src"
 sys.path.insert(0, str(SESSION_MODULE_PATH))
 
-# Add hooks dir for terminal detection
-sys.path.insert(0, str(HOOKS_DIR))
+# Add hooks dir for terminal detection (use existing comprehensive implementation)
+# Path: P:/packages/handoff/src/handoff/hooks/PreCompact_handoff_capture.py
+# Need to reach: P:/.claude/hooks/terminal_detection.py
+claude_hooks_dir = Path("P:/.claude/hooks")
+if str(claude_hooks_dir) not in sys.path:
+    sys.path.insert(0, str(claude_hooks_dir))
 
 # Import auto-logging decorator
 from __lib.hook_base import hook_main
