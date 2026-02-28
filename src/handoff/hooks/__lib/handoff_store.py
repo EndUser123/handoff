@@ -34,7 +34,6 @@ except ImportError:
     BRIDGE_TOKEN_PREFIX = "BRIDGE_"
 
 # Import utility functions
-from handoff.config import utcnow_iso
 
 # Constants for continue_session task creation
 CONTINUE_SESSION_TASK_ID = "continue_session"
@@ -347,6 +346,8 @@ def enrich_handoff_with_bridge_tokens(handoff_data: dict[str, Any]) -> dict[str,
     Returns:
         Enriched handoff data with bridge tokens added to decisions
     """
+    from handoff.config import utcnow_iso
+
     enriched = handoff_data.copy()
     handover = enriched.get("handover", {}).copy()
     decisions = handover.get("decisions", []).copy()
