@@ -270,6 +270,12 @@ class TestTaskIdentityMatching:
             assert manager_1.session_file.parent == Path("P:/.claude/state/task-identity")
             assert manager_1.session_file.name == "session-task-terminal_1.json"
 
+            # CRITICAL: Clear env var AFTER set_current_task to isolate session file behavior
+            # This reveals the bug: env var is global, not terminal-scoped
+            import os
+            if "TASK_NAME" in os.environ:
+                del os.environ["TASK_NAME"]
+
             # Act: Try to retrieve from terminal_2
             manager_2 = TaskIdentityManager(
                 project_root=project_root,
