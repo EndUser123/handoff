@@ -44,13 +44,13 @@ The handoff package uses automatic capture via PreCompact hooks:
 ## Your Workflow
 
 Before compact/handover:
-1. `/hod detailed` - Document current work
+1. `/handoff detailed` - Document current work
 2. Log critical decisions with bridge tokens
 3. Define next session objectives
-4. `/hod quality` - Assess completeness
+4. `/handoff quality` - Assess completeness
 
 After compact/handover:
-1. `/hod load` - Restore previous context
+1. `/handoff load` - Restore previous context
 2. Review bridge tokens for continuity
 3. Check quality score
 4. Continue with prioritized objectives
@@ -91,13 +91,13 @@ pip install -e P:/packages/handoff
 
 ## Bridge Token Expansion
 
-For external LLM handoffs (the primary use case for `/hod`), bridge tokens are **automatically expanded** with full context:
+For external LLM handoffs (the primary use case for `/handoff`), bridge tokens are **automatically expanded** with full context:
 
 ```
 Token: BRIDGE_20260212-202702_HANDOFF
 Expanded: Decision made on 2026-02-12 at 20:27 (handoff):
 
-          Reconciled /hod skill with handoff package, adding quality scoring...
+          Reconciled /handoff skill with handoff package, adding quality scoring...
 
           [Reference: BRIDGE_20260212-202702_HANDOFF]
 ```
@@ -106,7 +106,7 @@ This makes handoffs self-contained for platforms that don't have access to local
 
 ## Quality Scoring
 
-The handoff package now implements the /hod quality scoring algorithm:
+The handoff package now implements the /handoff quality scoring algorithm:
 
 | Component | Weight | Description |
 |-----------|--------|-------------|
@@ -305,13 +305,13 @@ python -m handoff.cli --cleanup  # Show old handoffs (dry-run)
 ## Session Continuity Workflow
 
 ### Before Compact/Handover
-1. `/hod detailed` - Document current work
+1. `/handoff detailed` - Document current work
 2. Log critical decisions with bridge tokens
 3. Define next session objectives
-4. `/hod quality` - Assess completeness
+4. `/handoff quality` - Assess completeness
 
 ### After Compact/Handover
-1. `/hod load` - Restore previous context
+1. `/handoff load` - Restore previous context
 2. Review bridge tokens for continuity
 3. Check quality score
 4. Continue with prioritized objectives
