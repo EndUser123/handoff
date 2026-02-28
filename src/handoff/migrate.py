@@ -30,8 +30,6 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-from handoff.config import utcnow_iso
-
 # Add hooks directory to path for terminal_detection import
 _hooks_path = Path(__file__).parent.parent / "hooks"
 if str(_hooks_path) not in sys.path:
@@ -43,6 +41,9 @@ except ImportError:
     # Fallback if terminal_detection unavailable
     def detect_terminal_id() -> str:  # type: ignore[misc]
         return f"term_{os.getpid()}"
+
+# Import utility functions
+from handoff.config import utcnow_iso
 
 
 def migrate_old_handoff_to_checkpoint(old_handoff: dict[str, Any]) -> dict[str, Any]:
