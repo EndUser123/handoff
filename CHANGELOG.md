@@ -12,9 +12,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Phase 1: Error logging improvements (53 exception blocks)
   - Phase 2: Long function refactoring (4 functions, including 329-line function)
   - Phase 3: Long lines reformatting (58 → 25 lines, 57% reduction)
-- **217 passing tests** (up from 21) - comprehensive test coverage added
-
-### Changed
 - **Checkpoint-chain architecture** with parent/child linking (checkpoint_id, parent_checkpoint_id, chain_id)
 - **Transcript offset tracking** (character position + entry count) for precise handoff resume
 - **Pending operations tracking** for fault tolerance across session interruptions
