@@ -642,8 +642,8 @@ def _cleanup_active_command_file(terminal_id: str) -> None:
             except OSError as e:
                 logger.debug(f"[SessionStart] Could not update handoff reference: {e}")
 
-    except (OSError, json.JSONDecodeError):
-        pass
+    except (OSError, json.JSONDecodeError) as e:
+        logger.debug(f"[SessionStart] Could not load handoff metadata: {e}")
 
 
 
