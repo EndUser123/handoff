@@ -105,10 +105,18 @@ class CheckpointChain:
         Note:
             Applies migration to old format handoffs that don't have checkpoint_id.
             Uses migration cache to ensure consistent chain_ids across calls.
+            Invalidates cache when task file is modified.
         """
         task_file = self._get_task_file_path()
         if not task_file.exists():
             return []
+
+        # Check if cache is valid (file hasn't been modified)
+        current_mtime = task_file.stat().st_mtime
+        if current_mtime != self._cache_mtime:
+            # File was modified, clear cache
+            self._cache.clear()
+            self._cache_mtime = current_mtime
 
         try:
             with open(task_file, encoding="utf-8") as f:
