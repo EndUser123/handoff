@@ -253,10 +253,12 @@ class PreCompactHandoffCapture:
             )
 
             if active_cmd_file.exists():
-                cmd_data = json.loads(active_cmd_file.read_text())
-                command = cmd_data.get("command", "")
-                if command:
-                    return command
+                from handoff.config import load_json_file
+                cmd_data = load_json_file(active_cmd_file)
+                if cmd_data:
+                    command = cmd_data.get("command", "")
+                    if command:
+                        return command
 
         except Exception:
             # Graceful failure - return None if any error occurs
