@@ -128,6 +128,7 @@ handoff/
 │   ├── protocol.py               # HandoffStorage Protocol interface
 │   ├── config.py                 # Configuration and paths
 │   ├── models.py                 # HandoffCheckpoint, PendingOperation dataclasses
+│   ├── checkpoint_ops.py         # PendingOperation with validation
 │   ├── migrate.py                # Checksum computation, migration utilities
 │   ├── checkpoint_chain.py       # CheckpointChain traversal
 │   └── hooks/
