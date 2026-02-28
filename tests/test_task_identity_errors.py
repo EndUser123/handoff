@@ -138,26 +138,34 @@ class TestTaskIdentityManagerMalformedIDs:
     def test_set_current_task_with_special_characters(self, manager):
         """Test set_current_task with special characters in task name.
 
-        Given: Task name contains special characters
+        Given: Task name contains dangerous special characters
         When: set_current_task is called
-        Then: Should handle gracefully without crashing
+        Then: Should reject task names with path separators or control characters
         """
-        # Arrange: Task name with special chars
-        special_names = [
-            "task/with/slashes",
-            "task\\with\\backslashes",
-            "task\nwith\nnewlines",
-            "task\twith\ttabs",
+        # Arrange: Task names with dangerous special chars
+        dangerous_names = [
+            "task/with/slashes",  # Path separator
+            "task\\with\\backslashes",  # Windows path separator
+            "task\nwith\nnewlines",  # Control character
+            "task\twith\ttabs",  # Control character
+        ]
+
+        for task_name in dangerous_names:
+            # Act: Try to set special char task
+            result = manager.set_current_task(task_name)
+
+            # Assert: Should reject dangerous characters (current implementation accepts - this test FAILS)
+            assert result is False, f"Should reject task name with dangerous characters: '{task_name}'"
+
+        # But emoji and regular symbols should be OK
+        safe_names = [
             "task😀with😀emoji",
             "task with spaces and !@#$% symbols"
         ]
 
-        for task_name in special_names:
-            # Act: Try to set special char task
+        for task_name in safe_names:
             result = manager.set_current_task(task_name)
-
-            # Assert: Should handle without crashing
-            assert isinstance(result, bool), f"Should handle '{task_name}' without crashing"
+            assert result is True, f"Should accept safe task name: '{task_name}'"
 
     def test_session_file_with_missing_task_name(self, manager):
         """Test reading session file that lacks task_name field.
