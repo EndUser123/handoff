@@ -770,30 +770,32 @@ class PreCompactHandoffCapture:
         recent_edits = self._extract_recent_edits()
 
         # Extract first_user_request from transcript if not provided
+        # Issue #7: Use TranscriptParser instead of raw line scanning (fixes 20-line limit bug)
         if not first_user_request and self.transcript_path:
             try:
-                with open(self.transcript_path, encoding="utf-8") as f:
-                    lines = f.readlines()
-                    for i in range(min(20, len(lines))):
-                        try:
-                            entry = json.loads(lines[i])
-                            if entry.get("type") == "user":
-                                msg_obj = entry.get("message", {})
-                                content = msg_obj.get("content", "")
-                                if isinstance(content, list):
-                                    for item in content:
-                                        if isinstance(item, str) and len(item.strip()) > 10:
-                                            first_user_request = item.strip()
-                                            break
-                                elif isinstance(content, str) and len(content.strip()) > 10:
-                                    first_user_request = content.strip()
-                                if first_user_request:
+                # Use the same logic as extract_last_user_message, but forward direction
+                # This finds the FIRST user message, not the last
+                entries = self.parser._get_parsed_entries()
+                for entry in entries:
+                    if entry.get("type") == "user":
+                        msg_obj = entry.get("message", {})
+                        content = msg_obj.get("content", "")
+                        if isinstance(content, list):
+                            for item in content:
+                                if isinstance(item, str) and len(item.strip()) > 10:
+                                    first_user_request = item.strip()
                                     break
-                        except (json.JSONDecodeError, KeyError) as e:
-                            logger.debug(f"[PreCompact] Skipping invalid recent work entry: {e}")
-                            continue
-            except (OSError, UnicodeDecodeError):
-                pass
+                        elif isinstance(content, str) and len(content.strip()) > 10:
+                            first_user_request = content.strip()
+
+                        if first_user_request:
+                            logger.debug(
+                                f"[PreCompact] Extracted first_user_request from transcript: "
+                                f"{first_user_request[:50]}..."
+                            )
+                            break
+            except (OSError, UnicodeDecodeError) as e:
+                logger.debug(f"[PreCompact] Could not extract first_user_request: {e}")
 
         # Build base handoff structure
         handoff_metadata = {
