@@ -729,10 +729,10 @@ class HandoffStore:
                 # Atomic rename with retry for Windows PermissionError (WinError 5)
                 atomic_write_with_retry(temp_path, task_file_path)
 
-            print(
-                f"[HandoffStore] active_session task added to {task_file_path.name} (PID {os.getpid()})"
-            )
-            print(f"[HandoffStore] continue_session task added to {task_file_path.name}")
+                print(
+                    f"[HandoffStore] active_session task added to {task_file_path.name} (PID {os.getpid()})"
+                )
+                print(f"[HandoffStore] continue_session task added to {task_file_path.name}")
         except OSError as write_error:
             logger.error(
                 f"[HandoffStore] Failed to write task file {task_file_path}: {write_error}"
