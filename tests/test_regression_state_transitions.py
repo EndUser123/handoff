@@ -178,35 +178,35 @@ class TestPendingOperationStateTransitions:
 class TestPendingOperationStateValidation:
     """Tests for state validation in PendingOperation."""
 
-    def test_completed_state_exists(self):
-        """Test that COMPLETED state is a valid state.
+    def test_completed_state_via_from_dict(self):
+        """Test that COMPLETED state is a valid state via from_dict.
 
-        Given: A PendingOperation is created
+        Given: A PendingOperation is loaded from dict
         When: State is set to "completed"
         Then: Should accept the state (completed should be valid)
         """
-        op = PendingOperation(
-            type="edit",
-            target="src/main.py",
-            state="completed",
-            details={}
-        )
+        data = {
+            "type": "edit",
+            "target": "src/main.py",
+            "state": "completed"
+        }
+        op = PendingOperation.from_dict(data)
         assert op.state == "completed"
 
-    def test_all_valid_states(self):
-        """Test that all expected states are valid.
+    def test_all_valid_states_via_from_dict(self):
+        """Test that all expected states are valid via from_dict.
 
-        Given: A PendingOperation is created
+        Given: A PendingOperation is loaded from dict
         When: Each valid state is used
         Then: All should be accepted including completed
         """
         valid_states = ["pending", "in_progress", "completed", "failed"]
 
         for state in valid_states:
-            op = PendingOperation(
-                type="edit",
-                target="test.py",
-                state=state,
-                details={}
-            )
+            data = {
+                "type": "edit",
+                "target": "test.py",
+                "state": state
+            }
+            op = PendingOperation.from_dict(data)
             assert op.state == state
