@@ -89,6 +89,7 @@ try:
     from tool_sequence_manager import load_tool_sequence
     _TOOL_SEQUENCE_AVAILABLE = True
 except ImportError:
+    logger.debug("[PreCompact] tool_sequence module not available")
     _TOOL_SEQUENCE_AVAILABLE = False
 
 
