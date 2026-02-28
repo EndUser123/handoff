@@ -347,9 +347,9 @@ class TaskIdentityManager:
 
         try:
             # Load existing mapping
-            if self.mapping_file.exists():
-                mapping = json.loads(self.mapping_file.read_text())
-            else:
+            from handoff.config import load_json_file
+            mapping = load_json_file(self.mapping_file)
+            if not mapping:
                 mapping = {}
 
             # Add new mapping
