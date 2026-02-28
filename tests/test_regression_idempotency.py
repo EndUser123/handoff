@@ -14,8 +14,6 @@ import json
 import tempfile
 from pathlib import Path
 
-import pytest
-
 # Add handoff package to path
 HANDOFF_PACKAGE = Path(__file__).parent.parent / "src"
 if str(HANDOFF_PACKAGE) not in globals():
