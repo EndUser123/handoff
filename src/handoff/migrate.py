@@ -43,7 +43,6 @@ except ImportError:
         return f"term_{os.getpid()}"
 
 # Import utility functions
-from handoff.config import utcnow_iso
 
 
 def migrate_old_handoff_to_checkpoint(old_handoff: dict[str, Any]) -> dict[str, Any]:
@@ -81,7 +80,8 @@ def migrate_old_handoff_to_checkpoint(old_handoff: dict[str, Any]) -> dict[str, 
 
     # Add timestamp with fallback to saved_at or current time
     if "timestamp" not in checkpoint:
-        checkpoint["timestamp"] = checkpoint.get("saved_at") or datetime.now(UTC).isoformat()
+        from handoff.config import utcnow_iso
+        checkpoint["timestamp"] = checkpoint.get("saved_at") or utcnow_iso()
 
     # Add metadata with default empty dict
     if "metadata" not in checkpoint:
