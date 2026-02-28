@@ -590,8 +590,8 @@ def _cleanup_active_session_task(terminal_id: str) -> None:
                     os.unlink(temp_path)
                 except OSError:
                     pass
-    except (json.JSONDecodeError, OSError):
-        pass
+    except (json.JSONDecodeError, OSError) as e:
+        logger.debug(f"[SessionStart] Could not load handoff data: {e}")
 
 
 def _safe_id(value: str) -> str:
