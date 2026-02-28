@@ -24,28 +24,22 @@ Generate comprehensive handover documentation that ensures **100% work continuit
 
 ### Implementation
 - **Package**: `handoff` at `P:/packages/handoff`
-- **CLI Entry Point**: `handoff` command (installed via package)
-- **Storage**: `P:/.claude/state/task_tracker/` (via handoff package)
-- **Automatic**: PreCompact hooks invoke handoff capture automatically
-- **Manual**: `handoff` CLI for on-demand handoff generation
+- **Hooks**: PreCompact handoff capture (automatic)
+- **Skill**: Claude Code skill integration via `skill/SKILL.md`
+- **Storage**: `P:/.claude/state/task_tracker/`
 
-### Consolidation (2026-02-28)
+### Hook-Only Architecture
 
-The HOD skill has been consolidated into the handoff package to achieve **fail-fast** behavior and eliminate cohesion violations:
+The handoff package uses automatic capture via PreCompact hooks:
 
-| Feature | Handoff Package | CLI (`handoff`) |
-|---------|----------------|-----------------|
-| Automatic capture | ✅ PreCompact hook | ❌ Manual only |
-| Quality scoring | ✅ Implemented | ✅ Displays |
-| Bridge tokens | ✅ Implemented | ✅ Shows in output |
-| Markdown output | ❌ | ✅ |
-| JSON output | ✅ | ✅ |
-| Cleanup | ❌ | ✅ --cleanup mode |
+| Feature | Implementation | Trigger |
+|---------|---------------|---------|
+| Automatic capture | PreCompact hook | Before /compact |
+| Handoff storage | JSON files | Automatic |
+| Quality scoring | Built-in algorithm | Automatic |
+| Bridge tokens | Embedded in decisions | Automatic |
 
-**Rationale**: The HOD skill is a thin wrapper that cannot exist without the handoff package. Consolidating both into a single package provides:
-- **Fail-fast errors**: ImportError detected at package import time
-- **Single installation**: `pip install handoff` provides both hooks and CLI
-- **Reduced coupling**: No symlink maintenance or separate skill directory
+**No manual CLI needed** - handoff capture is fully automated.
 
 ## Your Workflow
 
