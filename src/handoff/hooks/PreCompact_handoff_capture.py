@@ -304,7 +304,8 @@ class PreCompactHandoffCapture:
             tools = load_tool_sequence()
             # Only carry forward observation-relevant entries
             return tools[-30:]  # Last 30 entries max
-        except Exception:
+        except Exception as e:
+            logger.debug(f"[PreCompact] Could not extract recent errors: {e}")
             return []
 
     def _extract_file_modifications(self) -> list[str]:
