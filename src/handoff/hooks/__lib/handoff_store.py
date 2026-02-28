@@ -174,7 +174,8 @@ def atomic_write_with_validation(
     # Log warning if data was truncated
     if truncated:
         print(
-            f"[HandoffStore] Warning: Handoff data truncated from {original_size} to {final_size} bytes"
+            f"[HandoffStore] Warning: Handoff data truncated from "
+            f"{original_size} to {final_size} bytes"
         )
 
     # Create temp file and write validated data
