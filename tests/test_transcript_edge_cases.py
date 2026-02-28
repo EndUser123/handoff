@@ -6,7 +6,6 @@ This test expects the function to handle various malformed or empty message
 structures gracefully without raising errors.
 """
 
-import pytest
 
 # This import will fail until the function is implemented
 # This is expected in the RED phase of TDD
