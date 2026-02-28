@@ -38,8 +38,6 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import TypeAlias
 
-from handoff.config import utcnow_iso
-
 _hooks_project_root = Path(__file__).resolve().parent.parent.parent.parent.parent.parent  # Up to packages/handoff
 claude_root = _hooks_project_root.parent  # Up to P:/
 hooks_dir = claude_root / ".claude" / "hooks"
@@ -51,6 +49,9 @@ TaskMetadataDict: TypeAlias = dict[str, str]
 
 # Import terminal detection for multi-terminal isolation
 from terminal_detection import detect_terminal_id
+
+# Import utility functions
+from handoff.config import utcnow_iso
 
 logger = logging.getLogger(__name__)
 
