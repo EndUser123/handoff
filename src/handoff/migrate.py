@@ -30,6 +30,8 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
+from handoff.config import utcnow_iso
+
 # Add hooks directory to path for terminal_detection import
 _hooks_path = Path(__file__).parent.parent / "hooks"
 if str(_hooks_path) not in sys.path:
