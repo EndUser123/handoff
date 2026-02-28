@@ -605,11 +605,12 @@ def _cleanup_active_command_file(terminal_id: str) -> None:
         terminal_id: Terminal identifier (unused, filename has embedded IDs)
     """
     try:
+        from handoff.config import load_json_file
         current_session_file = Path("P:/.claude/current_session.json")
-        if not current_session_file.exists():
+        session_data = load_json_file(current_session_file)
+        if not session_data:
             return
 
-        session_data = json.loads(current_session_file.read_text())
         session_id = session_data.get("session_id")
         if not session_id:
             return
