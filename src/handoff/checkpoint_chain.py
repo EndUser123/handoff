@@ -87,6 +87,7 @@ class CheckpointChain:
         self._cache: dict[str, list[HandoffCheckpointRef]] = {}
         self._cache_mtime: float = 0.0
         self._migration_cache: dict[str, dict[str, Any]] = {}
+        self._migration_lock = __import__('threading').Lock()
 
     def _get_task_file_path(self) -> Path:
         """Get the task file path for this terminal.
