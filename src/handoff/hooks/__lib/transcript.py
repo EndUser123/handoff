@@ -434,7 +434,7 @@ class TranscriptParser:
                 self._parsed_entries_cache = []
                 return self._parsed_entries_cache
         except OSError as e:
-            print(f"[TranscriptParser] Warning: Could not check file size: {e}")
+            logger.warning(f"[TranscriptParser] Could not check file size: {e}")
             self._parsed_entries_cache = []
             return self._parsed_entries_cache
 
