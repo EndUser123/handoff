@@ -108,7 +108,8 @@ def atomic_write_with_retry(temp_path: str, target_path: str | Path, max_retries
         except PermissionError:
             # Windows-specific file locking error
             logger.warning(
-                f"[HandoffStore] Atomic write PermissionError (attempt {attempt + 1}/{max_retries}): {target_path_str}"
+                f"[HandoffStore] Atomic write PermissionError "
+                f"(attempt {attempt + 1}/{max_retries}): {target_path_str}"
             )
             if attempt == max_retries - 1:
                 # Last attempt failed, clean up and raise
