@@ -103,6 +103,6 @@ class HandoverBuilder:
                         )
 
         except Exception as e:
-            print(f"[HandoverBuilder] Warning: Handover generation failed: {e}")
+            logger.error(f"[HandoverBuilder] Handover generation failed: {e}")
 
         return handover
