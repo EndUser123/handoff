@@ -288,11 +288,12 @@ def _write_task_file_atomic(
             f.write(json.dumps(task_data, indent=2))
         temp_path.replace(task_file_path)
         return True
-    except OSError:
+    except OSError as replace_error:
+        logger.debug(f"[Migrate] Could not replace task file: {replace_error}")
         try:
             temp_path.unlink()
-        except OSError:
-            pass
+        except OSError as unlink_error:
+            logger.debug(f"[Migrate] Could not unlink temp file: {unlink_error}")
         raise
 
 
