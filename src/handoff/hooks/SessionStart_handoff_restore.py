@@ -54,6 +54,7 @@ except ImportError:
 try:
     from __lib.hook_base import hook_main
 except ImportError:
+    logger.debug("[SessionStart] hook_base module not available, using no-op decorator")
     from typing import Any, Callable
 
     def hook_main(func: Callable[..., Any]) -> Callable[..., Any]:
