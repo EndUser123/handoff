@@ -743,13 +743,14 @@ class HandoffStore:
                     pass
                 raise write_error
         finally:
-            # Issue #6: Always release lock file, even on error
-            if lock_fd is not None:
+            # Issue #6: Only release lock file if WE acquired it
+            # Important: Don't delete another process's lock file!
+            if lock_acquired and lock_fd is not None:
                 try:
                     os.close(lock_fd)
                 except OSError:
                     pass
-            try:
-                lock_file_path.unlink(missing_ok=True)
-            except OSError:
-                pass
+                try:
+                    lock_file_path.unlink(missing_ok=True)
+                except OSError:
+                    pass
