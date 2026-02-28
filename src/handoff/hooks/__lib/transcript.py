@@ -959,10 +959,11 @@ class TranscriptParser:
                     if any(keyword in content_text for keyword in visual_keywords):
                         # Get full text for context
                         full_text = self._extract_text_from_entry(entry)
+                        from handoff.config import utcnow_iso
                         return {
                             "description": f"User referenced visual content: {full_text[:200]}",
                             "type": "visual_reference",
-                            "timestamp": entry.get("timestamp", datetime.now(UTC).isoformat()),
+                            "timestamp": entry.get("timestamp", utcnow_iso()),
                         }
 
         except Exception as e:
