@@ -196,7 +196,7 @@ class TaskIdentityManager:
                         if timestamp.tzinfo is None:
                             timestamp = timestamp.replace(tzinfo=UTC)
                         age = (datetime.now(UTC) - timestamp).total_seconds()
-                        if age < 300:  # 5 minutes
+                        if age < COMPACT_METADATA_FRESHNESS_SECONDS:  # 5 minutes
                             return task
         except (json.JSONDecodeError, ValueError, OSError) as e:
             logger.error(f"[TaskID] Error reading metadata: {e}")
