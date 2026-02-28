@@ -6,8 +6,11 @@ from session context including decisions, patterns, and objectives.
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from ..PreCompact_handoff_capture import TranscriptParser
