@@ -120,10 +120,10 @@ class PendingOperation:
             raise ValueError("target cannot contain null bytes")
 
         # Check length (filesystem limit)
-        # Most filesystems have a 255-character limit for path components (POSIX NAME_MAX)
-        # Windows has similar limits. Exceeding this may cause silent failures or truncation.
-        if len(target) > 255:
-            raise ValueError("target cannot exceed 255 characters")
+        if len(target) > self.MAX_TARGET_LENGTH:
+            raise ValueError(
+                f"target cannot exceed {self.MAX_TARGET_LENGTH} characters"
+            )
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dict for JSON serialization.
