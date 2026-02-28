@@ -284,6 +284,70 @@ data_dict = checkpoint.to_dict()
 restored = HandoffCheckpoint.from_dict(data_dict)
 ```
 
+### Migration Utilities
+
+Backward compatibility support for legacy handoffs:
+
+```python
+from handoff.migrate import migrate_checkpoint_chain_fields, migrate_old_handoff_to_checkpoint
+
+# Migrate old handoff to new checkpoint format
+new_checkpoint = migrate_old_handoff_to_checkpoint(old_handoff_data)
+
+# Add checkpoint chain fields to existing handoff
+updated = migrate_checkpoint_chain_fields(handoff_data)
+```
+
+### Bridge Tokens
+
+Cross-session continuity tokens for tracking decisions across compactions:
+
+```python
+from handoff.hooks.__lib.bridge_tokens import generate_bridge_token, extract_bridge_tokens
+
+# Generate a bridge token for a decision
+token = generate_bridge_token(
+    topic="authentication",
+    timestamp="2026-02-12T14:05:30Z"
+)
+# Returns: "BRIDGE_20260212-140530_AUTHENTICATION"
+
+# Extract all bridge tokens from handoff data
+tokens = extract_bridge_tokens(handoff_data)
+```
+
+### Task Identity Manager
+
+5-source resilience chain for task identification after compaction:
+
+```python
+from handoff.hooks.__lib.task_identity_manager import TaskIdentityManager
+
+manager = TaskIdentityManager(project_root=Path("P:/"))
+
+# Recover task identity from multiple sources
+# 1. Environment variable (TASK_NAME)
+# 2. Session file
+# 3. Compact metadata
+# 4. Git worktree mapping
+# 5. User confirmation
+metadata = manager.recover_task_identity()
+```
+
+### Quality Assessment
+
+Handoff quality scoring and validation:
+
+```python
+from handoff.migrate import calculate_quality_score, validate_handoff_size
+
+# Calculate handoff quality score (0.0-1.0)
+score = calculate_quality_score(handoff_data)
+
+# Validate handoff size limits
+validation = validate_handoff_size(handoff_data)
+```
+
 ## Claude Code Hook Integration
 
 The handoff system integrates with Claude Code via two hooks:
