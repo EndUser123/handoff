@@ -318,10 +318,15 @@ class TestTaskIdentityManagerNoneInputs:
         When: get_current_task is called (which checks transient task)
         Then: Should continue to next source without crashing
         """
-        # Arrange: Create corrupted active command file
+        # Arrange: Create corrupted active command file and clear all session data
         active_cmd_file = manager.project_root / ".claude" / "active_command.json"
         active_cmd_file.parent.mkdir(parents=True, exist_ok=True)
         active_cmd_file.write_text("{ corrupted json }")
+
+        # Also clear any session files that might interfere
+        session_file = Path("P:/.claude/state/task-identity") / f"session-task-{manager.terminal_id}.json"
+        if session_file.exists():
+            session_file.unlink()
 
         with patch.dict('os.environ', {}, clear=True):
             # Act: Try to get current task
