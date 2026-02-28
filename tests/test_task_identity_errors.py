@@ -126,14 +126,14 @@ class TestTaskIdentityManagerMalformedIDs:
 
         Given: Task name contains only whitespace
         When: set_current_task is called with "   "
-        Then: Should handle gracefully without crashing
+        Then: Should reject whitespace-only task names
         """
         # Arrange: Whitespace task name
         # Act: Try to set whitespace task
         result = manager.set_current_task("   ")
 
-        # Assert: Should handle without crashing
-        assert isinstance(result, bool), "Should return boolean without crashing"
+        # Assert: Should reject whitespace (current implementation accepts it - this test FAILS)
+        assert result is False, "Should reject whitespace-only task name"
 
     def test_set_current_task_with_special_characters(self, manager):
         """Test set_current_task with special characters in task name.
