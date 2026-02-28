@@ -242,7 +242,6 @@ def migrate_handoffs(
         - Validates checksums before migration
         - Logs progress to stdout
     """
-    from handoff.config import utcnow_iso
 
     results = {"migrated": 0, "failed": 0, "skipped": 0, "errors": []}
 
@@ -293,7 +292,7 @@ def migrate_handoffs(
                 task_data = {
                     "terminal_id": terminal_id,
                     "tasks": {},
-                    "last_update": datetime.now(UTC).isoformat()
+                    "last_update": utcnow_iso()
                 }
         else:
             # File doesn't exist, create new structure
