@@ -1085,7 +1085,8 @@ class PreCompactHandoffCapture:
                     last_user_message = self.parser.extract_last_user_message()
                     if last_user_message:
                         print(
-                            f"[PreCompact] Using last_user_message from TranscriptParser: {last_user_message[:50]}..."
+                            f"[PreCompact] Using last_user_message from TranscriptParser: "
+                            f"{last_user_message[:50]}..."
                         )
 
                 # Build full handoff metadata for task storage
