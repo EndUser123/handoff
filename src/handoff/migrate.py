@@ -299,7 +299,7 @@ def migrate_handoffs(
             task_data = {
                 "terminal_id": terminal_id,
                 "tasks": {},
-                "last_update": datetime.now(UTC).isoformat()
+                "last_update": utcnow_iso()
             }
 
         # Add migrated task
