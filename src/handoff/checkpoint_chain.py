@@ -22,7 +22,7 @@ from typing import Any
 from handoff.migrate import migrate_checkpoint_chain_fields
 
 
-@dataclass
+@dataclass(slots=True)
 class HandoffCheckpointRef:
     """Reference to a handoff checkpoint.
 
