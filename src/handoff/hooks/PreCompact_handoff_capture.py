@@ -1054,7 +1054,8 @@ class PreCompactHandoffCapture:
                 last_user_message = self._load_active_command_file()
                 if last_user_message:
                     print(
-                        f"[PreCompact] Using last_user_message from active_command file: {last_user_message[:50]}..."
+                        f"[PreCompact] Using last_user_message from active_command file: "
+                        f"{last_user_message[:50]}..."
                     )
 
                 # Option 2: Use blocker.description (contains "User's last question: ...")
