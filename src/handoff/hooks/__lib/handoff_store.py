@@ -102,7 +102,7 @@ def atomic_write_with_retry(
             os.replace(temp_path, target_path_str)
             # Success - break out of retry loop
             return
-        except PermissionError as e:
+        except PermissionError:
             # Windows-specific file locking error
             logger.warning(f"[HandoffStore] Atomic write PermissionError (attempt {attempt + 1}/{max_retries}): {target_path_str}")
             if attempt == max_retries - 1:
@@ -179,8 +179,9 @@ def atomic_write_with_validation(
         # Use atomic_write_with_retry for actual write
         atomic_write_with_retry(temp_path, target_path_str, max_retries)
 
-    except OSError:
+    except OSError as e:
         # Clean up temp file if write fails
+        logger.error(f"[HandoffStore] Failed to write validated data to {target_path_str}: {e}")
         try:
             os.unlink(temp_path)
         except OSError:
