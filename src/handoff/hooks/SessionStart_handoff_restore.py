@@ -585,11 +585,12 @@ def _cleanup_active_session_task(terminal_id: str) -> None:
                 with os.fdopen(fd, "w", encoding="utf-8") as f:
                     json.dump(task_data, f, indent=2)
                 os.replace(temp_path, str(task_file_path))
-            except OSError:
+            except OSError as replace_error:
+                logger.debug(f"[SessionStart] Could not replace task file: {replace_error}")
                 try:
                     os.unlink(temp_path)
-                except OSError:
-                    pass
+                except OSError as unlink_error:
+                    logger.debug(f"[SessionStart] Could not unlink temp file: {unlink_error}")
     except (json.JSONDecodeError, OSError) as e:
         logger.debug(f"[SessionStart] Could not load handoff data: {e}")
 
