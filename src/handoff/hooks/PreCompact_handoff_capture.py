@@ -368,7 +368,8 @@ class PreCompactHandoffCapture:
                         if verification_pattern.search(content):
                             verification_found = True
 
-            except (json.JSONDecodeError, KeyError, TypeError):
+            except (json.JSONDecodeError, KeyError, TypeError) as e:
+                logger.debug(f"[PreCompact] Skipping invalid checkpoint entry: {e}")
                 continue
 
         return {
@@ -541,7 +542,8 @@ class PreCompactHandoffCapture:
                 for block in content:
                     if isinstance(block, dict) and block.get("type") == "tool_use":
                         tool_name_map[block.get("id", "")] = block.get("name", "unknown")
-            except (json.JSONDecodeError, KeyError, TypeError):
+            except (json.JSONDecodeError, KeyError, TypeError) as e:
+                logger.debug(f"[PreCompact] Skipping invalid checkpoint entry: {e}")
                 continue
         return tool_name_map
 
@@ -624,7 +626,8 @@ class PreCompactHandoffCapture:
                     if error:
                         errors.append(error)
 
-            except (json.JSONDecodeError, KeyError, TypeError):
+            except (json.JSONDecodeError, KeyError, TypeError) as e:
+                logger.debug(f"[PreCompact] Skipping invalid checkpoint entry: {e}")
                 continue
 
         return errors[-max_errors:]
@@ -675,7 +678,8 @@ class PreCompactHandoffCapture:
                     text = " ".join(text_parts).strip()
                     if text and len(text) > 5:
                         messages.append({"role": "assistant", "text": text[:800]})
-            except (json.JSONDecodeError, KeyError, TypeError):
+            except (json.JSONDecodeError, KeyError, TypeError) as e:
+                logger.debug(f"[PreCompact] Skipping invalid checkpoint entry: {e}")
                 continue
         # Return only the last max_pairs*2 messages (pairs = user+assistant)
         return messages[-(max_pairs * 2):]
@@ -721,7 +725,8 @@ class PreCompactHandoffCapture:
                         snippet = content_str[:200].replace("\n", " ") if content_str else ""
                         if file_path:
                             edits.append({"tool": "Write", "file": file_path, "snippet": snippet})
-            except (json.JSONDecodeError, KeyError, TypeError):
+            except (json.JSONDecodeError, KeyError, TypeError) as e:
+                logger.debug(f"[PreCompact] Skipping invalid checkpoint entry: {e}")
                 continue
         return edits[-max_edits:]
 
