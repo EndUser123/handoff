@@ -219,6 +219,23 @@ def _build_restoration_prompt(handoff_data: dict[str, Any]) -> str:
             "",
         ])
 
+    # Add recent modifications (from transcript parsing)
+    modifications = handoff_data.get("modifications", [])
+    if modifications:
+        lines.extend([
+            "**Recent Modifications:**",
+        ])
+        for mod in modifications[:5]:  # Limit to 5 most recent
+            file_path = mod.get("file", "unknown")
+            line_num = mod.get("line", "?")
+            reason = mod.get("reason", "Edit operation")
+            lines.append(f"  - {file_path}:{line_num}")
+            if reason and reason != "Edit operation":
+                lines.append(f"    {reason}")
+        if len(modifications) > 5:
+            lines.append(f"  ... and {len(modifications) - 5} more modifications")
+        lines.append("")
+
     # Add handover summary
     handover = handoff_data.get("handover")
     if handover and isinstance(handover, dict):
