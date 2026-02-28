@@ -101,7 +101,8 @@ def validate_bridge_token(token: str) -> bool:
     # Check date-time format
     try:
         datetime.strptime(parts[1], "%Y%m%d-%H%M%S")
-    except ValueError:
+    except ValueError as e:
+        logger.debug(f"[BridgeTokens] Invalid bridge token format: {e}")
         return False
 
     return True
