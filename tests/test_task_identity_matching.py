@@ -14,8 +14,6 @@ import tempfile
 from pathlib import Path
 from uuid import uuid4
 
-import pytest
-
 # Add handoff package to path
 HANDOFF_PACKAGE = Path(__file__).parent.parent.parent / "src"
 if str(HANDOFF_PACKAGE) not in globals():
@@ -198,7 +196,7 @@ class TestTaskIdentityMatching:
             )
 
             # Pre-create compact metadata file with recent timestamp
-            from datetime import datetime, UTC
+            from datetime import UTC, datetime
 
             metadata_data = {
                 "task_name": task_name,

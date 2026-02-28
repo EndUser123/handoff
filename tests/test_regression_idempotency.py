@@ -16,8 +16,8 @@ from pathlib import Path
 
 # Add handoff package to path
 HANDOFF_PACKAGE = Path(__file__).parent.parent / "src"
-if str(HANDOFF_PACKAGE) not in globals():
-    import sys
+import sys
+if str(HANDOFF_PACKAGE) not in sys.path:
     sys.path.insert(0, str(HANDOFF_PACKAGE))
 
 from handoff.migrate import (
