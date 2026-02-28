@@ -331,9 +331,9 @@ python -m handoff.cli --cleanup  # Show old handoffs (dry-run)
 
 **Cleanup options**:
 ```bash
-# Manual cleanup of old handovers
-handoff --cleanup          # Show what would be deleted
-handoff --cleanup-force    # Delete files older than 90 days
+# Manual cleanup (for debugging)
+python -m handoff.cli --cleanup      # Show what would be deleted
+python -m handoff.cli --cleanup-force  # Delete files older than 90 days
 
 # Custom retention period
 export HANDOFF_RETENTION_DAYS=30  # Default: 90
