@@ -670,13 +670,33 @@ def _cleanup_active_session_task(source_terminal_id: str) -> None:
                 json.dump(task_data, f, indent=2)
             os.replace(temp_path, str(task_file_path))
         except OSError as replace_error:
-            logger.debug(f"[SessionStart] Could not replace task file: {replace_error}")
+            # Issue #9: Log cleanup failures at ERROR level and add retry mechanism
+            logger.error(f"[SessionStart] Failed to clean up active_session: {replace_error}")
+            # Mark task for cleanup with timestamp (next SessionStart will retry)
+            if "tasks" in task_data:
+                for task_name in ("active_session", "continue_session"):
+                    if task_name in task_data["tasks"]:
+                        task_data["tasks"][task_name]["_cleanup_failed"] = True
+                        task_data["tasks"][task_name]["_cleanup_attempted_at"] = (
+                            task_data["tasks"][task_name].get("created_at", "")
+                        )
+                # Write back the marked task for later cleanup
+                try:
+                    with os.fdopen(fd, "w", encoding="utf-8") as f:
+                        json.dump(task_data, f, indent=2)
+                    os.replace(temp_path, str(task_file_path))
+                    logger.info(f"[SessionStart] Marked task for cleanup retry: {task_file_path.name}")
+                except OSError:
+                    try:
+                        os.unlink(temp_path)
+                    except OSError:
+                        pass
             try:
                 os.unlink(temp_path)
             except OSError as unlink_error:
                 logger.debug(f"[SessionStart] Could not unlink temp file: {unlink_error}")
     except (json.JSONDecodeError, OSError) as e:
-        logger.debug(f"[SessionStart] Could not load handoff data: {e}")
+        logger.error(f"[SessionStart] Could not load handoff data for cleanup: {e}")
 
 
 def _safe_id(value: str) -> str:
