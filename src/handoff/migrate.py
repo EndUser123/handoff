@@ -217,6 +217,80 @@ def handoff_to_task(handoff_data: dict[str, Any], terminal_id: str) -> dict[str,
     }
 
 
+def _create_task_file_structure(terminal_id: str) -> dict[str, Any]:
+    """Create new task file structure.
+
+    Args:
+        terminal_id: Terminal identifier
+
+    Returns:
+        Dict with terminal_id, empty tasks dict, and last_update timestamp
+    """
+    from handoff.config import utcnow_iso
+    return {
+        "terminal_id": terminal_id,
+        "tasks": {},
+        "last_update": utcnow_iso()
+    }
+
+
+def _load_or_create_task_file(
+    task_file_path: Path,
+    terminal_id: str
+) -> dict[str, Any]:
+    """Load existing task file or create new structure.
+
+    Args:
+        task_file_path: Path to task file
+        terminal_id: Terminal identifier
+
+    Returns:
+        Task data dict
+    """
+    from handoff.config import utcnow_iso
+
+    if task_file_path.exists():
+        try:
+            with open(task_file_path, encoding="utf-8") as f:
+                return json.load(f)
+        except (json.JSONDecodeError, OSError, ValueError):
+            # File exists but is corrupt, create new structure
+            return _create_task_file_structure(terminal_id)
+    else:
+        # File doesn't exist, create new structure
+        return _create_task_file_structure(terminal_id)
+
+
+def _write_task_file_atomic(
+    task_file_path: Path,
+    task_data: dict[str, Any]
+) -> bool:
+    """Write task file using atomic write (temp file + rename).
+
+    Args:
+        task_file_path: Path to task file
+        task_data: Task data to write
+
+    Returns:
+        True if successful, raises OSError if failed
+    """
+    fd, temp_path_str = tempfile.mkstemp(
+        suffix=".tmp", dir=str(task_file_path.parent)
+    )
+    temp_path = Path(temp_path_str)
+    try:
+        with open(fd, "w", encoding="utf-8") as f:
+            f.write(json.dumps(task_data, indent=2))
+        temp_path.replace(task_file_path)
+        return True
+    except OSError:
+        try:
+            temp_path.unlink()
+        except OSError:
+            pass
+        raise
+
+
 def migrate_handoffs(
     handoff_dir: Path,
     task_tracker_dir: Path,
@@ -244,8 +318,6 @@ def migrate_handoffs(
         - Validates checksums before migration
         - Logs progress to stdout
     """
-    from handoff.config import utcnow_iso
-
     results = {"migrated": 0, "failed": 0, "skipped": 0, "errors": []}
 
     # Auto-detect terminal ID if not provided
@@ -286,24 +358,7 @@ def migrate_handoffs(
         task_tracker_dir.mkdir(parents=True, exist_ok=True)
 
         # Load or create task file
-        if task_file_path.exists():
-            try:
-                with open(task_file_path, encoding="utf-8") as f:
-                    task_data = json.load(f)
-            except (json.JSONDecodeError, OSError, ValueError):
-                # File exists but is corrupt, create new structure
-                task_data = {
-                    "terminal_id": terminal_id,
-                    "tasks": {},
-                    "last_update": utcnow_iso()
-                }
-        else:
-            # File doesn't exist, create new structure
-            task_data = {
-                "terminal_id": terminal_id,
-                "tasks": {},
-                "last_update": utcnow_iso()
-            }
+        task_data = _load_or_create_task_file(task_file_path, terminal_id)
 
         # Add migrated task
         task_id = f"migrated_{json_path.stem}"
@@ -316,24 +371,12 @@ def migrate_handoffs(
             continue
 
         task_data["tasks"][task_id] = task
+        from handoff.config import utcnow_iso
         task_data["last_update"] = utcnow_iso()
 
-        # Write task file with atomic write (mkstemp avoids concurrent migration races)
+        # Write task file with atomic write
         try:
-            fd, temp_path_str = tempfile.mkstemp(
-                suffix=".tmp", dir=str(task_file_path.parent)
-            )
-            temp_path = Path(temp_path_str)
-            try:
-                with open(fd, "w", encoding="utf-8") as f:
-                    f.write(json.dumps(task_data, indent=2))
-                temp_path.replace(task_file_path)
-            except OSError:
-                try:
-                    temp_path.unlink()
-                except OSError:
-                    pass
-                raise
+            _write_task_file_atomic(task_file_path, task_data)
             print(f"Migrated: {json_path.name} -> {task_id}")
             results["migrated"] += 1
         except OSError as e:
