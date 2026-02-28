@@ -608,6 +608,7 @@ class HandoffStore:
             )
             print(f"[HandoffStore] continue_session task added to {task_file_path.name}")
         except OSError as write_error:
+            logger.error(f"[HandoffStore] Failed to write task file {task_file_path}: {write_error}")
             try:
                 os.unlink(temp_path)
             except OSError:
