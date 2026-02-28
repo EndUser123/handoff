@@ -387,10 +387,9 @@ class TaskIdentityManager:
             return False
 
         try:
-            from handoff.config import utcnow_iso
+            from handoff.config import utcnow_iso, save_json_file
 
             active_cmd_file = self.project_root / ".claude" / "active_command.json"
-            active_cmd_file.parent.mkdir(parents=True, exist_ok=True)
 
             command_data = {
                 "command": command,
@@ -400,7 +399,7 @@ class TaskIdentityManager:
                 "terminal_id": self.terminal_id
             }
 
-            active_cmd_file.write_text(json.dumps(command_data, indent=2))
+            save_json_file(active_cmd_file, command_data)
             logger.info(f"[TaskID] Recorded active command: {command} (phase: {phase})")
             return True
 
