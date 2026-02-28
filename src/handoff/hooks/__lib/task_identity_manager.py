@@ -51,7 +51,6 @@ TaskMetadataDict: TypeAlias = dict[str, str]
 from terminal_detection import detect_terminal_id
 
 # Import utility functions
-from handoff.config import utcnow_iso
 
 logger = logging.getLogger(__name__)
 
@@ -266,6 +265,8 @@ class TaskIdentityManager:
             return False
 
         try:
+            from handoff.config import utcnow_iso
+
             # Set terminal-scoped environment variable (prevents cross-terminal bleeding)
             env_var_name = f"TASK_NAME_{self.terminal_id}"
             os.environ[env_var_name] = task_name
@@ -275,7 +276,7 @@ class TaskIdentityManager:
                 "task_name": task_name,
                 "task_id": f"task_{task_name.lower()}",
                 "terminal_id": self.terminal_id,
-                "started": datetime.now(UTC).isoformat(),
+                "started": utcnow_iso(),
                 "checksum": hashlib.md5(task_name.encode()).hexdigest()
             }
 
