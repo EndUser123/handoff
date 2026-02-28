@@ -551,7 +551,7 @@ class HandoffStore:
             return {
                 "terminal_id": self.terminal_id,
                 "tasks": {},
-                "last_update": datetime.now(UTC).isoformat(),
+                "last_update": utcnow_iso(),
             }
 
         if task_file_path.exists():
