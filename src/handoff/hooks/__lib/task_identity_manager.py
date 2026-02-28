@@ -183,22 +183,20 @@ class TaskIdentityManager:
 
     def _from_compact_metadata(self) -> str | None:
         """Read task from terminal-scoped compact metadata (last-compact-metadata-{terminal_id}.json)."""
-        try:
-            if self.metadata_file.exists():
-                data = json.loads(self.metadata_file.read_text())
-                task = data.get("task_name")
-                if task:
-                    # Verify metadata is recent (within 5 minutes)
-                    timestamp_str = data.get("timestamp", "")
-                    if timestamp_str:
-                        timestamp = datetime.fromisoformat(timestamp_str)
-                        if timestamp.tzinfo is None:
-                            timestamp = timestamp.replace(tzinfo=UTC)
-                        age = (datetime.now(UTC) - timestamp).total_seconds()
-                        if age < COMPACT_METADATA_FRESHNESS_SECONDS:  # 5 minutes
-                            return task
-        except (json.JSONDecodeError, ValueError, OSError) as e:
-            logger.error(f"[TaskID] Error reading metadata: {e}")
+        from handoff.config import load_json_file
+        data = load_json_file(self.metadata_file)
+        if data:
+            task = data.get("task_name")
+            if task:
+                # Verify metadata is recent (within 5 minutes)
+                timestamp_str = data.get("timestamp", "")
+                if timestamp_str:
+                    timestamp = datetime.fromisoformat(timestamp_str)
+                    if timestamp.tzinfo is None:
+                        timestamp = timestamp.replace(tzinfo=UTC)
+                    age = (datetime.now(UTC) - timestamp).total_seconds()
+                    if age < COMPACT_METADATA_FRESHNESS_SECONDS:  # 5 minutes
+                        return task
         return None
 
     def _from_git_worktree(self) -> str | None:
