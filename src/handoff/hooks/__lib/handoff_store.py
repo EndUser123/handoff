@@ -195,6 +195,94 @@ def atomic_write_with_validation(
     }
 
 
+def _truncate_text_field(text: str, max_length: int) -> str:
+    """Truncate text field with truncation marker.
+
+    Args:
+        text: Text to truncate
+        max_length: Maximum length
+
+    Returns:
+        Truncated text with marker, or original if under limit
+    """
+    if len(text) > max_length:
+        return text[:max_length - 50] + "\n\n...[truncated]"
+    return text
+
+
+def _truncate_list_with_marker(items: list, max_items: int) -> list:
+    """Truncate list with "and N more" marker.
+
+    Args:
+        items: List to truncate
+        max_items: Maximum items to keep
+
+    Returns:
+        Truncated list with marker, or original if under limit
+    """
+    if len(items) > max_items:
+        truncated = items[:max_items]
+        truncated.append(f"...and {len(items) - max_items} more")
+        return truncated
+    return items
+
+
+def _truncate_list_keep_recent(items: list, max_items: int) -> list:
+    """Truncate list keeping most recent items.
+
+    Args:
+        items: List to truncate
+        max_items: Maximum items to keep (from end)
+
+    Returns:
+        Truncated list with recent items, or original if under limit
+    """
+    if len(items) > max_items:
+        return items[-max_items:]
+    return items
+
+
+def _truncate_handover_section(handover: dict[str, Any]) -> dict[str, Any]:
+    """Truncate handover decisions and patterns.
+
+    Args:
+        handover: Handover dict to truncate
+
+    Returns:
+        Handover dict with truncated lists
+    """
+    result = handover.copy()
+
+    if isinstance(result.get("decisions"), list) and len(result["decisions"]) > MAX_HANDOVER_DECISIONS:
+        result["decisions"] = result["decisions"][:MAX_HANDOVER_DECISIONS]
+
+    if isinstance(result.get("patterns_learned"), list) and len(result["patterns_learned"]) > MAX_HANDOVER_PATTERNS:
+        result["patterns_learned"] = result["patterns_learned"][:MAX_HANDOVER_PATTERNS]
+
+    return result
+
+
+def _apply_last_resort_truncation(validated: dict[str, Any]) -> dict[str, Any]:
+    """Apply last-resort truncation if size still exceeds limit.
+
+    Args:
+        validated: Validated handoff data
+
+    Returns:
+        Handoff data with task_aware fields truncated
+    """
+    task_aware = validated.get("task_aware")
+    if isinstance(task_aware, dict):
+        # Remove some verbose fields to reduce size
+        for field in ["REASONS", "CONTEXT_FILES", "KNOWN_RISKS"]:
+            if field in task_aware and task_aware[field]:
+                task_aware[field] = []
+        validated["task_aware"] = task_aware
+        print("[HandoffStore] Truncated task_aware fields to reduce size")
+
+    return validated
+
+
 def _validate_handoff_data_size(handoff_data: dict[str, Any]) -> dict[str, Any]:
     """Validate and truncate handoff data to enforce size limits.
 
@@ -215,56 +303,33 @@ def _validate_handoff_data_size(handoff_data: dict[str, Any]) -> dict[str, Any]:
     """
     validated = handoff_data.copy()
 
-    # Truncate next_steps to 10,000 characters
+    # Truncate next_steps to max length
     next_steps = validated.get("next_steps", "")
-    if isinstance(next_steps, str) and len(next_steps) > MAX_NEXT_STEPS_LENGTH:
-        validated["next_steps"] = next_steps[:MAX_NEXT_STEPS_LENGTH - 50] + "\n\n...[truncated]"
+    if isinstance(next_steps, str):
+        validated["next_steps"] = _truncate_text_field(next_steps, MAX_NEXT_STEPS_LENGTH)
 
-    # Truncate active_files to 100 items
-    active_files = validated.get("active_files", [])
-    if isinstance(active_files, list) and len(active_files) > MAX_ACTIVE_FILES:
-        validated["active_files"] = active_files[:MAX_ACTIVE_FILES]
-        validated["active_files"].append(f"...and {len(active_files) - MAX_ACTIVE_FILES} more")
+    # Truncate active_files and files_modified lists
+    for field in ["active_files", "files_modified"]:
+        items = validated.get(field, [])
+        if isinstance(items, list):
+            validated[field] = _truncate_list_with_marker(items, MAX_ACTIVE_FILES)
 
-    # Truncate files_modified (alias for active_files in some contexts)
-    files_modified = validated.get("files_modified", [])
-    if isinstance(files_modified, list) and len(files_modified) > MAX_ACTIVE_FILES:
-        validated["files_modified"] = files_modified[:MAX_ACTIVE_FILES]
-        validated["files_modified"].append(f"...and {len(files_modified) - MAX_ACTIVE_FILES} more")
-
-    # Truncate modifications to 50 entries (keep most recent)
-    modifications = validated.get("modifications", [])
-    if isinstance(modifications, list) and len(modifications) > MAX_MODIFICATIONS:
-        validated["modifications"] = modifications[-MAX_MODIFICATIONS:]
-
-    # Limit recent_tools to 30 entries (keep most recent)
-    recent_tools = validated.get("recent_tools", [])
-    if isinstance(recent_tools, list) and len(recent_tools) > MAX_RECENT_TOOLS:
-        validated["recent_tools"] = recent_tools[-MAX_RECENT_TOOLS:]
+    # Truncate modifications and recent_tools (keep most recent)
+    for field, limit in [("modifications", MAX_MODIFICATIONS), ("recent_tools", MAX_RECENT_TOOLS)]:
+        items = validated.get(field, [])
+        if isinstance(items, list):
+            validated[field] = _truncate_list_keep_recent(items, limit)
 
     # Truncate handover patterns/decisions
     handover = validated.get("handover")
     if isinstance(handover, dict):
-        handover = handover.copy()
-        if isinstance(handover.get("decisions"), list) and len(handover["decisions"]) > MAX_HANDOVER_DECISIONS:
-            handover["decisions"] = handover["decisions"][:MAX_HANDOVER_DECISIONS]
-        if isinstance(handover.get("patterns_learned"), list) and len(handover["patterns_learned"]) > MAX_HANDOVER_PATTERNS:
-            handover["patterns_learned"] = handover["patterns_learned"][:MAX_HANDOVER_PATTERNS]
-        validated["handover"] = handover
+        validated["handover"] = _truncate_handover_section(handover)
 
     # Compute final size and warn if still exceeds 500 KB
     estimated_size = len(json.dumps(validated).encode('utf-8'))
     if estimated_size > MAX_HANDOFF_SIZE_BYTES:
         print(f"[HandoffStore] Warning: Handoff still exceeds {MAX_HANDOFF_SIZE_BYTES} bytes: {estimated_size} bytes")
-        # Last resort: truncate task_aware section if present
-        task_aware = validated.get("task_aware")
-        if isinstance(task_aware, dict):
-            # Remove some verbose fields to reduce size
-            for field in ["REASONS", "CONTEXT_FILES", "KNOWN_RISKS"]:
-                if field in task_aware and task_aware[field]:
-                    task_aware[field] = []
-            validated["task_aware"] = task_aware
-            print("[HandoffStore] Truncated task_aware fields to reduce size")
+        validated = _apply_last_resort_truncation(validated)
 
     return validated
 
