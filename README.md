@@ -5,7 +5,7 @@
 [![Python Version](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://github.com/csf-nip/handoff)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![CI](https://img.shields.io/badge/CI-passing-brightgreen.svg)](.github/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-21%20passing-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-217%20passing-brightgreen.svg)](tests/)
 [![Coverage](https://img.shields.io/badge/coverage-29.5%25-yellow.svg)](tests/)
 
 ## Quick Start
