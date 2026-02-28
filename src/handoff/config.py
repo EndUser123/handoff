@@ -132,11 +132,12 @@ def save_json_file(file_path: Path, data: dict[str, Any]) -> bool:
                 f.write(json.dumps(data, indent=2))
             Path(temp_path).replace(file_path)
             return True
-        except OSError:
+        except OSError as replace_error:
+            logger.debug(f"[Config] Could not replace target file, cleaning up: {replace_error}")
             try:
                 Path(temp_path).unlink()
-            except OSError:
-                pass
+            except OSError as unlink_error:
+                logger.debug(f"[Config] Could not unlink temp file: {unlink_error}")
             raise
     except (OSError, TypeError) as e:
         import logging
