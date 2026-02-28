@@ -247,7 +247,6 @@ def _load_or_create_task_file(
     Returns:
         Task data dict
     """
-    from handoff.config import utcnow_iso
 
     if task_file_path.exists():
         try:
@@ -452,6 +451,55 @@ def validate_handoff_size(handoff_data: dict[str, Any]) -> dict[str, Any]:
     return validated
 
 
+def _validate_checkpoint_chain_field_types(handoff_data: dict[str, Any]) -> None:
+    """Validate types of existing checkpoint chain fields.
+
+    Args:
+        handoff_data: Handoff dictionary to validate
+
+    Raises:
+        TypeError: If any existing field has wrong type
+    """
+    if "checkpoint_id" in handoff_data and not isinstance(handoff_data["checkpoint_id"], str):
+        raise TypeError("checkpoint_id must be str")
+
+    if "parent_checkpoint_id" in handoff_data:
+        if not isinstance(handoff_data["parent_checkpoint_id"], (str, type(None))):
+            raise TypeError("parent_checkpoint_id must be str or None")
+
+    if "chain_id" in handoff_data and not isinstance(handoff_data["chain_id"], str):
+        raise TypeError("chain_id must be str")
+
+
+def _add_missing_checkpoint_chain_fields(handoff_data: dict[str, Any]) -> None:
+    """Add missing checkpoint chain fields with defaults.
+
+    This modifies handoff_data in place.
+
+    Args:
+        handoff_data: Handoff dictionary to update
+    """
+    # Only add fields if they don't already exist (idempotent)
+    if "checkpoint_id" not in handoff_data:
+        handoff_data["checkpoint_id"] = str(uuid4())
+
+    if "parent_checkpoint_id" not in handoff_data:
+        # Old handoffs have no parent (treated as first in chain)
+        handoff_data["parent_checkpoint_id"] = None
+
+    if "chain_id" not in handoff_data:
+        # Generate new chain ID for migrated handoffs
+        handoff_data["chain_id"] = str(uuid4())
+
+    # Add transcript tracking fields for migrated handoffs
+    # Use 0 as default since we don't have exact historical data
+    if "transcript_offset" not in handoff_data:
+        handoff_data["transcript_offset"] = 0
+
+    if "transcript_entry_count" not in handoff_data:
+        handoff_data["transcript_entry_count"] = 0
+
+
 def migrate_checkpoint_chain_fields(handoff_data: dict[str, Any]) -> dict[str, Any]:
     """Migrate old handoff data to include checkpoint chain fields.
 
@@ -492,38 +540,11 @@ def migrate_checkpoint_chain_fields(handoff_data: dict[str, Any]) -> dict[str, A
     # Create a copy to avoid mutating original
     migrated = handoff_data.copy()
 
-    # Validate existing checkpoint_id type
-    if "checkpoint_id" in migrated and not isinstance(migrated["checkpoint_id"], str):
-        raise TypeError("checkpoint_id must be str")
+    # Validate existing field types
+    _validate_checkpoint_chain_field_types(migrated)
 
-    # Validate existing parent_checkpoint_id type
-    if "parent_checkpoint_id" in migrated:
-        if not isinstance(migrated["parent_checkpoint_id"], (str, type(None))):
-            raise TypeError("parent_checkpoint_id must be str or None")
-
-    # Validate existing chain_id type
-    if "chain_id" in migrated and not isinstance(migrated["chain_id"], str):
-        raise TypeError("chain_id must be str")
-
-    # Only add fields if they don't already exist (idempotent)
-    if "checkpoint_id" not in migrated:
-        migrated["checkpoint_id"] = str(uuid4())
-
-    if "parent_checkpoint_id" not in migrated:
-        # Old handoffs have no parent (treated as first in chain)
-        migrated["parent_checkpoint_id"] = None
-
-    if "chain_id" not in migrated:
-        # Generate new chain ID for migrated handoffs
-        migrated["chain_id"] = str(uuid4())
-
-    # Add transcript tracking fields for migrated handoffs
-    # Use 0 as default since we don't have exact historical data
-    if "transcript_offset" not in migrated:
-        migrated["transcript_offset"] = 0
-
-    if "transcript_entry_count" not in migrated:
-        migrated["transcript_entry_count"] = 0
+    # Add missing fields
+    _add_missing_checkpoint_chain_fields(migrated)
 
     return migrated
 
