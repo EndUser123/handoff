@@ -5,7 +5,7 @@ Tests invalid message handling - ensures the function gracefully skips invalid
 messages and continues processing valid ones.
 """
 
-
+from handoff.hooks.__lib.transcript import filter_valid_messages
 
 
 class TestFilterValidMessagesInvalidInput:
