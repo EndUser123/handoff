@@ -12,9 +12,9 @@ suggest:
   - /session-handoff
 ---
 
-# HOD - Enhanced Session Continuity and Handover System
+# Handoff - Enhanced Session Continuity and Handover System
 
-Research-backed handover documentation system for seamless LLM session continuity across compacts. **Now implemented as a CLI wrapper using the handoff package.**
+Research-backed handover documentation system for seamless LLM session continuity across compacts. **Automatic capture via PreCompact hooks, manual invocation available via `python -m handoff.cli`.**
 
 ## Purpose
 
