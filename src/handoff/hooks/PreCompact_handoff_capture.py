@@ -786,7 +786,8 @@ class PreCompactHandoffCapture:
                                     first_user_request = content.strip()
                                 if first_user_request:
                                     break
-                        except (json.JSONDecodeError, KeyError):
+                        except (json.JSONDecodeError, KeyError) as e:
+                            logger.debug(f"[PreCompact] Skipping invalid recent work entry: {e}")
                             continue
             except (OSError, UnicodeDecodeError):
                 pass
