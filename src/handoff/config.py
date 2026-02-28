@@ -140,6 +140,5 @@ def save_json_file(file_path: Path, data: dict[str, Any]) -> bool:
                 logger.debug(f"[Config] Could not unlink temp file: {unlink_error}")
             raise
     except (OSError, TypeError) as e:
-        import logging
-        logging.getLogger(__name__).error(f"Error saving {file_path}: {e}")
+        logger.error(f"[Config] Error saving {file_path}: {e}")
         return False
