@@ -20,6 +20,15 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
+# Import utility functions
+try:
+    from handoff.config import utcnow_iso
+except ImportError:
+    # Fallback for testing
+    from datetime import UTC, datetime
+    def utcnow_iso() -> str:
+        return datetime.now(UTC).isoformat()
+
 # Import bridge token utilities
 try:
     from handoff.hooks.__lib.bridge_tokens import (
