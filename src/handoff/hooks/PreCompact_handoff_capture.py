@@ -300,6 +300,125 @@ class PreCompactHandoffCapture:
         except Exception:
             return []
 
+    def _extract_file_modifications(self) -> list[str]:
+        """Extract list of modified files using the parser.
+
+        Returns:
+            List of file paths modified in this session
+        """
+        modifications = self.parser.extract_modifications()
+        if modifications:
+            return [m.get("file") for m in modifications if m.get("file")]
+        return []
+
+    def _scan_transcript_for_test_results(self, recent_lines: list[str]) -> dict[str, Any]:
+        """Scan transcript lines for test results and verification activity.
+
+        Args:
+            recent_lines: List of transcript JSONL lines to scan
+
+        Returns:
+            Dict with passed, failed counts and verification_found flag
+        """
+        test_pattern = re.compile(
+            r"(?P<result>passed|failed|PASSED|FAILED|✓|✗|❌|✅)\s*(?P<count>\d*)",
+            re.IGNORECASE
+        )
+        verification_pattern = re.compile(
+            r"(verified|verification|tests? run|assert|pytest)",
+            re.IGNORECASE
+        )
+
+        passed = 0
+        failed = 0
+        verification_found = False
+
+        for line in recent_lines:
+            try:
+                entry = json.loads(line)
+                content = ""
+
+                # Extract content from various message formats
+                if entry.get("type") == "assistant":
+                    msg = entry.get("message", {})
+                    if isinstance(msg, dict):
+                        content = msg.get("content", "")
+                    elif isinstance(msg, str):
+                        content = msg
+
+                    # Check for test results
+                    if content:
+                        # Count passed/failed indicators
+                        for match in test_pattern.finditer(content):
+                            result = match.group("result").upper()
+                            if result in ("PASSED", "✓", "✅"):
+                                passed += 1
+                            elif result in ("FAILED", "✗", "❌"):
+                                failed += 1
+
+                        # Check for verification activity
+                        if verification_pattern.search(content):
+                            verification_found = True
+
+            except (json.JSONDecodeError, KeyError, TypeError):
+                continue
+
+        return {
+            "passed": passed,
+            "failed": failed,
+            "verification_found": verification_found
+        }
+
+    def _build_test_results_dict(self, passed: int, failed: int) -> dict[str, Any] | None:
+        """Build test results dict with status based on passed/failed counts.
+
+        Args:
+            passed: Number of passed tests
+            failed: Number of failed tests
+
+        Returns:
+            Test results dict or None if no tests found
+        """
+        if passed > 0 or failed > 0:
+            result = {
+                "passed": passed,
+                "failed": failed,
+                "total": passed + failed,
+            }
+            if failed == 0 and passed > 0:
+                result["status"] = "all_passed"
+            elif failed > 0:
+                result["status"] = "has_failures"
+            return result
+        return None
+
+    def _determine_completion_state(
+        self,
+        files_modified: list[str],
+        passed: int,
+        failed: int,
+        verification_found: bool
+    ) -> str:
+        """Determine completion state based on test results and modifications.
+
+        Args:
+            files_modified: List of files modified in session
+            passed: Number of passed tests
+            failed: Number of failed tests
+            verification_found: Whether verification activity was found
+
+        Returns:
+            Completion state: verified, implemented, or in_progress
+        """
+        if files_modified and passed > 0 and failed == 0:
+            return "verified"
+        elif files_modified:
+            return "implemented"
+        elif verification_found:
+            return "verified"
+        else:
+            return "in_progress"
+
     def _extract_implementation_status(self) -> dict[str, Any]:
         """Extract implementation status from recent transcript activity.
 
@@ -322,10 +441,8 @@ class PreCompactHandoffCapture:
             return status
 
         try:
-            # Use the parser to extract modifications (files changed)
-            modifications = self.parser.extract_modifications()
-            if modifications:
-                status["files_modified"] = [m.get("file") for m in modifications if m.get("file")]
+            # Extract file modifications
+            status["files_modified"] = self._extract_file_modifications()
 
             # Scan recent transcript for test results and verification
             with open(self.transcript_path, encoding="utf-8") as f:
@@ -334,70 +451,22 @@ class PreCompactHandoffCapture:
             # Check last 100 lines for test results
             recent_lines = lines[-100:] if len(lines) > 100 else lines
 
-            test_pattern = re.compile(
-                r"(?P<result>passed|failed|PASSED|FAILED|✓|✗|❌|✅)\s*(?P<count>\d*)",
-                re.IGNORECASE
-            )
-            verification_pattern = re.compile(
-                r"(verified|verification|tests? run|assert|pytest)",
-                re.IGNORECASE
-            )
+            # Scan for test results
+            test_scan = self._scan_transcript_for_test_results(recent_lines)
+            passed = test_scan["passed"]
+            failed = test_scan["failed"]
+            verification_found = test_scan["verification_found"]
 
-            passed = 0
-            failed = 0
-            verification_found = False
-
-            for line in recent_lines:
-                try:
-                    entry = json.loads(line)
-                    content = ""
-
-                    # Extract content from various message formats
-                    if entry.get("type") == "assistant":
-                        msg = entry.get("message", {})
-                        if isinstance(msg, dict):
-                            content = msg.get("content", "")
-                        elif isinstance(msg, str):
-                            content = msg
-
-                        # Check for test results
-                        if content:
-                            # Count passed/failed indicators
-                            for match in test_pattern.finditer(content):
-                                result = match.group("result").upper()
-                                if result in ("PASSED", "✓", "✅"):
-                                    passed += 1
-                                elif result in ("FAILED", "✗", "❌"):
-                                    failed += 1
-
-                            # Check for verification activity
-                            if verification_pattern.search(content):
-                                verification_found = True
-
-                except (json.JSONDecodeError, KeyError, TypeError):
-                    continue
-
-            # Determine test results
-            if passed > 0 or failed > 0:
-                status["test_results"] = {
-                    "passed": passed,
-                    "failed": failed,
-                    "total": passed + failed,
-                }
-                if failed == 0 and passed > 0:
-                    status["test_results"]["status"] = "all_passed"
-                elif failed > 0:
-                    status["test_results"]["status"] = "has_failures"
+            # Build test results dict
+            status["test_results"] = self._build_test_results_dict(passed, failed)
 
             # Determine completion state
-            if status["files_modified"] and passed > 0 and failed == 0:
-                status["completion_state"] = "verified"
-            elif status["files_modified"]:
-                status["completion_state"] = "implemented"
-            elif verification_found:
-                status["completion_state"] = "verified"
-            else:
-                status["completion_state"] = "in_progress"
+            status["completion_state"] = self._determine_completion_state(
+                status["files_modified"],
+                passed,
+                failed,
+                verification_found
+            )
 
             if verification_found:
                 status["last_verification"] = "tests_or_verification_found"

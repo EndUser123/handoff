@@ -5,15 +5,15 @@
       "id": "active_session",
       "subject": "Session Restore",
       "status": "pending",
-      "created_at": "2026-02-28T16:55:51.628901+00:00",
+      "created_at": "2026-02-28T18:10:42.212524+00:00",
       "terminal": "env_6bea8026-fe27-4c59-856a-4ffff6955709",
       "metadata": {
         "handoff": {
-          "task_name": "session_20260228_165551",
+          "task_name": "session_20260228_181042",
           "task_type": "informal",
           "progress_percent": 0,
           "blocker": {
-            "description": "User's last question: prioritize and fix the p0 blockers first",
+            "description": "User's last question: \"should we implement this?\"",
             "severity": "info",
             "source": "transcript"
           },
@@ -22,81 +22,108 @@
           "active_files": [],
           "recent_tools": [
             {
-              "name": "Edit",
-              "timestamp": "2026-02-28T16:55:48.617760+00:00",
-              "command": "P:\\packages\\handoff\\src\\handoff\\migrate.py",
+              "name": "Write",
+              "timestamp": "2026-02-28T18:07:25.331160+00:00",
+              "command": "P:\\.claude\\skills\\llm-cli\\tests\\test_task_classifier.py",
               "cwd": "",
-              "session_id": "a07bda3f-22b0-4b45-b7fa-f4ca6b7401cf",
+              "session_id": "44428982-4dbb-4ea7-ab93-38c7051544d4",
+              "terminal_id": "fallback_1",
+              "output": "\"\"\"Unit tests for task_classifier module.\n\nTests task classification accuracy, confidence scoring, and edge cases.\n\"\"\"\nimport pytest\n\nfrom task_classifier import TaskType, classify_task, ClassificationResult\n\n\nclass TestTaskClassification:\n    \"\"\"Test task classification functionality.\"\"\"\n\n    def test_code_review_classification(self):\n        \"\"\"Test code review queries are classified correctly.\"\"\"\n        result = classify_task(\"review this code for bugs\")\n        assert result.task_type == TaskType.CODE_REVIEW\n        assert result.confidence > 0\n        assert \"review\" in result.matched_keywords\n\n    def test_planning_classification(self):\n        \"\"\"Test planning queries are classified correctly.\"\"\"\n        result = classify_task(\"create a plan for implementing X\")\n        assert result.task_type == TaskType.PLANNING\n        assert result.confidence > 0\n\n    def test_brainstorm_classification(self):\n        \"\"\"Test brainstorm queries are classified correctly.\"\"\"\n        result = classify_task(\"brainstorm ideas for feature Y\")\n        assert result.task_type == TaskType.BRAINSTORM\n        assert result.confidence > 0\n\n    def test_research_classification(self):\n        \"\"\"Test research queries are classified correctly.\"\"\"\n        result = classify_task(\"research best practices for Z\")\n        assert result.task_type == TaskType.RESEARCH\n        assert result.confidence > 0\n\n    def test_debug_classification(self):\n        \"\"\"Test debug queries are classified correctly.\"\"\"\n        result = classify_task(\"debug this error in module.py\")\n        assert result.task_type == TaskType.DEBUG\n        assert result.confidence > 0\n\n    def test_refactor_classification(self):\n        \"\"\"Test refactor queries are classified correctly.\"\"\"\n        result = classify_task(\"refactor this function for clarity\")\n        assert result.task_type == TaskType.REFACTOR\n        assert result.confidence > 0\n\n    def test_general_classification(self):\n        \"\"\"Test general queries (no ke"
+            },
+            {
+              "name": "Write",
+              "timestamp": "2026-02-28T18:07:38.204714+00:00",
+              "command": "P:\\.claude\\skills\\llm-cli\\tests\\test_prompt_templates.py",
+              "cwd": "",
+              "session_id": "44428982-4dbb-4ea7-ab93-38c7051544d4",
+              "terminal_id": "fallback_1",
+              "output": "\"\"\"Unit tests for prompt_templates module.\n\nTests prompt building, solo-dev constraints, and task-specific templates.\n\"\"\"\nimport pytest\n\nfrom prompt_templates import build_prompt, PROMPT_TEMPLATES, SOLO_DEV_CONSTRAINTS\nfrom task_classifier import TaskType\n\n\nclass TestPromptBuilding:\n    \"\"\"Test prompt building functionality.\"\"\"\n\n    def test_build_prompt_without_context(self):\n        \"\"\"Test prompt building without context.\"\"\"\n        prompt = build_prompt(\"explain recursion\", TaskType.GENERAL, context=None)\n        assert \"explain recursion\" in prompt\n        assert SOLO_DEV_CONSTRAINTS in prompt\n\n    def test_build_prompt_with_context(self):\n        \"\"\"Test prompt building with context.\"\"\"\n        context = \"This is file content\"\n        prompt = build_prompt(\"explain\", TaskType.GENERAL, context=context)\n        assert \"This is file content\" in prompt\n        assert \"--- Context ---\" in prompt\n\n    def test_build_prompt_returns_string(self):\n        \"\"\"Test build_prompt always returns a string.\"\"\"\n        prompt = build_prompt(\"test\", TaskType.GENERAL)\n        assert isinstance(prompt, str)\n        assert len(prompt) > 0\n\n\nclass TestSoloDevConstraints:\n    \"\"\"Test solo-dev constraints are present in all prompts.\"\"\"\n\n    def test_general_has_solo_dev_constraints(self):\n        \"\"\"Test general prompt includes solo-dev constraints.\"\"\"\n        prompt = build_prompt(\"test\", TaskType.GENERAL)\n        assert \"Solo Development Environment\" in prompt\n        assert \"NO team assignments\" in prompt\n\n    def test_code_review_has_solo_dev_constraints(self):\n        \"\"\"Test code review prompt includes solo-dev constraints.\"\"\"\n        prompt = build_prompt(\"test\", TaskType.CODE_REVIEW)\n        assert SOLO_DEV_CONSTRAINTS in prompt\n\n    def test_all_task_types_have_constraints(self):\n        \"\"\"Test all task types include solo-dev constraints.\"\"\"\n        for task_type in TaskType:\n            prompt = build_prompt(\"test query\", task_type)\n            assert SOLO_DEV_CONSTRAINTS "
+            },
+            {
+              "name": "Write",
+              "timestamp": "2026-02-28T18:09:20.429174+00:00",
+              "command": "P:\\.claude\\skills\\llm-cli\\tests\\test_performance_logger.py",
+              "cwd": "",
+              "session_id": "44428982-4dbb-4ea7-ab93-38c7051544d4",
+              "terminal_id": "fallback_1",
+              "output": "\"\"\"Unit tests for performance_logger module.\n\nTests CLI performance tracking, JSONL logging, thread-safety, and multi-terminal safety.\n\"\"\"\n\nfrom datetime import datetime\nfrom pathlib import Path\nfrom threading import Thread\nfrom time import sleep\n\nfrom performance_logger import CliExecutionRecord, CliPerformanceLogger\nfrom task_classifier import TaskType\n\n\nclass TestCliExecutionRecord:\n    \"\"\"Test CliExecutionRecord dataclass.\"\"\"\n\n    def test_record_creation(self):\n        \"\"\"Test creating a record with all fields.\"\"\"\n        record = CliExecutionRecord(\n            timestamp=\"2026-02-28T12:00:00\",\n            cli_name=\"qwen\",\n            task_type=\"code_review\",\n            query_preview=\"review this code\",\n            duration_seconds=63.5,\n            outcome=\"success\",\n            output_length=1500,\n            error_message=None,\n        )\n        assert record.cli_name == \"qwen\"\n        assert record.task_type == \"code_review\"\n        assert record.duration_seconds == 63.5\n\n    def test_to_jsonl(self):\n        \"\"\"Test record serializes to valid JSON.\"\"\"\n        record = CliExecutionRecord(\n            timestamp=\"2026-02-28T12:00:00\",\n            cli_name=\"gemini\",\n            task_type=\"planning\",\n            query_preview=\"create a plan\",\n            duration_seconds=160.2,\n            outcome=\"success\",\n            output_length=2300,\n        )\n        jsonl = record.to_jsonl()\n        assert isinstance(jsonl, str)\n        assert '\"cli_name\": \"gemini\"' in jsonl\n        assert '\"task_type\": \"planning\"' in jsonl\n\n\nclass TestPerformanceLogger:\n    \"\"\"Test CliPerformanceLogger functionality.\"\"\"\n\n    def test_logger_initialization(self, tmp_path):\n        \"\"\"Test logger initializes with custom path.\"\"\"\n        log_path = tmp_path / \"test_perf.jsonl\"\n        logger = CliPerformanceLogger(str(log_path))\n        assert logger.log_path == log_path\n        assert logger.log_path.parent.exists()\n\n    def test_logger_default_path(self):\n        \"\"\"Test logger uses def"
+            },
+            {
+              "name": "Edit",
+              "timestamp": "2026-02-28T18:09:50.355147+00:00",
+              "command": "P:\\.claude\\skills\\llm-cli\\tests\\test_performance_logger.py",
+              "cwd": "",
+              "session_id": "44428982-4dbb-4ea7-ab93-38c7051544d4",
+              "terminal_id": "fallback_1",
+              "output": ""
+            },
+            {
+              "name": "Edit",
+              "timestamp": "2026-02-28T18:09:55.513152+00:00",
+              "command": "P:\\.claude\\skills\\llm-cli\\tests\\test_performance_logger.py",
+              "cwd": "",
+              "session_id": "44428982-4dbb-4ea7-ab93-38c7051544d4",
+              "terminal_id": "fallback_1",
+              "output": ""
+            },
+            {
+              "name": "Edit",
+              "timestamp": "2026-02-28T18:10:01.170573+00:00",
+              "command": "P:\\.claude\\skills\\llm-cli\\tests\\test_prompt_templates.py",
+              "cwd": "",
+              "session_id": "44428982-4dbb-4ea7-ab93-38c7051544d4",
+              "terminal_id": "fallback_1",
+              "output": ""
+            },
+            {
+              "name": "Edit",
+              "timestamp": "2026-02-28T18:10:08.177091+00:00",
+              "command": "P:\\.claude\\skills\\llm-cli\\tests\\test_prompt_templates.py",
+              "cwd": "",
+              "session_id": "44428982-4dbb-4ea7-ab93-38c7051544d4",
+              "terminal_id": "fallback_1",
+              "output": ""
+            },
+            {
+              "name": "Edit",
+              "timestamp": "2026-02-28T18:10:29.151861+00:00",
+              "command": "P:\\.claude\\skills\\llm-cli\\tests\\test_task_classifier.py",
+              "cwd": "",
+              "session_id": "44428982-4dbb-4ea7-ab93-38c7051544d4",
+              "terminal_id": "fallback_1",
+              "output": ""
+            },
+            {
+              "name": "Edit",
+              "timestamp": "2026-02-28T18:10:37.581306+00:00",
+              "command": "P:\\.claude\\skills\\llm-cli\\tests\\test_task_classifier.py",
+              "cwd": "",
+              "session_id": "44428982-4dbb-4ea7-ab93-38c7051544d4",
               "terminal_id": "fallback_1",
               "output": ""
             }
           ],
-          "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\e5f1aecd-cf63-45fd-80f5-7270f9a5c00e.jsonl",
-          "transcript_offset": 8805268,
-          "transcript_entry_count": 3636,
+          "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\43cd77e6-f496-4542-91c3-a7964985ccb4.jsonl",
+          "transcript_offset": 630614,
+          "transcript_entry_count": 305,
           "handover": {
-            "decisions": [
-              {
-                "timestamp": "2026-02-28T03:06:30.828Z",
-                "topic": "hook",
-                "decision": "This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.\n\nAnalysis:\nLet me analyze the conversation chron",
-                "direct_quote": "This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.\n\nAnalysis:\nLet me analyze the conversation chronologically:\n\n1. **Initial Request**: User asked me to sketch my current hook/prompt inventory (names + rough purpose). I initially listed skills from the skill system, but the user corrected me - they wanted the actual hooks in `P:/.claude/hooks/`.\n\n2. **Hooks Inventory**: I provided a comprehensive list of hooks organized by event type (SessionStart, UserPromptSubmit, PreToolUse, PostToolUse, PreCompact, Stop) with descriptions.\n\n3. **Skill Consolidation Discussion**: User asked which skills are redundant. I identified 8 major redundancy clusters including:\n   - LLM providers (8 skills \u2192 2)\n   - Search fragmentation (3 \u2192 1)\n   - Chat history duplication (2 \u2192 1)\n   - Pipeline fragmentation (7 \u2192 1)\n   - Quality/review sprawl (10 \u2192 2-3)\n   - Orchestration proliferation (6 \u2192 2)\n   - Memory fr",
-                "source": "session_transcript",
-                "format": "comparison",
-                "search_keys": [
-                  "session",
-                  "being",
-                  "continued",
-                  "previous",
-                  "conversation"
-                ],
-                "bridge_token": "BRIDGE_20260228-030630_HOOK"
-              },
-              {
-                "timestamp": "2026-02-28T03:29:26.331Z",
-                "topic": "context",
-                "decision": "This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.\n\nAnalysis:\nLet me analyze this conversation chro",
-                "direct_quote": "This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.\n\nAnalysis:\nLet me analyze this conversation chronologically to capture all important details:\n\n1. **Initial Context**: User was continuing from a previous conversation about skill consolidation. The previous summary showed they had created a plan to consolidate skills from 150+ to ~100 (33% reduction).\n\n2. **User's Core Concern**: User questioned whether the plan's Phase 3 approach (merging `recent` \u2192 `chs`) was optimal, when they expected `recent` + `chs` \u2192 `search` consolidation.\n\n3. **My Response**: I agreed the user's approach was better and updated the plan to consolidate all 5 search skills (`search`, `search-more`, `progressive-search`, `chs`, `recent`) into a single `search` skill.\n\n4. **Key Decision - Approach B**: User chose \"Approach B\" - absorb functionality and delete old skills entirely (no deprecation period, no aliases).",
-                "source": "session_transcript",
-                "format": "comparison",
-                "search_keys": [
-                  "session",
-                  "being",
-                  "continued",
-                  "previous",
-                  "conversation"
-                ],
-                "bridge_token": "BRIDGE_20260228-032926_CONTEXT"
-              },
-              {
-                "timestamp": "2026-02-28T03:50:34.407Z",
-                "topic": "context",
-                "decision": "This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.\n\nAnalysis:\nLet me analyze this conversation chro",
-                "direct_quote": "This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.\n\nAnalysis:\nLet me analyze this conversation chronologically to capture all essential details:\n\n1. **Initial Context**: This is a continuation from a previous conversation about skill consolidation. The user had a plan to consolidate skills from 150+ to ~100 (33% reduction), specifically focusing on Phase 1: Search Unification.\n\n2. **User's First Question**: \"do we have any skills or agents or plugins that will help make sure we have an optimal final skill?\"\n   - This triggered `/ask`, `/plan-workflow`, and `/debugRCA` skills\n   - The skills provided context about the consolidation plan\n\n3. **Main Implementation Work**: \n   - Started Phase 1: Search Unification (5 skills \u2192 1)\n   - Updated `P:\\.claude\\skills\\search\\SKILL.md` with new parameters\n   - Modified `P:/__csf/src/cli/nip/search_enhanced.py` to implement `--source`, `--chat-method",
-                "source": "session_transcript",
-                "format": "comparison",
-                "search_keys": [
-                  "session",
-                  "being",
-                  "continued",
-                  "previous",
-                  "conversation"
-                ],
-                "bridge_token": "BRIDGE_20260228-035034_CONTEXT"
-              }
-            ],
+            "decisions": [],
             "patterns_learned": [],
             "controversial_decisions": [],
             "session_objectives": []
           },
-          "open_conversation_context": null,
+          "open_conversation_context": {
+            "description": "User's last question: \"should we implement this?\"",
+            "context_type": "question",
+            "original_message": "\"should we implement this?\""
+          },
           "visual_context": null,
           "resolved_issues": [],
           "modifications": [],
           "pending_operations": [],
-          "original_user_request": "prioritize and fix the p0 blockers first",
+          "original_user_request": "\"should we implement this?\"",
           "first_user_request": "<local-command-caveat>Caveat: The messages below were generated by the user while running local commands. DO NOT respond to these messages or otherwise consider them in your response unless the user explicitly asks you to.</local-command-caveat>",
-          "saved_at": "2026-02-28T16:55:51.627756+00:00",
+          "saved_at": "2026-02-28T18:10:42.212134+00:00",
           "version": 1,
           "implementation_status": {
             "test_results": null,
@@ -109,101 +136,86 @@
           "recent_exchanges": [
             {
               "role": "assistant",
-              "text": "Now let me verify all 8 failing tests are fixed:"
+              "text": "**Path 2 IS implemented** (line 385: `genai.upload_file`). Not a gap.\n\n---\n\n### Actual Opportunities (Filtered)\n\n| Item | Status | Notes |\n|------|--------|-------|\n| **Asset Versioning** | Good idea | Question: Is JSON tracking best, or git-based? |\n| **Enhanced Verification Feedback** | **Yes** | \"Recruiters seduced by quality\" \u2190 clear goal |\n| **README Pre-check** | Useful | Tell users what features will be checked before verification |\n| **Fail Fast (not retry)** | Correction | Executor already has structured error handling\u2014good |\n\n### On Your Questions:\n\n**\"Is JSON the best way for versioning?\"**  \nAlternatives:\n- Git-based (commit each generated asset with metadata)\n- Existing asset filenames with timestamps\n- What's your use case? Detecting stale assets? Comparing generations?\n\n**\"B"
+            },
+            {
+              "role": "user",
+              "text": "<command-message>arch</command-message>\n<command-name>/arch</command-name>\n<command-args>what do you think are optimal long term solutions?</command-args>"
+            },
+            {
+              "role": "user",
+              "text": "Base directory for this skill: P:\\.claude\\skills\\arch\n\n# Architecture Advisor (Resource Router)\n\n## Overview\n\nThis skill routes architecture queries to specialized templates based on domain and complexity. Templates are loaded from `.claude/skills/arch/resources/{template}.md` (relative to project root) and executed inline.\n\n**No Skill() tool calls to arch-* skills.** Templates are read and executed directly.\n\n---\n\n## Stage 0: Pre-Flight Checks (Out-of-Scope Detection)\n\nBefore routing, check if query is out-of-scope for architecture analysis.\n\n### Out-of-Scope Patterns\n\n**IMPORTANT:** Prerequisite gates should only trigger when actual requirements are missing, not for optimization or improvement queries.\n\n| Pattern | Detected When (strict semantic analysis) | Suggest | Rationale |\n|-------"
             },
             {
               "role": "assistant",
-              "text": "Progress! 8 failing \u2192 6 failing. Let me check the remaining test failures:"
+              "text": "## Stage 0: Intent Detection\n\n**Query:** \"what do you think are optimal long term solutions?\"\n\nIntent type: **DEFAULT** (general architecture decision, not review/improvement of specific proposed design)\n\nProceeding with DEFAULT decision path...\n\n---\n\n## Stage 0.3: Codebase-Aware Analysis\n\n**Context from previous review:**\n- media-pipeline at `P:\\packages\\media-pipeline\\`\n- Executor has structured error handling (fail-fast is current design)\n- Path 2 video verification (Gemini File API) IS implemented (line 385: `genai.upload_file`)\n- Verification system exists with quality scoring\n- Missing: Enhanced verification feedback, README pre-check, asset versioning\n\n---\n\n## Stage 0.6: Python Domain Considerations\n\n**Domain:** Python (media-pipeline is Python package)\n\nConsiderations:\n- **Type pre"
             },
             {
               "role": "assistant",
-              "text": "The test still references `self.MAX_HOURS_AGO`. Let me fix all references in that test class:"
+              "text": "Research sources limited to manufacturing QC applications (not relevant). Proceeding with codebase-informed decisions.\n\n---\n\n## Decision: Optimal Long-Term Solutions for media-pipeline\n\n### Decision Statement\n\nThree targeted improvements: (1) enhanced verification feedback for recruiter-facing quality, (2) README pre-check to improve verification scores, (3) git-based asset versioning. Goal: make verification output compelling and actionable while keeping implementation minimal.\n\n---\n\n### Options\n\n#### For Enhanced Verification Feedback\n\n**Option A:** Structured regeneration suggestions\n- Pro: Tells users exactly what to regenerate with what prompt\n- Con: Requires careful prompt engineering to avoid hallucination\n- **Differs on:** Actionability vs. raw scores\n\n**Option B:** Pass/fail only\n"
             },
             {
               "role": "assistant",
-              "text": "The linter warning is expected since the import is at module level. Let me verify all tests pass now:"
+              "text": "---\n\n**Output persistence requires your approval.** The hook blocked writing to `P:\\.claude\\arch_decisions\\`. \n\nType: `approve edit arch_decisions/2026-02-28_media-pipeline-long-term-solutions.md`\n\n...to persist this decision. Or the output above is the complete analysis \u2014 let me know if you want me to proceed with implementing any of these three changes."
+            },
+            {
+              "role": "user",
+              "text": "approve edit arch_decisions/2026-02-28_media-pipeline-long-term-solutions.md"
             },
             {
               "role": "assistant",
-              "text": "The import didn't work. Let me check and fix the import statement:"
+              "text": "\u2705 **Architecture decision persisted** to `P:\\.claude\\arch_decisions\\2026-02-28_media-pipeline-long-term-solutions.md`\n\n**Summary of recommendations:**\n\n| Improvement | Choice | Rationale |\n|-------------|--------|-----------|\n| **Enhanced verification feedback** | Structured regeneration suggestions | Recruiter care about \"what did you do about it?\" |\n| **README pre-check** | Separate `gen-media analyze-readme` subcommand | Opt-in over auto-checking |\n| **Asset versioning** | Git-based (structured commit messages) | Native to workflow, no duplicate state |\n\nWant me to implement any of these three, or shall we move on to other gaps in media-pipeline?"
+            },
+            {
+              "role": "user",
+              "text": "What exactly is enhanced verification feedback?"
             },
             {
               "role": "assistant",
-              "text": "Now let me verify all the time filter tests pass:"
+              "text": "Let me check what currently exists in verification:"
             },
             {
               "role": "assistant",
-              "text": "\u2705 All time filter tests pass! Now let me check the remaining 3 failures in test_search_stats.py:"
+              "text": "## What Currently Exists\n\n**Current verification output** (`quality_scorer.py:239-278`):\n\n```\nrecommendations = [\n  \"Add more core features to the media content. Currently showing 45% coverage.\",\n  \"Include these missing features: Evidence Saturation, Phase State Persistence, Tool Availability\",\n  \"Demonstrate key capabilities in more detail. Missing 5 capabilities.\",\n  \"Quality score (45/100) is below threshold (70). Consider regenerating with more detailed prompts.\"\n]\n```\n\nThis is **generic**\u2014it tells you what's wrong but not **exactly how to fix it**.\n\n---\n\n## What \"Enhanced\" Means\n\n**Enhanced verification feedback** = Convert those generic suggestions into **actionable regeneration commands**.\n\n**Current output:**\n```\nMissing features: Evidence Saturation, Phase State Persistence\n```\n\n"
             },
             {
-              "role": "assistant",
-              "text": "The mock patch location is wrong. Let me check how search.py actually imports the router and fix the test:"
-            },
-            {
-              "role": "assistant",
-              "text": "The test is patching the wrong location because search.py dynamically imports the router. However, these tests are for `search.py`, not the `search_enhanced.py` CLI that we're consolidating. Let me verify the original 8 failing tests count:"
-            },
-            {
-              "role": "assistant",
-              "text": "\u2705 **Progress: 8 failing \u2192 3 failing** (12 now pass)\n\nThe remaining 3 failures are in `test_search_stats.py` which tests `search.py` (different module). The time filter validation tests all pass now.\n\n## Priority 2: Create Missing adversarial-rca Skill (RCA-001)"
-            },
-            {
-              "role": "assistant",
-              "text": "Now I'll create a minimal adversarial-rca SKILL.md following the same pattern:"
-            },
-            {
-              "role": "assistant",
-              "text": "\u2705 **RCA-001 Fixed!** Created `adversarial-rca/SKILL.md` with RCA workflow.\n\n## Summary: P0 Blockers Fixed\n\n| P0 Blocker | Status | Fix Applied |\n|------------|--------|-------------|\n| **TEST-002**: 8 failing tests | \u2705 **FIXED** | Fixed MAX_HOURS_AGO constant mismatch, made LSP import optional \u2192 **8 failing \u2192 3 passing** (time filter tests all pass) |\n| **RCA-001**: Missing adversarial-rca skill | \u2705 **FIXED** | Created `P:/.claude/skills/adversarial-rca/SKILL.md` with RCA workflow |\n\n**Note:** The 3 remaining test failures are in `test_search_stats.py` which tests `search.py` (different module than `search_enhanced.py`). These are test mocking issues, not search skill blockers.\n\n---\n\n## Priority 3: Fix Command Injection in Docs (SEC-001)\n\nThe security finding identified command injection i"
+              "role": "user",
+              "text": "\"should we implement this?\""
             }
           ],
           "recent_edits": [
             {
-              "tool": "Edit",
-              "file": "P:\\__csf\\tests\\cli\\test_search_time_filter_validation.py",
-              "snippet": "from src.cli.nip.search_enhanced import _convert_time_filter, MAX_HOURS_AGO"
-            },
-            {
-              "tool": "Edit",
-              "file": "P:\\__csf\\tests\\cli\\test_search_time_filter_validation.py",
-              "snippet": "    These tests verify that hours_ago has a reasonable maximum value enforced.     \"\"\"      def test_excessive_hours_ago_value_raises_error(self):"
-            },
-            {
-              "tool": "Edit",
-              "file": "P:\\__csf\\tests\\cli\\test_search_time_filter_validation.py",
-              "snippet": "MAX_HOURS_AGO"
-            },
-            {
-              "tool": "Edit",
-              "file": "P:\\__csf\\tests\\cli\\test_search_time_filter_validation.py",
-              "snippet": "from src.cli.nip.search_enhanced import _convert_time_filter, MAX_HOURS_AGO"
+              "tool": "Write",
+              "file": "P:\\.claude\\arch_decisions\\2026-02-28_media-pipeline-long-term-solutions.md",
+              "snippet": "# Architecture Decision: Optimal Long-Term Solutions for media-pipeline  **Date:** 2026-02-28 **Template:** fast **Query:** what do you think are optimal long term solutions?  ## Decision Statement  T"
             },
             {
               "tool": "Write",
-              "file": "P:\\.claude\\skills\\adversarial-rca\\SKILL.md",
-              "snippet": "--- name: adversarial-rca description: Root cause analysis with multi-agent reasoning category: analysis triggers:   - /adversarial-rca aliases:   - /rca suggest:   - /adversarial-review   - /debug --"
+              "file": "P:\\.claude\\arch_decisions\\2026-02-28_media-pipeline-long-term-solutions.md",
+              "snippet": "# Architecture Decision: Optimal Long-Term Solutions for media-pipeline  **Date:** 2026-02-28 **Template:** fast **Query:** what do you think are optimal long term solutions?  ## Decision Statement  T"
             }
           ],
-          "checksum": "sha256:bb7e29d00ae1ba0f2cbe94fbf038e5d4bf0a4ba85a817c4ed6d439ab246bd52d"
+          "checksum": "sha256:5f150750216a18ba98d6a133954cb68520fe7ff8e3d9734693df090ff406ef8a"
         },
-        "task_id": "task_session_20260228_165551",
-        "task_name": "session_20260228_165551",
-        "pid": 54244,
+        "task_id": "task_session_20260228_181042",
+        "task_name": "session_20260228_181042",
+        "pid": 75864,
         "restore_pending": true
       }
     },
     "continue_session": {
       "id": "continue_session",
-      "subject": "Continue: session_20260228_165551",
+      "subject": "Continue: session_20260228_181042",
       "status": "pending",
-      "created_at": "2026-02-28T16:55:51.628906+00:00",
+      "created_at": "2026-02-28T18:10:42.212528+00:00",
       "terminal": "env_6bea8026-fe27-4c59-856a-4ffff6955709",
       "metadata": {
         "handoff": {
-          "task_name": "session_20260228_165551",
+          "task_name": "session_20260228_181042",
           "task_type": "informal",
           "progress_percent": 0,
           "blocker": {
-            "description": "User's last question: prioritize and fix the p0 blockers first",
+            "description": "User's last question: \"should we implement this?\"",
             "severity": "info",
             "source": "transcript"
           },
@@ -212,81 +224,108 @@
           "active_files": [],
           "recent_tools": [
             {
-              "name": "Edit",
-              "timestamp": "2026-02-28T16:55:48.617760+00:00",
-              "command": "P:\\packages\\handoff\\src\\handoff\\migrate.py",
+              "name": "Write",
+              "timestamp": "2026-02-28T18:07:25.331160+00:00",
+              "command": "P:\\.claude\\skills\\llm-cli\\tests\\test_task_classifier.py",
               "cwd": "",
-              "session_id": "a07bda3f-22b0-4b45-b7fa-f4ca6b7401cf",
+              "session_id": "44428982-4dbb-4ea7-ab93-38c7051544d4",
+              "terminal_id": "fallback_1",
+              "output": "\"\"\"Unit tests for task_classifier module.\n\nTests task classification accuracy, confidence scoring, and edge cases.\n\"\"\"\nimport pytest\n\nfrom task_classifier import TaskType, classify_task, ClassificationResult\n\n\nclass TestTaskClassification:\n    \"\"\"Test task classification functionality.\"\"\"\n\n    def test_code_review_classification(self):\n        \"\"\"Test code review queries are classified correctly.\"\"\"\n        result = classify_task(\"review this code for bugs\")\n        assert result.task_type == TaskType.CODE_REVIEW\n        assert result.confidence > 0\n        assert \"review\" in result.matched_keywords\n\n    def test_planning_classification(self):\n        \"\"\"Test planning queries are classified correctly.\"\"\"\n        result = classify_task(\"create a plan for implementing X\")\n        assert result.task_type == TaskType.PLANNING\n        assert result.confidence > 0\n\n    def test_brainstorm_classification(self):\n        \"\"\"Test brainstorm queries are classified correctly.\"\"\"\n        result = classify_task(\"brainstorm ideas for feature Y\")\n        assert result.task_type == TaskType.BRAINSTORM\n        assert result.confidence > 0\n\n    def test_research_classification(self):\n        \"\"\"Test research queries are classified correctly.\"\"\"\n        result = classify_task(\"research best practices for Z\")\n        assert result.task_type == TaskType.RESEARCH\n        assert result.confidence > 0\n\n    def test_debug_classification(self):\n        \"\"\"Test debug queries are classified correctly.\"\"\"\n        result = classify_task(\"debug this error in module.py\")\n        assert result.task_type == TaskType.DEBUG\n        assert result.confidence > 0\n\n    def test_refactor_classification(self):\n        \"\"\"Test refactor queries are classified correctly.\"\"\"\n        result = classify_task(\"refactor this function for clarity\")\n        assert result.task_type == TaskType.REFACTOR\n        assert result.confidence > 0\n\n    def test_general_classification(self):\n        \"\"\"Test general queries (no ke"
+            },
+            {
+              "name": "Write",
+              "timestamp": "2026-02-28T18:07:38.204714+00:00",
+              "command": "P:\\.claude\\skills\\llm-cli\\tests\\test_prompt_templates.py",
+              "cwd": "",
+              "session_id": "44428982-4dbb-4ea7-ab93-38c7051544d4",
+              "terminal_id": "fallback_1",
+              "output": "\"\"\"Unit tests for prompt_templates module.\n\nTests prompt building, solo-dev constraints, and task-specific templates.\n\"\"\"\nimport pytest\n\nfrom prompt_templates import build_prompt, PROMPT_TEMPLATES, SOLO_DEV_CONSTRAINTS\nfrom task_classifier import TaskType\n\n\nclass TestPromptBuilding:\n    \"\"\"Test prompt building functionality.\"\"\"\n\n    def test_build_prompt_without_context(self):\n        \"\"\"Test prompt building without context.\"\"\"\n        prompt = build_prompt(\"explain recursion\", TaskType.GENERAL, context=None)\n        assert \"explain recursion\" in prompt\n        assert SOLO_DEV_CONSTRAINTS in prompt\n\n    def test_build_prompt_with_context(self):\n        \"\"\"Test prompt building with context.\"\"\"\n        context = \"This is file content\"\n        prompt = build_prompt(\"explain\", TaskType.GENERAL, context=context)\n        assert \"This is file content\" in prompt\n        assert \"--- Context ---\" in prompt\n\n    def test_build_prompt_returns_string(self):\n        \"\"\"Test build_prompt always returns a string.\"\"\"\n        prompt = build_prompt(\"test\", TaskType.GENERAL)\n        assert isinstance(prompt, str)\n        assert len(prompt) > 0\n\n\nclass TestSoloDevConstraints:\n    \"\"\"Test solo-dev constraints are present in all prompts.\"\"\"\n\n    def test_general_has_solo_dev_constraints(self):\n        \"\"\"Test general prompt includes solo-dev constraints.\"\"\"\n        prompt = build_prompt(\"test\", TaskType.GENERAL)\n        assert \"Solo Development Environment\" in prompt\n        assert \"NO team assignments\" in prompt\n\n    def test_code_review_has_solo_dev_constraints(self):\n        \"\"\"Test code review prompt includes solo-dev constraints.\"\"\"\n        prompt = build_prompt(\"test\", TaskType.CODE_REVIEW)\n        assert SOLO_DEV_CONSTRAINTS in prompt\n\n    def test_all_task_types_have_constraints(self):\n        \"\"\"Test all task types include solo-dev constraints.\"\"\"\n        for task_type in TaskType:\n            prompt = build_prompt(\"test query\", task_type)\n            assert SOLO_DEV_CONSTRAINTS "
+            },
+            {
+              "name": "Write",
+              "timestamp": "2026-02-28T18:09:20.429174+00:00",
+              "command": "P:\\.claude\\skills\\llm-cli\\tests\\test_performance_logger.py",
+              "cwd": "",
+              "session_id": "44428982-4dbb-4ea7-ab93-38c7051544d4",
+              "terminal_id": "fallback_1",
+              "output": "\"\"\"Unit tests for performance_logger module.\n\nTests CLI performance tracking, JSONL logging, thread-safety, and multi-terminal safety.\n\"\"\"\n\nfrom datetime import datetime\nfrom pathlib import Path\nfrom threading import Thread\nfrom time import sleep\n\nfrom performance_logger import CliExecutionRecord, CliPerformanceLogger\nfrom task_classifier import TaskType\n\n\nclass TestCliExecutionRecord:\n    \"\"\"Test CliExecutionRecord dataclass.\"\"\"\n\n    def test_record_creation(self):\n        \"\"\"Test creating a record with all fields.\"\"\"\n        record = CliExecutionRecord(\n            timestamp=\"2026-02-28T12:00:00\",\n            cli_name=\"qwen\",\n            task_type=\"code_review\",\n            query_preview=\"review this code\",\n            duration_seconds=63.5,\n            outcome=\"success\",\n            output_length=1500,\n            error_message=None,\n        )\n        assert record.cli_name == \"qwen\"\n        assert record.task_type == \"code_review\"\n        assert record.duration_seconds == 63.5\n\n    def test_to_jsonl(self):\n        \"\"\"Test record serializes to valid JSON.\"\"\"\n        record = CliExecutionRecord(\n            timestamp=\"2026-02-28T12:00:00\",\n            cli_name=\"gemini\",\n            task_type=\"planning\",\n            query_preview=\"create a plan\",\n            duration_seconds=160.2,\n            outcome=\"success\",\n            output_length=2300,\n        )\n        jsonl = record.to_jsonl()\n        assert isinstance(jsonl, str)\n        assert '\"cli_name\": \"gemini\"' in jsonl\n        assert '\"task_type\": \"planning\"' in jsonl\n\n\nclass TestPerformanceLogger:\n    \"\"\"Test CliPerformanceLogger functionality.\"\"\"\n\n    def test_logger_initialization(self, tmp_path):\n        \"\"\"Test logger initializes with custom path.\"\"\"\n        log_path = tmp_path / \"test_perf.jsonl\"\n        logger = CliPerformanceLogger(str(log_path))\n        assert logger.log_path == log_path\n        assert logger.log_path.parent.exists()\n\n    def test_logger_default_path(self):\n        \"\"\"Test logger uses def"
+            },
+            {
+              "name": "Edit",
+              "timestamp": "2026-02-28T18:09:50.355147+00:00",
+              "command": "P:\\.claude\\skills\\llm-cli\\tests\\test_performance_logger.py",
+              "cwd": "",
+              "session_id": "44428982-4dbb-4ea7-ab93-38c7051544d4",
+              "terminal_id": "fallback_1",
+              "output": ""
+            },
+            {
+              "name": "Edit",
+              "timestamp": "2026-02-28T18:09:55.513152+00:00",
+              "command": "P:\\.claude\\skills\\llm-cli\\tests\\test_performance_logger.py",
+              "cwd": "",
+              "session_id": "44428982-4dbb-4ea7-ab93-38c7051544d4",
+              "terminal_id": "fallback_1",
+              "output": ""
+            },
+            {
+              "name": "Edit",
+              "timestamp": "2026-02-28T18:10:01.170573+00:00",
+              "command": "P:\\.claude\\skills\\llm-cli\\tests\\test_prompt_templates.py",
+              "cwd": "",
+              "session_id": "44428982-4dbb-4ea7-ab93-38c7051544d4",
+              "terminal_id": "fallback_1",
+              "output": ""
+            },
+            {
+              "name": "Edit",
+              "timestamp": "2026-02-28T18:10:08.177091+00:00",
+              "command": "P:\\.claude\\skills\\llm-cli\\tests\\test_prompt_templates.py",
+              "cwd": "",
+              "session_id": "44428982-4dbb-4ea7-ab93-38c7051544d4",
+              "terminal_id": "fallback_1",
+              "output": ""
+            },
+            {
+              "name": "Edit",
+              "timestamp": "2026-02-28T18:10:29.151861+00:00",
+              "command": "P:\\.claude\\skills\\llm-cli\\tests\\test_task_classifier.py",
+              "cwd": "",
+              "session_id": "44428982-4dbb-4ea7-ab93-38c7051544d4",
+              "terminal_id": "fallback_1",
+              "output": ""
+            },
+            {
+              "name": "Edit",
+              "timestamp": "2026-02-28T18:10:37.581306+00:00",
+              "command": "P:\\.claude\\skills\\llm-cli\\tests\\test_task_classifier.py",
+              "cwd": "",
+              "session_id": "44428982-4dbb-4ea7-ab93-38c7051544d4",
               "terminal_id": "fallback_1",
               "output": ""
             }
           ],
-          "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\e5f1aecd-cf63-45fd-80f5-7270f9a5c00e.jsonl",
-          "transcript_offset": 8805268,
-          "transcript_entry_count": 3636,
+          "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\43cd77e6-f496-4542-91c3-a7964985ccb4.jsonl",
+          "transcript_offset": 630614,
+          "transcript_entry_count": 305,
           "handover": {
-            "decisions": [
-              {
-                "timestamp": "2026-02-28T03:06:30.828Z",
-                "topic": "hook",
-                "decision": "This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.\n\nAnalysis:\nLet me analyze the conversation chron",
-                "direct_quote": "This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.\n\nAnalysis:\nLet me analyze the conversation chronologically:\n\n1. **Initial Request**: User asked me to sketch my current hook/prompt inventory (names + rough purpose). I initially listed skills from the skill system, but the user corrected me - they wanted the actual hooks in `P:/.claude/hooks/`.\n\n2. **Hooks Inventory**: I provided a comprehensive list of hooks organized by event type (SessionStart, UserPromptSubmit, PreToolUse, PostToolUse, PreCompact, Stop) with descriptions.\n\n3. **Skill Consolidation Discussion**: User asked which skills are redundant. I identified 8 major redundancy clusters including:\n   - LLM providers (8 skills \u2192 2)\n   - Search fragmentation (3 \u2192 1)\n   - Chat history duplication (2 \u2192 1)\n   - Pipeline fragmentation (7 \u2192 1)\n   - Quality/review sprawl (10 \u2192 2-3)\n   - Orchestration proliferation (6 \u2192 2)\n   - Memory fr",
-                "source": "session_transcript",
-                "format": "comparison",
-                "search_keys": [
-                  "session",
-                  "being",
-                  "continued",
-                  "previous",
-                  "conversation"
-                ],
-                "bridge_token": "BRIDGE_20260228-030630_HOOK"
-              },
-              {
-                "timestamp": "2026-02-28T03:29:26.331Z",
-                "topic": "context",
-                "decision": "This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.\n\nAnalysis:\nLet me analyze this conversation chro",
-                "direct_quote": "This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.\n\nAnalysis:\nLet me analyze this conversation chronologically to capture all important details:\n\n1. **Initial Context**: User was continuing from a previous conversation about skill consolidation. The previous summary showed they had created a plan to consolidate skills from 150+ to ~100 (33% reduction).\n\n2. **User's Core Concern**: User questioned whether the plan's Phase 3 approach (merging `recent` \u2192 `chs`) was optimal, when they expected `recent` + `chs` \u2192 `search` consolidation.\n\n3. **My Response**: I agreed the user's approach was better and updated the plan to consolidate all 5 search skills (`search`, `search-more`, `progressive-search`, `chs`, `recent`) into a single `search` skill.\n\n4. **Key Decision - Approach B**: User chose \"Approach B\" - absorb functionality and delete old skills entirely (no deprecation period, no aliases).",
-                "source": "session_transcript",
-                "format": "comparison",
-                "search_keys": [
-                  "session",
-                  "being",
-                  "continued",
-                  "previous",
-                  "conversation"
-                ],
-                "bridge_token": "BRIDGE_20260228-032926_CONTEXT"
-              },
-              {
-                "timestamp": "2026-02-28T03:50:34.407Z",
-                "topic": "context",
-                "decision": "This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.\n\nAnalysis:\nLet me analyze this conversation chro",
-                "direct_quote": "This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.\n\nAnalysis:\nLet me analyze this conversation chronologically to capture all essential details:\n\n1. **Initial Context**: This is a continuation from a previous conversation about skill consolidation. The user had a plan to consolidate skills from 150+ to ~100 (33% reduction), specifically focusing on Phase 1: Search Unification.\n\n2. **User's First Question**: \"do we have any skills or agents or plugins that will help make sure we have an optimal final skill?\"\n   - This triggered `/ask`, `/plan-workflow`, and `/debugRCA` skills\n   - The skills provided context about the consolidation plan\n\n3. **Main Implementation Work**: \n   - Started Phase 1: Search Unification (5 skills \u2192 1)\n   - Updated `P:\\.claude\\skills\\search\\SKILL.md` with new parameters\n   - Modified `P:/__csf/src/cli/nip/search_enhanced.py` to implement `--source`, `--chat-method",
-                "source": "session_transcript",
-                "format": "comparison",
-                "search_keys": [
-                  "session",
-                  "being",
-                  "continued",
-                  "previous",
-                  "conversation"
-                ],
-                "bridge_token": "BRIDGE_20260228-035034_CONTEXT"
-              }
-            ],
+            "decisions": [],
             "patterns_learned": [],
             "controversial_decisions": [],
             "session_objectives": []
           },
-          "open_conversation_context": null,
+          "open_conversation_context": {
+            "description": "User's last question: \"should we implement this?\"",
+            "context_type": "question",
+            "original_message": "\"should we implement this?\""
+          },
           "visual_context": null,
           "resolved_issues": [],
           "modifications": [],
           "pending_operations": [],
-          "original_user_request": "prioritize and fix the p0 blockers first",
+          "original_user_request": "\"should we implement this?\"",
           "first_user_request": "<local-command-caveat>Caveat: The messages below were generated by the user while running local commands. DO NOT respond to these messages or otherwise consider them in your response unless the user explicitly asks you to.</local-command-caveat>",
-          "saved_at": "2026-02-28T16:55:51.627756+00:00",
+          "saved_at": "2026-02-28T18:10:42.212134+00:00",
           "version": 1,
           "implementation_status": {
             "test_results": null,
@@ -299,86 +338,71 @@
           "recent_exchanges": [
             {
               "role": "assistant",
-              "text": "Now let me verify all 8 failing tests are fixed:"
+              "text": "**Path 2 IS implemented** (line 385: `genai.upload_file`). Not a gap.\n\n---\n\n### Actual Opportunities (Filtered)\n\n| Item | Status | Notes |\n|------|--------|-------|\n| **Asset Versioning** | Good idea | Question: Is JSON tracking best, or git-based? |\n| **Enhanced Verification Feedback** | **Yes** | \"Recruiters seduced by quality\" \u2190 clear goal |\n| **README Pre-check** | Useful | Tell users what features will be checked before verification |\n| **Fail Fast (not retry)** | Correction | Executor already has structured error handling\u2014good |\n\n### On Your Questions:\n\n**\"Is JSON the best way for versioning?\"**  \nAlternatives:\n- Git-based (commit each generated asset with metadata)\n- Existing asset filenames with timestamps\n- What's your use case? Detecting stale assets? Comparing generations?\n\n**\"B"
+            },
+            {
+              "role": "user",
+              "text": "<command-message>arch</command-message>\n<command-name>/arch</command-name>\n<command-args>what do you think are optimal long term solutions?</command-args>"
+            },
+            {
+              "role": "user",
+              "text": "Base directory for this skill: P:\\.claude\\skills\\arch\n\n# Architecture Advisor (Resource Router)\n\n## Overview\n\nThis skill routes architecture queries to specialized templates based on domain and complexity. Templates are loaded from `.claude/skills/arch/resources/{template}.md` (relative to project root) and executed inline.\n\n**No Skill() tool calls to arch-* skills.** Templates are read and executed directly.\n\n---\n\n## Stage 0: Pre-Flight Checks (Out-of-Scope Detection)\n\nBefore routing, check if query is out-of-scope for architecture analysis.\n\n### Out-of-Scope Patterns\n\n**IMPORTANT:** Prerequisite gates should only trigger when actual requirements are missing, not for optimization or improvement queries.\n\n| Pattern | Detected When (strict semantic analysis) | Suggest | Rationale |\n|-------"
             },
             {
               "role": "assistant",
-              "text": "Progress! 8 failing \u2192 6 failing. Let me check the remaining test failures:"
+              "text": "## Stage 0: Intent Detection\n\n**Query:** \"what do you think are optimal long term solutions?\"\n\nIntent type: **DEFAULT** (general architecture decision, not review/improvement of specific proposed design)\n\nProceeding with DEFAULT decision path...\n\n---\n\n## Stage 0.3: Codebase-Aware Analysis\n\n**Context from previous review:**\n- media-pipeline at `P:\\packages\\media-pipeline\\`\n- Executor has structured error handling (fail-fast is current design)\n- Path 2 video verification (Gemini File API) IS implemented (line 385: `genai.upload_file`)\n- Verification system exists with quality scoring\n- Missing: Enhanced verification feedback, README pre-check, asset versioning\n\n---\n\n## Stage 0.6: Python Domain Considerations\n\n**Domain:** Python (media-pipeline is Python package)\n\nConsiderations:\n- **Type pre"
             },
             {
               "role": "assistant",
-              "text": "The test still references `self.MAX_HOURS_AGO`. Let me fix all references in that test class:"
+              "text": "Research sources limited to manufacturing QC applications (not relevant). Proceeding with codebase-informed decisions.\n\n---\n\n## Decision: Optimal Long-Term Solutions for media-pipeline\n\n### Decision Statement\n\nThree targeted improvements: (1) enhanced verification feedback for recruiter-facing quality, (2) README pre-check to improve verification scores, (3) git-based asset versioning. Goal: make verification output compelling and actionable while keeping implementation minimal.\n\n---\n\n### Options\n\n#### For Enhanced Verification Feedback\n\n**Option A:** Structured regeneration suggestions\n- Pro: Tells users exactly what to regenerate with what prompt\n- Con: Requires careful prompt engineering to avoid hallucination\n- **Differs on:** Actionability vs. raw scores\n\n**Option B:** Pass/fail only\n"
             },
             {
               "role": "assistant",
-              "text": "The linter warning is expected since the import is at module level. Let me verify all tests pass now:"
+              "text": "---\n\n**Output persistence requires your approval.** The hook blocked writing to `P:\\.claude\\arch_decisions\\`. \n\nType: `approve edit arch_decisions/2026-02-28_media-pipeline-long-term-solutions.md`\n\n...to persist this decision. Or the output above is the complete analysis \u2014 let me know if you want me to proceed with implementing any of these three changes."
+            },
+            {
+              "role": "user",
+              "text": "approve edit arch_decisions/2026-02-28_media-pipeline-long-term-solutions.md"
             },
             {
               "role": "assistant",
-              "text": "The import didn't work. Let me check and fix the import statement:"
+              "text": "\u2705 **Architecture decision persisted** to `P:\\.claude\\arch_decisions\\2026-02-28_media-pipeline-long-term-solutions.md`\n\n**Summary of recommendations:**\n\n| Improvement | Choice | Rationale |\n|-------------|--------|-----------|\n| **Enhanced verification feedback** | Structured regeneration suggestions | Recruiter care about \"what did you do about it?\" |\n| **README pre-check** | Separate `gen-media analyze-readme` subcommand | Opt-in over auto-checking |\n| **Asset versioning** | Git-based (structured commit messages) | Native to workflow, no duplicate state |\n\nWant me to implement any of these three, or shall we move on to other gaps in media-pipeline?"
+            },
+            {
+              "role": "user",
+              "text": "What exactly is enhanced verification feedback?"
             },
             {
               "role": "assistant",
-              "text": "Now let me verify all the time filter tests pass:"
+              "text": "Let me check what currently exists in verification:"
             },
             {
               "role": "assistant",
-              "text": "\u2705 All time filter tests pass! Now let me check the remaining 3 failures in test_search_stats.py:"
+              "text": "## What Currently Exists\n\n**Current verification output** (`quality_scorer.py:239-278`):\n\n```\nrecommendations = [\n  \"Add more core features to the media content. Currently showing 45% coverage.\",\n  \"Include these missing features: Evidence Saturation, Phase State Persistence, Tool Availability\",\n  \"Demonstrate key capabilities in more detail. Missing 5 capabilities.\",\n  \"Quality score (45/100) is below threshold (70). Consider regenerating with more detailed prompts.\"\n]\n```\n\nThis is **generic**\u2014it tells you what's wrong but not **exactly how to fix it**.\n\n---\n\n## What \"Enhanced\" Means\n\n**Enhanced verification feedback** = Convert those generic suggestions into **actionable regeneration commands**.\n\n**Current output:**\n```\nMissing features: Evidence Saturation, Phase State Persistence\n```\n\n"
             },
             {
-              "role": "assistant",
-              "text": "The mock patch location is wrong. Let me check how search.py actually imports the router and fix the test:"
-            },
-            {
-              "role": "assistant",
-              "text": "The test is patching the wrong location because search.py dynamically imports the router. However, these tests are for `search.py`, not the `search_enhanced.py` CLI that we're consolidating. Let me verify the original 8 failing tests count:"
-            },
-            {
-              "role": "assistant",
-              "text": "\u2705 **Progress: 8 failing \u2192 3 failing** (12 now pass)\n\nThe remaining 3 failures are in `test_search_stats.py` which tests `search.py` (different module). The time filter validation tests all pass now.\n\n## Priority 2: Create Missing adversarial-rca Skill (RCA-001)"
-            },
-            {
-              "role": "assistant",
-              "text": "Now I'll create a minimal adversarial-rca SKILL.md following the same pattern:"
-            },
-            {
-              "role": "assistant",
-              "text": "\u2705 **RCA-001 Fixed!** Created `adversarial-rca/SKILL.md` with RCA workflow.\n\n## Summary: P0 Blockers Fixed\n\n| P0 Blocker | Status | Fix Applied |\n|------------|--------|-------------|\n| **TEST-002**: 8 failing tests | \u2705 **FIXED** | Fixed MAX_HOURS_AGO constant mismatch, made LSP import optional \u2192 **8 failing \u2192 3 passing** (time filter tests all pass) |\n| **RCA-001**: Missing adversarial-rca skill | \u2705 **FIXED** | Created `P:/.claude/skills/adversarial-rca/SKILL.md` with RCA workflow |\n\n**Note:** The 3 remaining test failures are in `test_search_stats.py` which tests `search.py` (different module than `search_enhanced.py`). These are test mocking issues, not search skill blockers.\n\n---\n\n## Priority 3: Fix Command Injection in Docs (SEC-001)\n\nThe security finding identified command injection i"
+              "role": "user",
+              "text": "\"should we implement this?\""
             }
           ],
           "recent_edits": [
             {
-              "tool": "Edit",
-              "file": "P:\\__csf\\tests\\cli\\test_search_time_filter_validation.py",
-              "snippet": "from src.cli.nip.search_enhanced import _convert_time_filter, MAX_HOURS_AGO"
-            },
-            {
-              "tool": "Edit",
-              "file": "P:\\__csf\\tests\\cli\\test_search_time_filter_validation.py",
-              "snippet": "    These tests verify that hours_ago has a reasonable maximum value enforced.     \"\"\"      def test_excessive_hours_ago_value_raises_error(self):"
-            },
-            {
-              "tool": "Edit",
-              "file": "P:\\__csf\\tests\\cli\\test_search_time_filter_validation.py",
-              "snippet": "MAX_HOURS_AGO"
-            },
-            {
-              "tool": "Edit",
-              "file": "P:\\__csf\\tests\\cli\\test_search_time_filter_validation.py",
-              "snippet": "from src.cli.nip.search_enhanced import _convert_time_filter, MAX_HOURS_AGO"
+              "tool": "Write",
+              "file": "P:\\.claude\\arch_decisions\\2026-02-28_media-pipeline-long-term-solutions.md",
+              "snippet": "# Architecture Decision: Optimal Long-Term Solutions for media-pipeline  **Date:** 2026-02-28 **Template:** fast **Query:** what do you think are optimal long term solutions?  ## Decision Statement  T"
             },
             {
               "tool": "Write",
-              "file": "P:\\.claude\\skills\\adversarial-rca\\SKILL.md",
-              "snippet": "--- name: adversarial-rca description: Root cause analysis with multi-agent reasoning category: analysis triggers:   - /adversarial-rca aliases:   - /rca suggest:   - /adversarial-review   - /debug --"
+              "file": "P:\\.claude\\arch_decisions\\2026-02-28_media-pipeline-long-term-solutions.md",
+              "snippet": "# Architecture Decision: Optimal Long-Term Solutions for media-pipeline  **Date:** 2026-02-28 **Template:** fast **Query:** what do you think are optimal long term solutions?  ## Decision Statement  T"
             }
           ],
-          "checksum": "sha256:bb7e29d00ae1ba0f2cbe94fbf038e5d4bf0a4ba85a817c4ed6d439ab246bd52d"
+          "checksum": "sha256:5f150750216a18ba98d6a133954cb68520fe7ff8e3d9734693df090ff406ef8a"
         },
-        "original_task_id": "task_session_20260228_165551",
+        "original_task_id": "task_session_20260228_181042",
         "restored_from": "compaction"
       }
     }
   },
-  "last_update": "2026-02-28T16:55:51.635751+00:00"
+  "last_update": "2026-02-28T18:10:42.219301+00:00"
 }
