@@ -760,7 +760,7 @@ class TranscriptParser:
                         break
 
         except Exception as e:
-            print(f"[TranscriptParser] Warning: Could not extract session decisions: {e}")
+            logger.error(f"[TranscriptParser] Could not extract session decisions: {e}")
 
         return decisions
 
