@@ -170,6 +170,8 @@ def handoff_to_task(handoff_data: dict[str, Any], terminal_id: str) -> dict[str,
         - Adds migration metadata (migrated_at, migrated_from)
         - Applies checkpoint chain field migration for backward compatibility
     """
+    from handoff.config import utcnow_iso
+
     # Apply checkpoint chain field migration to ensure compatibility
     migrated_handoff = migrate_checkpoint_chain_fields(handoff_data)
 
