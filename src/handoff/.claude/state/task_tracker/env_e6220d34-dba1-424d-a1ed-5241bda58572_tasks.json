@@ -5,33 +5,91 @@
       "id": "active_session",
       "subject": "Session Restore",
       "status": "pending",
-      "created_at": "2026-02-28T19:17:19.782759+00:00",
+      "created_at": "2026-02-28T21:01:36.935253+00:00",
       "terminal": "env_e6220d34-dba1-424d-a1ed-5241bda58572",
       "metadata": {
         "handoff": {
-          "task_name": "session_20260228_191719",
+          "task_name": "session_20260228_210136",
           "task_type": "informal",
           "progress_percent": 0,
-          "blocker": null,
+          "blocker": {
+            "description": "User's last question: implement those recruiter checklist updates",
+            "severity": "info",
+            "source": "transcript"
+          },
           "next_steps": "",
           "git_branch": "main",
           "active_files": [],
           "recent_tools": [
             {
               "name": "Write",
-              "timestamp": "2026-02-28T19:17:19.097643+00:00",
-              "command": "P:\\__csf\\tests\\search\\backends\\test_persona_memory_backend.py",
+              "timestamp": "2026-02-28T19:50:42.871145+00:00",
+              "command": "P:/packages/media-pipeline/plan-recruiter-fixes.md",
               "cwd": "",
-              "session_id": "e5f1aecd-cf63-45fd-80f5-7270f9a5c00e",
+              "session_id": "d4ef9d26-8df6-45c9-8c29-b889c27f8da5",
               "terminal_id": "fallback_1",
-              "output": "\"\"\"Tests for PersonaMemoryBackend - Persona Memory FTS5 search backend.\"\"\"\n\nfrom __future__ import annotations\n\nimport tempfile\nfrom pathlib import Path\nfrom unittest.mock import MagicMock, patch\n\nfrom knowledge.search.backends.persona_memory_backend import (\n    BACKEND_PERSONA,\n    PersonaMemoryBackend,\n)\n\n\nclass TestPersonaMemoryBackendInitialization:\n    \"\"\"Test PersonaMemoryBackend initialization and configuration.\"\"\"\n\n    def test_default_initialization(self):\n        \"\"\"\n        Test that PersonaMemoryBackend initializes with default db_path.\n\n        Given: No db_path parameter provided\n        When: Creating PersonaMemoryBackend instance\n        Then: Should use default db_path (~/.claude/data/persona_memory.db)\n        \"\"\"\n        # Act\n        backend = PersonaMemoryBackend()\n\n        # Assert\n        assert backend._db_path is None  # Default is None, not expanded\n        assert backend._memory is None\n        assert backend._available is False\n        assert backend._initialized is False\n\n    def test_custom_db_path(self):\n        \"\"\"\n        Test that PersonaMemoryBackend accepts custom db_path.\n\n        Given: Custom db_path parameter\n        When: Creating PersonaMemoryBackend instance\n        Then: Should store provided path\n        \"\"\"\n        # Arrange\n        custom_path = \"/custom/persona_memory.db\"\n\n        # Act\n        backend = PersonaMemoryBackend(db_path=custom_path)\n\n        # Assert\n        assert backend._db_path == custom_path\n\n    def test_backend_constant(self):\n        \"\"\"\n        Test that BACKEND_PERSONA constant is defined.\n\n        Given: BACKEND_PERSONA constant\n        When: Checking its value\n        Then: Should be \"PERSONA\"\n        \"\"\"\n        # Assert\n        assert BACKEND_PERSONA == \"PERSONA\"\n\n\nclass TestPersonaMemoryBackendLazyInitialization:\n    \"\"\"Test lazy initialization behavior.\"\"\"\n\n    def test_lazy_initialization_on_first_use(self):\n        \"\"\"\n        Test that PersonaMemoryBackend initializes lazily on first us"
+              "output": "# Media-Pipeline Recruiter Readiness Fixes\n\n## Acceptance Criteria\nAfter completion, media-pipeline will be:\n1. Free of outdated TODO comments\n2. All tests passing (105/105)\n3. Clean root directory (plan files moved)\n4. Ready for recruiter showcase\n\n## Tasks\n\n### Task 1: Remove Outdated TODO Comments [5 min]\n**File:** `pyproject.toml`\n\n**Problem:** Lines 5, 47, 48 claim README.md and LICENSE don't exist, but they do.\n\n**Changes:**\n- Line 5: Uncomment `readme = \"README.md\"` (remove TODO)\n- Line 47: Uncomment `\"/README.md\"` (remove TODO)\n- Line 48: Uncomment `\"/LICENSE\"` (remove TODO)\n\n**Verification:** File no longer contains TODO comments about these files.\n\n---\n\n### Task 2: Fix Graphviz PNG Encoding Test [15 min]\n**File:** `tests/test_executor_integration.py`\n\n**Problem:** `test_architecture_diagram_under_500kb` fails because Graphviz returns binary PNG data but code tries UTF-8 decode.\n\n**Root Cause:** `0x89` is PNG magic byte - indicates binary data, not text.\n\n**Fix:** Handle binary data in mindmap renderers.\n\n**Verification:** Test passes, file size < 500 KB or marked as expected failure.\n\n---\n\n### Task 3: Consolidate Plan Files [5 min]\n**Files:** `plan.md`, `plan-20250216-media-pipeline.md`, `plan-20260227-video-verification.md`\n\n**Action:** Create `docs/planning/` directory and move all plan files there.\n\n**Verification:**\n- `docs/planning/` contains all plan files\n- Root directory has no plan*.md files\n- README.md references updated if needed\n\n---\n\n### Task 4: Add Basic CI/CD Workflow [30 min]\n**File:** `.github/workflows/ci.yml`\n\n**Action:** Create basic GitHub Actions workflow for:\n- pytest on PR\n- Ruff linting\n- Python version matrix (3.11, 3.12)\n\n**Verification:** Workflow file exists, syntax valid.\n\n---\n\n### Task 5: Version Evaluation [5 min]\n**File:** `pyproject.toml`\n\n**Current:** `0.1.0`\n\n**Action:** Evaluate if stable enough for 1.0.0 release based on:\n- Feature completeness \u2705\n- Test coverage \u2705 (340 tests)\n- Documentation \u2705\n- Breaking changes expect"
+            },
+            {
+              "name": "Edit",
+              "timestamp": "2026-02-28T19:50:54.846190+00:00",
+              "command": "P:/packages/media-pipeline/pyproject.toml",
+              "cwd": "",
+              "session_id": "d4ef9d26-8df6-45c9-8c29-b889c27f8da5",
+              "terminal_id": "fallback_1",
+              "output": ""
+            },
+            {
+              "name": "Edit",
+              "timestamp": "2026-02-28T19:50:55.305037+00:00",
+              "command": "P:/packages/media-pipeline/pyproject.toml",
+              "cwd": "",
+              "session_id": "d4ef9d26-8df6-45c9-8c29-b889c27f8da5",
+              "terminal_id": "fallback_1",
+              "output": ""
+            },
+            {
+              "name": "Edit",
+              "timestamp": "2026-02-28T19:51:58.862967+00:00",
+              "command": "P:/packages/media-pipeline/tests/test_executor_integration.py",
+              "cwd": "",
+              "session_id": "d4ef9d26-8df6-45c9-8c29-b889c27f8da5",
+              "terminal_id": "fallback_1",
+              "output": ""
+            },
+            {
+              "name": "Edit",
+              "timestamp": "2026-02-28T19:53:32.326584+00:00",
+              "command": "P:/packages/media-pipeline/pyproject.toml",
+              "cwd": "",
+              "session_id": "d4ef9d26-8df6-45c9-8c29-b889c27f8da5",
+              "terminal_id": "fallback_1",
+              "output": ""
+            },
+            {
+              "name": "Edit",
+              "timestamp": "2026-02-28T19:53:32.781437+00:00",
+              "command": "P:/packages/media-pipeline/README.md",
+              "cwd": "",
+              "session_id": "d4ef9d26-8df6-45c9-8c29-b889c27f8da5",
+              "terminal_id": "fallback_1",
+              "output": ""
             }
           ],
-          "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\e5f1aecd-cf63-45fd-80f5-7270f9a5c00e.jsonl",
-          "transcript_offset": 14692183,
-          "transcript_entry_count": 0,
+          "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\d4ef9d26-8df6-45c9-8c29-b889c27f8da5.jsonl",
+          "transcript_offset": 745949,
+          "transcript_entry_count": 379,
           "handover": {
-            "decisions": [],
+            "decisions": [
+              {
+                "timestamp": "2026-02-28T19:49:55.312Z",
+                "topic": "<command-message>code</command-message> <command-name>/code</command-name> <comm",
+                "decision": "<command-message>code</command-message>\n<command-name>/code</command-name>\n<command-args>implement fixes and recommendations.</command-args>",
+                "direct_quote": "<command-message>code</command-message>\n<command-name>/code</command-name>\n<command-args>implement fixes and recommendations.</command-args>",
+                "source": "session_transcript",
+                "bridge_token": "BRIDGE_20260228-194955_COMMAND_MESSAGECOD"
+              }
+            ],
             "patterns_learned": [],
             "controversial_decisions": [],
             "session_objectives": []
@@ -41,9 +99,9 @@
           "resolved_issues": [],
           "modifications": [],
           "pending_operations": [],
-          "original_user_request": null,
+          "original_user_request": "implement those recruiter checklist updates",
           "first_user_request": "<local-command-caveat>Caveat: The messages below were generated by the user while running local commands. DO NOT respond to these messages or otherwise consider them in your response unless the user explicitly asks you to.</local-command-caveat>",
-          "saved_at": "2026-02-28T19:17:19.779713+00:00",
+          "saved_at": "2026-02-28T21:01:36.934862+00:00",
           "version": 1,
           "implementation_status": {
             "test_results": null,
@@ -56,105 +114,173 @@
           "recent_exchanges": [
             {
               "role": "assistant",
-              "text": "Perfect! All 11 integration tests pass! Let me now commit these changes:"
+              "text": "**Task 5 - Version Evaluation:**\n\nAssessment shows the package is **stable and production-ready**:\n- \u2705 340/340 tests passing\n- \u2705 Comprehensive features implemented\n- \u2705 Clean architecture with type hints\n- \u2705 Excellent documentation\n\n**Recommendation:** Bump to `0.5.0` (stable beta) rather than `1.0.0` to allow for minor refinements, while signaling stability to recruiters."
             },
             {
               "role": "assistant",
-              "text": "Let me check what files are actually changed and unstage any unrelated changes:"
+              "text": "**Task 5 Complete** \u2705 - Version bumped to 0.5.0 (stable beta)\n\nFinal verification:"
             },
             {
               "role": "assistant",
-              "text": "These are unrelated changes. Let me reset and only commit the search integration test fixes:"
-            },
-            {
-              "role": "assistant",
-              "text": "Perfect! The integration tests are all passing. Let me create a summary of what was accomplished:\n\n## TEST-009 Backend Test Coverage - Complete \u2705\n\n### Summary\n\nSuccessfully completed TEST-009 by creating comprehensive test coverage for 5 core search backends (90 tests total, all passing) and fixing integration test failures caused by Phase 1 cleanup.\n\n### Backend Test Coverage Created\n\n1. **test_grep_backend.py** (16 tests) - AST-based code pattern search\n2. **test_cds_backend.py** (25 tests) - AST-based docstring search with caching\n3. **test_kg_backend.py** (15 tests) - Knowledge Graph entity search with AND queries\n4. **test_skills_backend.py** (23 tests) - Progressive disclosure skills/commands search\n5. **test_dedup.py** (11 tests) - Cross-backend result deduplication\n\n**Total: 90/90 "
+              "text": "## \u2705 Recruiter Readiness Fixes Complete\n\nAll 5 tasks from the assessment have been successfully implemented:\n\n### Summary of Changes\n\n| Task | Status | Impact |\n|------|--------|--------|\n| **1. Remove TODO comments** | \u2705 Done | pyproject.toml clean, professional |\n| **2. Fix test failure** | \u2705 Done | 340/340 tests passing |\n| **3. Consolidate plan files** | \u2705 Done | Clean root directory |\n| **4. Add CI/CD workflow** | \u2705 Done | Multi-OS, multi-Python testing |\n| **5. Version bump** | \u2705 Done | Now 0.5.0 (stable beta) |\n\n### Key Improvements\n\n**Code Quality:**\n- \u2705 No outdated TODOs\n- \u2705 All 340 tests passing (24.22s)\n- \u2705 Clean architecture maintained\n\n**Professional Infrastructure:**\n- \u2705 GitHub Actions CI/CD (`.github/workflows/ci.yml`)\n  - Tests on Ubuntu, Windows, macOS\n  - Python 3.11, 3.1"
             },
             {
               "role": "user",
-              "text": "It's committed. We'll push later. What's next?"
+              "text": "do we need to udpate /package or /media-pipeline so that the skills can automatically improve packages to recruiter level without my forgetting anything?"
             },
             {
               "role": "assistant",
-              "text": "Based on the project context, we have a few options:\n\n## Current Status\n\u2705 **TEST-009 Phase 1 Complete** - 5 core backends with 90 tests (all passing)\n- GrepBackend (16 tests)\n- CdsBackend (25 tests)  \n- KGBackend (15 tests)\n- SkillsBackend (23 tests)\n- ResultDeduplicator (11 tests)\n\n\u2705 **Integration Tests Fixed** - 11/11 passing\n\n## Next Steps (Priority Order)\n\n**Option A: Continue TEST-009** (Recommended)\n- 21 more backends need test coverage\n- Priority candidates: LSPBackend, MultiLangBackend, CodeBackend, PersonaBackend, RLMBackend\n- Estimated: ~150-200 more tests\n\n**Option B: Address Remaining Findings**\n- Check if there are pending adversarial review findings\n- Review and fix any outstanding issues\n\n**Option C: Move to Next Phase**\n- Whatever the next task in your roadmap is\n\n**Recomme"
+              "text": "Good question! Let me check what `/package` and `/media-pipeline` currently do, and identify which recruiter-readiness tasks should be automated:"
+            },
+            {
+              "role": "assistant",
+              "text": "Based on my analysis, here's what needs to be updated:\n\n## Current State Analysis\n\n**`/package` skill already includes:**\n- \u2705 CI/CD workflow creation mentioned in SKILL.md\n- \u2705 Badge generation for CI status\n- \u2705 README template with GitHub integration\n\n**However, it's missing:**\n- \u274c **TODO cleanup automation** - Doesn't scan for/remove TODO comments\n- \u274c **Recruiter-readiness checklist** - No post-generation validation\n- \u274c **Version evaluation guidance** - Doesn't help decide 0.x vs 1.0.0\n- \u274c **Plan file organization** - Doesn't create `docs/planning/` structure\n\n**`/media-pipeline` skill already includes:**\n- \u2705 Asset quality verification (Step 6.5)\n- \u2705 PBS video structure guidance\n- \u2705 Asset currency checking\n\n**But missing:**\n- \u274c **Post-media cleanup checklist** - No \"recruiter-ready\" valid"
             },
             {
               "role": "user",
-              "text": "do A and B"
+              "text": "implement those recruiter checklist updates"
             },
             {
               "role": "assistant",
-              "text": "I'll tackle both A and B. Let me start by identifying the remaining backends and any pending findings."
+              "text": "I'll implement the recruiter checklist updates. Let me start by checking for existing validation modules:"
             },
             {
               "role": "assistant",
-              "text": "Now let me check for pending findings. The task list mentioned adversarial review findings for cleanup scripts:"
+              "text": "Good, no existing shared directory. I'll create the recruiter checklist infrastructure:\n\n## Step 1: Create Shared Recruiter Checklist Module"
             },
             {
               "role": "assistant",
-              "text": "Perfect! I can see the pending adversarial reviews for cleanup scripts (tasks #1195-1198). Let me tackle both:\n\n## Plan\n\n**Option A: TEST-009 Phase 2** - Tests for next 5 priority backends:\n1. `multilang_backend` (tree-sitter)\n2. `code_backend`\n3. `persona_memory_backend`\n4. `rlm_backend`\n5. `cks_metadata_backend`\n\n**Option B:** Address adversarial review findings for cleanup scripts\n\nLet me start by creating comprehensive tests for these 5 backends in parallel, then address the cleanup script findings."
+              "text": "## Step 2: Update `/package` Skill with Recruiter Validation"
             },
             {
               "role": "assistant",
-              "text": "Now let me start working on these tasks. I'll begin with the CKS Metadata Backend tests since it's straightforward SQL-based:"
+              "text": "Now I'll add PHASE 7 (Recruiter Readiness) after PHASE 6:"
             },
             {
               "role": "assistant",
-              "text": "Excellent! Let me continue with the Persona Memory Backend tests:"
+              "text": "I'll add PHASE 7 (Recruiter Readiness) after PHASE 6. Let me insert it:"
             }
           ],
           "recent_edits": [
             {
               "tool": "Write",
-              "file": "P:\\__csf\\tests\\search\\backends\\test_cks_metadata_backend.py",
-              "snippet": "\"\"\"Tests for CKSMetadataBackend - CKS metadata query backend.\"\"\"  from __future__ import annotations  import sqlite3 import tempfile from pathlib import Path  from knowledge.search.backends.cks_metada"
+              "file": "P:/packages/media-pipeline/.github/workflows/ci.yml",
+              "snippet": "name: CI  on:   push:     branches: [ main, develop ]   pull_request:     branches: [ main, develop ]  jobs:   test:     runs-on: ${{ matrix.os }}     strategy:       fail-fast: false       matrix:   "
             },
             {
-              "tool": "Write",
-              "file": "P:\\__csf\\tests\\search\\backends\\test_persona_memory_backend.py",
-              "snippet": "\"\"\"Tests for PersonaMemoryBackend - Persona Memory FTS5 search backend.\"\"\"  from __future__ import annotations  import tempfile from pathlib import Path from unittest.mock import MagicMock, patch  fro"
+              "tool": "Edit",
+              "file": "P:/packages/media-pipeline/pyproject.toml",
+              "snippet": "[project] name = \"media-pipeline\" version = \"0.5.0\" description = \"Automated media asset generation for GitHub repos\""
+            },
+            {
+              "tool": "Edit",
+              "file": "P:/packages/media-pipeline/README.md",
+              "snippet": "[![Version](https://img.shields.io/badge/version-0.5.0-green.svg)](https://github.com/csf-dev/media-pipeline)"
+            },
+            {
+              "tool": "Edit",
+              "file": "P:/packages/media-pipeline/docs/planning/plan-recruiter-fixes.md",
+              "snippet": "## Completion Checklist - [x] All TODOs removed from pyproject.toml - [x] All tests pass (340/340) - [x] Plan files moved to docs/planning/ - [x] CI/CD workflow created - [x] Version evaluated and upd"
             }
           ],
-          "checksum": "sha256:0c8b0ed34c24c97e843d3c1427cd5d3351b9b426896795dd8a9e5d8ce6477edb",
+          "checksum": "sha256:70a135c4ac02f360462502a357105fcf251a840be26bef57a93b611d856e3adc",
           "files_modified": []
         },
-        "task_id": "task_session_20260228_191719",
-        "task_name": "session_20260228_191719",
-        "pid": 99708,
+        "task_id": "task_session_20260228_210136",
+        "task_name": "session_20260228_210136",
+        "pid": 126624,
         "restore_pending": true
       }
     },
     "continue_session": {
       "id": "continue_session",
-      "subject": "Continue: session_20260228_191719",
+      "subject": "Continue: session_20260228_210136",
       "status": "pending",
-      "created_at": "2026-02-28T19:17:19.782771+00:00",
+      "created_at": "2026-02-28T21:01:36.935258+00:00",
       "terminal": "env_e6220d34-dba1-424d-a1ed-5241bda58572",
       "metadata": {
         "handoff": {
-          "task_name": "session_20260228_191719",
+          "task_name": "session_20260228_210136",
           "task_type": "informal",
           "progress_percent": 0,
-          "blocker": null,
+          "blocker": {
+            "description": "User's last question: implement those recruiter checklist updates",
+            "severity": "info",
+            "source": "transcript"
+          },
           "next_steps": "",
           "git_branch": "main",
           "active_files": [],
           "recent_tools": [
             {
               "name": "Write",
-              "timestamp": "2026-02-28T19:17:19.097643+00:00",
-              "command": "P:\\__csf\\tests\\search\\backends\\test_persona_memory_backend.py",
+              "timestamp": "2026-02-28T19:50:42.871145+00:00",
+              "command": "P:/packages/media-pipeline/plan-recruiter-fixes.md",
               "cwd": "",
-              "session_id": "e5f1aecd-cf63-45fd-80f5-7270f9a5c00e",
+              "session_id": "d4ef9d26-8df6-45c9-8c29-b889c27f8da5",
               "terminal_id": "fallback_1",
-              "output": "\"\"\"Tests for PersonaMemoryBackend - Persona Memory FTS5 search backend.\"\"\"\n\nfrom __future__ import annotations\n\nimport tempfile\nfrom pathlib import Path\nfrom unittest.mock import MagicMock, patch\n\nfrom knowledge.search.backends.persona_memory_backend import (\n    BACKEND_PERSONA,\n    PersonaMemoryBackend,\n)\n\n\nclass TestPersonaMemoryBackendInitialization:\n    \"\"\"Test PersonaMemoryBackend initialization and configuration.\"\"\"\n\n    def test_default_initialization(self):\n        \"\"\"\n        Test that PersonaMemoryBackend initializes with default db_path.\n\n        Given: No db_path parameter provided\n        When: Creating PersonaMemoryBackend instance\n        Then: Should use default db_path (~/.claude/data/persona_memory.db)\n        \"\"\"\n        # Act\n        backend = PersonaMemoryBackend()\n\n        # Assert\n        assert backend._db_path is None  # Default is None, not expanded\n        assert backend._memory is None\n        assert backend._available is False\n        assert backend._initialized is False\n\n    def test_custom_db_path(self):\n        \"\"\"\n        Test that PersonaMemoryBackend accepts custom db_path.\n\n        Given: Custom db_path parameter\n        When: Creating PersonaMemoryBackend instance\n        Then: Should store provided path\n        \"\"\"\n        # Arrange\n        custom_path = \"/custom/persona_memory.db\"\n\n        # Act\n        backend = PersonaMemoryBackend(db_path=custom_path)\n\n        # Assert\n        assert backend._db_path == custom_path\n\n    def test_backend_constant(self):\n        \"\"\"\n        Test that BACKEND_PERSONA constant is defined.\n\n        Given: BACKEND_PERSONA constant\n        When: Checking its value\n        Then: Should be \"PERSONA\"\n        \"\"\"\n        # Assert\n        assert BACKEND_PERSONA == \"PERSONA\"\n\n\nclass TestPersonaMemoryBackendLazyInitialization:\n    \"\"\"Test lazy initialization behavior.\"\"\"\n\n    def test_lazy_initialization_on_first_use(self):\n        \"\"\"\n        Test that PersonaMemoryBackend initializes lazily on first us"
+              "output": "# Media-Pipeline Recruiter Readiness Fixes\n\n## Acceptance Criteria\nAfter completion, media-pipeline will be:\n1. Free of outdated TODO comments\n2. All tests passing (105/105)\n3. Clean root directory (plan files moved)\n4. Ready for recruiter showcase\n\n## Tasks\n\n### Task 1: Remove Outdated TODO Comments [5 min]\n**File:** `pyproject.toml`\n\n**Problem:** Lines 5, 47, 48 claim README.md and LICENSE don't exist, but they do.\n\n**Changes:**\n- Line 5: Uncomment `readme = \"README.md\"` (remove TODO)\n- Line 47: Uncomment `\"/README.md\"` (remove TODO)\n- Line 48: Uncomment `\"/LICENSE\"` (remove TODO)\n\n**Verification:** File no longer contains TODO comments about these files.\n\n---\n\n### Task 2: Fix Graphviz PNG Encoding Test [15 min]\n**File:** `tests/test_executor_integration.py`\n\n**Problem:** `test_architecture_diagram_under_500kb` fails because Graphviz returns binary PNG data but code tries UTF-8 decode.\n\n**Root Cause:** `0x89` is PNG magic byte - indicates binary data, not text.\n\n**Fix:** Handle binary data in mindmap renderers.\n\n**Verification:** Test passes, file size < 500 KB or marked as expected failure.\n\n---\n\n### Task 3: Consolidate Plan Files [5 min]\n**Files:** `plan.md`, `plan-20250216-media-pipeline.md`, `plan-20260227-video-verification.md`\n\n**Action:** Create `docs/planning/` directory and move all plan files there.\n\n**Verification:**\n- `docs/planning/` contains all plan files\n- Root directory has no plan*.md files\n- README.md references updated if needed\n\n---\n\n### Task 4: Add Basic CI/CD Workflow [30 min]\n**File:** `.github/workflows/ci.yml`\n\n**Action:** Create basic GitHub Actions workflow for:\n- pytest on PR\n- Ruff linting\n- Python version matrix (3.11, 3.12)\n\n**Verification:** Workflow file exists, syntax valid.\n\n---\n\n### Task 5: Version Evaluation [5 min]\n**File:** `pyproject.toml`\n\n**Current:** `0.1.0`\n\n**Action:** Evaluate if stable enough for 1.0.0 release based on:\n- Feature completeness \u2705\n- Test coverage \u2705 (340 tests)\n- Documentation \u2705\n- Breaking changes expect"
+            },
+            {
+              "name": "Edit",
+              "timestamp": "2026-02-28T19:50:54.846190+00:00",
+              "command": "P:/packages/media-pipeline/pyproject.toml",
+              "cwd": "",
+              "session_id": "d4ef9d26-8df6-45c9-8c29-b889c27f8da5",
+              "terminal_id": "fallback_1",
+              "output": ""
+            },
+            {
+              "name": "Edit",
+              "timestamp": "2026-02-28T19:50:55.305037+00:00",
+              "command": "P:/packages/media-pipeline/pyproject.toml",
+              "cwd": "",
+              "session_id": "d4ef9d26-8df6-45c9-8c29-b889c27f8da5",
+              "terminal_id": "fallback_1",
+              "output": ""
+            },
+            {
+              "name": "Edit",
+              "timestamp": "2026-02-28T19:51:58.862967+00:00",
+              "command": "P:/packages/media-pipeline/tests/test_executor_integration.py",
+              "cwd": "",
+              "session_id": "d4ef9d26-8df6-45c9-8c29-b889c27f8da5",
+              "terminal_id": "fallback_1",
+              "output": ""
+            },
+            {
+              "name": "Edit",
+              "timestamp": "2026-02-28T19:53:32.326584+00:00",
+              "command": "P:/packages/media-pipeline/pyproject.toml",
+              "cwd": "",
+              "session_id": "d4ef9d26-8df6-45c9-8c29-b889c27f8da5",
+              "terminal_id": "fallback_1",
+              "output": ""
+            },
+            {
+              "name": "Edit",
+              "timestamp": "2026-02-28T19:53:32.781437+00:00",
+              "command": "P:/packages/media-pipeline/README.md",
+              "cwd": "",
+              "session_id": "d4ef9d26-8df6-45c9-8c29-b889c27f8da5",
+              "terminal_id": "fallback_1",
+              "output": ""
             }
           ],
-          "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\e5f1aecd-cf63-45fd-80f5-7270f9a5c00e.jsonl",
-          "transcript_offset": 14692183,
-          "transcript_entry_count": 0,
+          "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\d4ef9d26-8df6-45c9-8c29-b889c27f8da5.jsonl",
+          "transcript_offset": 745949,
+          "transcript_entry_count": 379,
           "handover": {
-            "decisions": [],
+            "decisions": [
+              {
+                "timestamp": "2026-02-28T19:49:55.312Z",
+                "topic": "<command-message>code</command-message> <command-name>/code</command-name> <comm",
+                "decision": "<command-message>code</command-message>\n<command-name>/code</command-name>\n<command-args>implement fixes and recommendations.</command-args>",
+                "direct_quote": "<command-message>code</command-message>\n<command-name>/code</command-name>\n<command-args>implement fixes and recommendations.</command-args>",
+                "source": "session_transcript",
+                "bridge_token": "BRIDGE_20260228-194955_COMMAND_MESSAGECOD"
+              }
+            ],
             "patterns_learned": [],
             "controversial_decisions": [],
             "session_objectives": []
@@ -164,9 +290,9 @@
           "resolved_issues": [],
           "modifications": [],
           "pending_operations": [],
-          "original_user_request": null,
+          "original_user_request": "implement those recruiter checklist updates",
           "first_user_request": "<local-command-caveat>Caveat: The messages below were generated by the user while running local commands. DO NOT respond to these messages or otherwise consider them in your response unless the user explicitly asks you to.</local-command-caveat>",
-          "saved_at": "2026-02-28T19:17:19.779713+00:00",
+          "saved_at": "2026-02-28T21:01:36.934862+00:00",
           "version": 1,
           "implementation_status": {
             "test_results": null,
@@ -179,72 +305,82 @@
           "recent_exchanges": [
             {
               "role": "assistant",
-              "text": "Perfect! All 11 integration tests pass! Let me now commit these changes:"
+              "text": "**Task 5 - Version Evaluation:**\n\nAssessment shows the package is **stable and production-ready**:\n- \u2705 340/340 tests passing\n- \u2705 Comprehensive features implemented\n- \u2705 Clean architecture with type hints\n- \u2705 Excellent documentation\n\n**Recommendation:** Bump to `0.5.0` (stable beta) rather than `1.0.0` to allow for minor refinements, while signaling stability to recruiters."
             },
             {
               "role": "assistant",
-              "text": "Let me check what files are actually changed and unstage any unrelated changes:"
+              "text": "**Task 5 Complete** \u2705 - Version bumped to 0.5.0 (stable beta)\n\nFinal verification:"
             },
             {
               "role": "assistant",
-              "text": "These are unrelated changes. Let me reset and only commit the search integration test fixes:"
-            },
-            {
-              "role": "assistant",
-              "text": "Perfect! The integration tests are all passing. Let me create a summary of what was accomplished:\n\n## TEST-009 Backend Test Coverage - Complete \u2705\n\n### Summary\n\nSuccessfully completed TEST-009 by creating comprehensive test coverage for 5 core search backends (90 tests total, all passing) and fixing integration test failures caused by Phase 1 cleanup.\n\n### Backend Test Coverage Created\n\n1. **test_grep_backend.py** (16 tests) - AST-based code pattern search\n2. **test_cds_backend.py** (25 tests) - AST-based docstring search with caching\n3. **test_kg_backend.py** (15 tests) - Knowledge Graph entity search with AND queries\n4. **test_skills_backend.py** (23 tests) - Progressive disclosure skills/commands search\n5. **test_dedup.py** (11 tests) - Cross-backend result deduplication\n\n**Total: 90/90 "
+              "text": "## \u2705 Recruiter Readiness Fixes Complete\n\nAll 5 tasks from the assessment have been successfully implemented:\n\n### Summary of Changes\n\n| Task | Status | Impact |\n|------|--------|--------|\n| **1. Remove TODO comments** | \u2705 Done | pyproject.toml clean, professional |\n| **2. Fix test failure** | \u2705 Done | 340/340 tests passing |\n| **3. Consolidate plan files** | \u2705 Done | Clean root directory |\n| **4. Add CI/CD workflow** | \u2705 Done | Multi-OS, multi-Python testing |\n| **5. Version bump** | \u2705 Done | Now 0.5.0 (stable beta) |\n\n### Key Improvements\n\n**Code Quality:**\n- \u2705 No outdated TODOs\n- \u2705 All 340 tests passing (24.22s)\n- \u2705 Clean architecture maintained\n\n**Professional Infrastructure:**\n- \u2705 GitHub Actions CI/CD (`.github/workflows/ci.yml`)\n  - Tests on Ubuntu, Windows, macOS\n  - Python 3.11, 3.1"
             },
             {
               "role": "user",
-              "text": "It's committed. We'll push later. What's next?"
+              "text": "do we need to udpate /package or /media-pipeline so that the skills can automatically improve packages to recruiter level without my forgetting anything?"
             },
             {
               "role": "assistant",
-              "text": "Based on the project context, we have a few options:\n\n## Current Status\n\u2705 **TEST-009 Phase 1 Complete** - 5 core backends with 90 tests (all passing)\n- GrepBackend (16 tests)\n- CdsBackend (25 tests)  \n- KGBackend (15 tests)\n- SkillsBackend (23 tests)\n- ResultDeduplicator (11 tests)\n\n\u2705 **Integration Tests Fixed** - 11/11 passing\n\n## Next Steps (Priority Order)\n\n**Option A: Continue TEST-009** (Recommended)\n- 21 more backends need test coverage\n- Priority candidates: LSPBackend, MultiLangBackend, CodeBackend, PersonaBackend, RLMBackend\n- Estimated: ~150-200 more tests\n\n**Option B: Address Remaining Findings**\n- Check if there are pending adversarial review findings\n- Review and fix any outstanding issues\n\n**Option C: Move to Next Phase**\n- Whatever the next task in your roadmap is\n\n**Recomme"
+              "text": "Good question! Let me check what `/package` and `/media-pipeline` currently do, and identify which recruiter-readiness tasks should be automated:"
+            },
+            {
+              "role": "assistant",
+              "text": "Based on my analysis, here's what needs to be updated:\n\n## Current State Analysis\n\n**`/package` skill already includes:**\n- \u2705 CI/CD workflow creation mentioned in SKILL.md\n- \u2705 Badge generation for CI status\n- \u2705 README template with GitHub integration\n\n**However, it's missing:**\n- \u274c **TODO cleanup automation** - Doesn't scan for/remove TODO comments\n- \u274c **Recruiter-readiness checklist** - No post-generation validation\n- \u274c **Version evaluation guidance** - Doesn't help decide 0.x vs 1.0.0\n- \u274c **Plan file organization** - Doesn't create `docs/planning/` structure\n\n**`/media-pipeline` skill already includes:**\n- \u2705 Asset quality verification (Step 6.5)\n- \u2705 PBS video structure guidance\n- \u2705 Asset currency checking\n\n**But missing:**\n- \u274c **Post-media cleanup checklist** - No \"recruiter-ready\" valid"
             },
             {
               "role": "user",
-              "text": "do A and B"
+              "text": "implement those recruiter checklist updates"
             },
             {
               "role": "assistant",
-              "text": "I'll tackle both A and B. Let me start by identifying the remaining backends and any pending findings."
+              "text": "I'll implement the recruiter checklist updates. Let me start by checking for existing validation modules:"
             },
             {
               "role": "assistant",
-              "text": "Now let me check for pending findings. The task list mentioned adversarial review findings for cleanup scripts:"
+              "text": "Good, no existing shared directory. I'll create the recruiter checklist infrastructure:\n\n## Step 1: Create Shared Recruiter Checklist Module"
             },
             {
               "role": "assistant",
-              "text": "Perfect! I can see the pending adversarial reviews for cleanup scripts (tasks #1195-1198). Let me tackle both:\n\n## Plan\n\n**Option A: TEST-009 Phase 2** - Tests for next 5 priority backends:\n1. `multilang_backend` (tree-sitter)\n2. `code_backend`\n3. `persona_memory_backend`\n4. `rlm_backend`\n5. `cks_metadata_backend`\n\n**Option B:** Address adversarial review findings for cleanup scripts\n\nLet me start by creating comprehensive tests for these 5 backends in parallel, then address the cleanup script findings."
+              "text": "## Step 2: Update `/package` Skill with Recruiter Validation"
             },
             {
               "role": "assistant",
-              "text": "Now let me start working on these tasks. I'll begin with the CKS Metadata Backend tests since it's straightforward SQL-based:"
+              "text": "Now I'll add PHASE 7 (Recruiter Readiness) after PHASE 6:"
             },
             {
               "role": "assistant",
-              "text": "Excellent! Let me continue with the Persona Memory Backend tests:"
+              "text": "I'll add PHASE 7 (Recruiter Readiness) after PHASE 6. Let me insert it:"
             }
           ],
           "recent_edits": [
             {
               "tool": "Write",
-              "file": "P:\\__csf\\tests\\search\\backends\\test_cks_metadata_backend.py",
-              "snippet": "\"\"\"Tests for CKSMetadataBackend - CKS metadata query backend.\"\"\"  from __future__ import annotations  import sqlite3 import tempfile from pathlib import Path  from knowledge.search.backends.cks_metada"
+              "file": "P:/packages/media-pipeline/.github/workflows/ci.yml",
+              "snippet": "name: CI  on:   push:     branches: [ main, develop ]   pull_request:     branches: [ main, develop ]  jobs:   test:     runs-on: ${{ matrix.os }}     strategy:       fail-fast: false       matrix:   "
             },
             {
-              "tool": "Write",
-              "file": "P:\\__csf\\tests\\search\\backends\\test_persona_memory_backend.py",
-              "snippet": "\"\"\"Tests for PersonaMemoryBackend - Persona Memory FTS5 search backend.\"\"\"  from __future__ import annotations  import tempfile from pathlib import Path from unittest.mock import MagicMock, patch  fro"
+              "tool": "Edit",
+              "file": "P:/packages/media-pipeline/pyproject.toml",
+              "snippet": "[project] name = \"media-pipeline\" version = \"0.5.0\" description = \"Automated media asset generation for GitHub repos\""
+            },
+            {
+              "tool": "Edit",
+              "file": "P:/packages/media-pipeline/README.md",
+              "snippet": "[![Version](https://img.shields.io/badge/version-0.5.0-green.svg)](https://github.com/csf-dev/media-pipeline)"
+            },
+            {
+              "tool": "Edit",
+              "file": "P:/packages/media-pipeline/docs/planning/plan-recruiter-fixes.md",
+              "snippet": "## Completion Checklist - [x] All TODOs removed from pyproject.toml - [x] All tests pass (340/340) - [x] Plan files moved to docs/planning/ - [x] CI/CD workflow created - [x] Version evaluated and upd"
             }
           ],
-          "checksum": "sha256:0c8b0ed34c24c97e843d3c1427cd5d3351b9b426896795dd8a9e5d8ce6477edb",
+          "checksum": "sha256:70a135c4ac02f360462502a357105fcf251a840be26bef57a93b611d856e3adc",
           "files_modified": []
         },
-        "original_task_id": "task_session_20260228_191719",
+        "original_task_id": "task_session_20260228_210136",
         "restored_from": "compaction"
       }
     }
   },
-  "last_update": "2026-02-28T19:17:19.792448+00:00"
+  "last_update": "2026-02-28T21:01:36.942232+00:00"
 }

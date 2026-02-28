@@ -1048,28 +1048,22 @@ class PreCompactHandoffCapture:
         if handoff_saved:
             try:
                 # Get last user message for handoff metadata
-                # Priority: 1) active_command file, 2) blocker.description,
-                # 3) hook_input, 4) transcript scraping
+                # Priority: 1) TranscriptParser (source of truth), 2) hook_input,
+                # 3) active_command file, 4) blocker.description
                 last_user_message = ""
 
-                # Option 1: Load from active_command file (PRIORITY 1 - most reliable)
-                last_user_message = self._load_active_command_file()
-                if last_user_message:
-                    print(
-                        f"[PreCompact] Using last_user_message from active_command file: "
-                        f"{last_user_message[:50]}..."
-                    )
-
-                # Option 2: Use blocker.description (contains "User's last question: ...")
-                if not last_user_message:
-                    last_user_message = transcript.extract_user_message_from_blocker(blocker)
+                # Option 1: TranscriptParser - scans the ACTUAL transcript (PRIORITY 1 - most reliable)
+                if self.transcript_path:
+                    # Use the TranscriptParser's extract_last_user_message() which scans
+                    # the ENTIRE parsed transcript, not just last 20 raw lines
+                    last_user_message = self.parser.extract_last_user_message()
                     if last_user_message:
                         print(
-                            f"[PreCompact] Using last_user_message from blocker: "
+                            f"[PreCompact] Using last_user_message from TranscriptParser: "
                             f"{last_user_message[:50]}..."
                         )
 
-                # Option 3: Read from hook_input if available
+                # Option 2: Read from hook_input if available
                 if not last_user_message:
                     handoff_input_data = self.hook_input.get("handoff_data") or self.hook_input
                     if isinstance(handoff_input_data, dict):
@@ -1083,14 +1077,21 @@ class PreCompactHandoffCapture:
                                 f"{last_user_message[:50]}..."
                             )
 
-                # Option 4: Fallback to TranscriptParser (uses full transcript, not just 20 lines)
-                if not last_user_message and self.transcript_path:
-                    # Use the TranscriptParser's extract_last_user_message() which scans
-                    # the ENTIRE parsed transcript, not just last 20 raw lines
-                    last_user_message = self.parser.extract_last_user_message()
+                # Option 3: Load from active_command file (can be stale)
+                if not last_user_message:
+                    last_user_message = self._load_active_command_file()
                     if last_user_message:
                         print(
-                            f"[PreCompact] Using last_user_message from TranscriptParser: "
+                            f"[PreCompact] Using last_user_message from active_command file: "
+                            f"{last_user_message[:50]}..."
+                        )
+
+                # Option 4: Use blocker.description (can be from earlier, fallback only)
+                if not last_user_message:
+                    last_user_message = transcript.extract_user_message_from_blocker(blocker)
+                    if last_user_message:
+                        print(
+                            f"[PreCompact] Using last_user_message from blocker: "
                             f"{last_user_message[:50]}..."
                         )
 
