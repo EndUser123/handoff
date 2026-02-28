@@ -615,7 +615,7 @@ class TranscriptParser:
                         )
 
         except Exception as e:
-            print(f"[TranscriptParser] Warning: Could not extract modifications: {e}")
+            logger.error(f"[TranscriptParser] Could not extract modifications: {e}")
 
         # Apply FIFO limit - keep only the most recent N modifications
         if len(modifications) > limit:
