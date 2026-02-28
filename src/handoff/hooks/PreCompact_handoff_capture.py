@@ -210,7 +210,7 @@ class PreCompactHandoffCapture:
             )
             return files[:10]  # Limit to 10
         except Exception as e:
-            print(f"[PreCompact] Warning: Could not get session files: {e}")
+            logger.warning(f"[PreCompact] Could not get session files: {e}")
             return []
 
     def _load_active_command_file(self) -> str | None:
