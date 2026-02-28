@@ -6,18 +6,17 @@ messages and continues processing valid ones.
 """
 
 
-from handoff.hooks.__lib.transcript import filter_valid_messages
 
 
 class TestFilterValidMessagesInvalidInput:
-    """Test extract_transcript_from_messages with invalid message formats."""
+    """Test filter_valid_messages with invalid message formats."""
 
     def test_skips_non_dict_messages(self):
         """
         Test that non-dict messages are skipped.
 
         Given: A list of messages containing non-dict items
-        When: extract_transcript_from_messages is called
+        When: filter_valid_messages is called
         Then: Non-dict messages are skipped, valid messages are processed
         """
         messages = [
@@ -29,7 +28,7 @@ class TestFilterValidMessagesInvalidInput:
             ["list", "instead", "of", "dict"],
         ]
 
-        result = extract_transcript_from_messages(messages)
+        result = filter_valid_messages(messages)
 
         # Should only process the two valid dict messages
         assert len(result) == 2
@@ -43,7 +42,7 @@ class TestFilterValidMessagesInvalidInput:
         Test that messages missing 'role' field are skipped.
 
         Given: A list of messages with some missing 'role' field
-        When: extract_transcript_from_messages is called
+        When: filter_valid_messages is called
         Then: Messages without 'role' are skipped, valid messages are processed
         """
         messages = [
@@ -54,7 +53,7 @@ class TestFilterValidMessagesInvalidInput:
             {"role": "user", "content": "valid message 3"},
         ]
 
-        result = extract_transcript_from_messages(messages)
+        result = filter_valid_messages(messages)
 
         # Should only process messages with 'role' field
         assert len(result) == 3
@@ -70,7 +69,7 @@ class TestFilterValidMessagesInvalidInput:
         Test that messages with unexpected value types are skipped.
 
         Given: A list of messages with unexpected types for fields
-        When: extract_transcript_from_messages is called
+        When: filter_valid_messages is called
         Then: Messages with invalid types are skipped
         """
         messages = [
@@ -81,7 +80,7 @@ class TestFilterValidMessagesInvalidInput:
             {"role": "assistant", "content": "another valid message"},
         ]
 
-        result = extract_transcript_from_messages(messages)
+        result = filter_valid_messages(messages)
 
         # Should only process messages with correct types
         assert len(result) == 2
@@ -95,10 +94,10 @@ class TestFilterValidMessagesInvalidInput:
         Test that an empty message list returns empty result.
 
         Given: An empty list of messages
-        When: extract_transcript_from_messages is called
+        When: filter_valid_messages is called
         Then: Returns empty list
         """
-        result = extract_transcript_from_messages([])
+        result = filter_valid_messages([])
         assert result == []
 
     def test_handles_all_invalid_messages(self):
@@ -106,7 +105,7 @@ class TestFilterValidMessagesInvalidInput:
         Test that a list with only invalid messages returns empty result.
 
         Given: A list containing only invalid messages
-        When: extract_transcript_from_messages is called
+        When: filter_valid_messages is called
         Then: Returns empty list
         """
         messages = [
@@ -117,7 +116,7 @@ class TestFilterValidMessagesInvalidInput:
             {"role": 123, "content": "invalid role type"},
         ]
 
-        result = extract_transcript_from_messages(messages)
+        result = filter_valid_messages(messages)
         assert result == []
 
     def test_preserves_valid_message_structure(self):
@@ -125,7 +124,7 @@ class TestFilterValidMessagesInvalidInput:
         Test that valid message structure is preserved.
 
         Given: A list of valid messages with various fields
-        When: extract_transcript_from_messages is called
+        When: filter_valid_messages is called
         Then: All fields are preserved in the output
         """
         messages = [
@@ -138,7 +137,7 @@ class TestFilterValidMessagesInvalidInput:
             {"role": "assistant", "content": "simple message"},
         ]
 
-        result = extract_transcript_from_messages(messages)
+        result = filter_valid_messages(messages)
 
         assert len(result) == 2
         assert result[0]["role"] == "user"
@@ -153,7 +152,7 @@ class TestFilterValidMessagesInvalidInput:
         Test complex mix of valid and invalid messages.
 
         Given: A realistic mix of valid and invalid messages
-        When: extract_transcript_from_messages is called
+        When: filter_valid_messages is called
         Then: Only valid messages are extracted and returned in order
         """
         messages = [
@@ -169,7 +168,7 @@ class TestFilterValidMessagesInvalidInput:
             {"role": "assistant", "content": "fifth valid"},
         ]
 
-        result = extract_transcript_from_messages(messages)
+        result = filter_valid_messages(messages)
 
         assert len(result) == 5
         assert result[0] == {"role": "user", "content": "first valid"}
