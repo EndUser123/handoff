@@ -346,7 +346,6 @@ def enrich_handoff_with_bridge_tokens(handoff_data: dict[str, Any]) -> dict[str,
     Returns:
         Enriched handoff data with bridge tokens added to decisions
     """
-    from handoff.config import utcnow_iso
 
     enriched = handoff_data.copy()
     handover = enriched.get("handover", {}).copy()
@@ -358,7 +357,7 @@ def enrich_handoff_with_bridge_tokens(handoff_data: dict[str, Any]) -> dict[str,
             decision_copy = decision.copy()
             # Generate bridge token from topic and timestamp
             topic = decision_copy.get("topic", "unknown")
-            timestamp = decision_copy.get("timestamp", datetime.now(UTC).isoformat())
+            timestamp = decision_copy.get("timestamp", utcnow_iso())
             bridge_token = generate_bridge_token(topic, timestamp)
             decision_copy["bridge_token"] = bridge_token
             decisions[i] = decision_copy
