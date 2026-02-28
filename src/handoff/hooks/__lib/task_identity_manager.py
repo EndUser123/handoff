@@ -310,11 +310,13 @@ class TaskIdentityManager:
             return False
 
         try:
+            from handoff.config import utcnow_iso
+
             metadata = {
                 "task_name": task_name,
                 "task_id": f"task_{task_name.lower()}",
                 "handoff_id": handoff_id,
-                "timestamp": datetime.now(UTC).isoformat(),
+                "timestamp": utcnow_iso(),
                 "version": "v1"
             }
 
