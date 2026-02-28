@@ -620,7 +620,13 @@ def _load_active_session_task(terminal_id: str) -> tuple[dict[str, Any] | None, 
                 return continue_session, source_terminal
 
         except (json.JSONDecodeError, OSError) as e:
-            logger.debug(f"[SessionStart] Error reading {task_file.name}: {e}")
+            # Issue #4: Log corrupted task files at ERROR level and delete them
+            logger.error(f"[SessionStart] CORRUPTED task file {task_file.name}: {e}")
+            try:
+                task_file.unlink(missing_ok=True)
+                logger.info(f"[SessionStart] Deleted corrupted task file: {task_file.name}")
+            except OSError:
+                pass
             continue
 
     return None, None
