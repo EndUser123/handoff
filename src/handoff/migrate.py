@@ -385,6 +385,82 @@ def migrate_handoffs(
     return results
 
 
+def _truncate_active_files(handoff_data: dict[str, Any]) -> None:
+    """Truncate active_files to 100 items with truncation marker.
+
+    Modifies handoff_data in place.
+
+    Args:
+        handoff_data: Handoff dictionary to update
+    """
+    active_files = handoff_data.get("active_files", [])
+    if isinstance(active_files, list) and len(active_files) > 100:
+        handoff_data["active_files"] = active_files[:100]
+        handoff_data["active_files"].append(f"...and {len(active_files) - 100} more")
+
+
+def _truncate_next_steps(handoff_data: dict[str, Any]) -> None:
+    """Truncate next_steps to 10,000 characters.
+
+    Modifies handoff_data in place.
+
+    Args:
+        handoff_data: Handoff dictionary to update
+    """
+    next_steps = handoff_data.get("next_steps", "")
+    if isinstance(next_steps, str) and len(next_steps) > 10000:
+        handoff_data["next_steps"] = next_steps[:9950] + "\n\n...[truncated]"
+
+
+def _truncate_handover_lists(handoff_data: dict[str, Any]) -> None:
+    """Truncate handover patterns/decisions to 10 items each.
+
+    Modifies handoff_data in place.
+
+    Args:
+        handoff_data: Handoff dictionary to update
+    """
+    handover = handoff_data.get("handover")
+    if isinstance(handover, dict):
+        handover = handover.copy()
+        if isinstance(handover.get("decisions"), list) and len(handover["decisions"]) > 10:
+            handover["decisions"] = handover["decisions"][:10]
+        if isinstance(handover.get("patterns_learned"), list) and len(handover["patterns_learned"]) > 10:
+            handover["patterns_learned"] = handover["patterns_learned"][:10]
+        handoff_data["handover"] = handover
+
+
+def _truncate_list_keep_recent(
+    handoff_data: dict[str, Any],
+    field_name: str,
+    max_entries: int
+) -> None:
+    """Truncate list field to max entries, keeping most recent.
+
+    Modifies handoff_data in place.
+
+    Args:
+        handoff_data: Handoff dictionary to update
+        field_name: Name of the list field to truncate
+        max_entries: Maximum number of entries to keep
+    """
+    items = handoff_data.get(field_name, [])
+    if isinstance(items, list) and len(items) > max_entries:
+        handoff_data[field_name] = items[-max_entries:]
+
+
+def _warn_if_oversized(handoff_data: dict[str, Any], max_bytes: int = 500_000) -> None:
+    """Warn if handoff data size exceeds limit.
+
+    Args:
+        handoff_data: Handoff dictionary to check
+        max_bytes: Maximum allowed size in bytes (default: 500 KB)
+    """
+    estimated_size = len(json.dumps(handoff_data).encode('utf-8'))
+    if estimated_size > max_bytes:
+        print(f"Warning: Handoff metadata exceeds {max_bytes // 1000} KB: {estimated_size} bytes")
+
+
 def validate_handoff_size(handoff_data: dict[str, Any]) -> dict[str, Any]:
     """Enforce metadata size limits to prevent task file bloat.
 
@@ -412,41 +488,15 @@ def validate_handoff_size(handoff_data: dict[str, Any]) -> dict[str, Any]:
     # Create a copy to avoid mutating original
     validated = handoff_data.copy()
 
-    # Truncate active_files to 100 items
-    active_files = validated.get("active_files", [])
-    if isinstance(active_files, list) and len(active_files) > 100:
-        validated["active_files"] = active_files[:100]
-        validated["active_files"].append(f"...and {len(active_files) - 100} more")
+    # Apply all truncation rules
+    _truncate_active_files(validated)
+    _truncate_next_steps(validated)
+    _truncate_handover_lists(validated)
+    _truncate_list_keep_recent(validated, "recent_tools", 30)
+    _truncate_list_keep_recent(validated, "modifications", 50)
 
-    # Truncate next_steps to 10,000 characters
-    next_steps = validated.get("next_steps", "")
-    if isinstance(next_steps, str) and len(next_steps) > 10000:
-        validated["next_steps"] = next_steps[:9950] + "\n\n...[truncated]"
-
-    # Truncate handover patterns/decisions
-    handover = validated.get("handover")
-    if isinstance(handover, dict):
-        handover = handover.copy()
-        if isinstance(handover.get("decisions"), list) and len(handover["decisions"]) > 10:
-            handover["decisions"] = handover["decisions"][:10]
-        if isinstance(handover.get("patterns_learned"), list) and len(handover["patterns_learned"]) > 10:
-            handover["patterns_learned"] = handover["patterns_learned"][:10]
-        validated["handover"] = handover
-
-    # Limit recent_tools to 30 entries (keep most recent)
-    recent_tools = validated.get("recent_tools", [])
-    if isinstance(recent_tools, list) and len(recent_tools) > 30:
-        validated["recent_tools"] = recent_tools[-30:]
-
-    # Limit modifications to 50 entries (keep most recent)
-    modifications = validated.get("modifications", [])
-    if isinstance(modifications, list) and len(modifications) > 50:
-        validated["modifications"] = modifications[-50:]
-
-    # Compute final size and warn if exceeds 500 KB
-    estimated_size = len(json.dumps(validated).encode('utf-8'))
-    if estimated_size > 500_000:  # 500 KB
-        print(f"Warning: Handoff metadata exceeds 500 KB: {estimated_size} bytes")
+    # Warn if oversized
+    _warn_if_oversized(validated)
 
     return validated
 
