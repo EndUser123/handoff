@@ -23,7 +23,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import os
 import sys
 import tempfile
 from datetime import UTC, datetime
@@ -41,7 +40,6 @@ try:
 except ImportError:
     # Fallback if terminal_detection unavailable
     def detect_terminal_id() -> str:  # type: ignore[misc]
-        import os
         return f"term_{os.getpid()}"
 
 
@@ -312,7 +310,6 @@ def migrate_handoffs(
         task_data["last_update"] = datetime.now(UTC).isoformat()
 
         # Write task file with atomic write (mkstemp avoids concurrent migration races)
-        import tempfile
         try:
             fd, temp_path_str = tempfile.mkstemp(
                 suffix=".tmp", dir=str(task_file_path.parent)
@@ -489,7 +486,6 @@ def main() -> int:
     Returns:
         Exit code (0 for success, 1 for failure)
     """
-    import argparse
 
     parser = argparse.ArgumentParser(
         description="Migrate handoff JSON files to task metadata"
