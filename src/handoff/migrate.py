@@ -154,7 +154,8 @@ def load_handoff_json(json_path: Path) -> dict[str, Any] | None:
             if not stored.startswith(computed):
                 # Checksum mismatch - file may be corrupted
                 return None
-    except (ValueError, TypeError):
+    except (ValueError, TypeError) as e:
+        logger.debug(f"[Migrate] Could not parse timestamp: {e}")
         return None
 
     return data
