@@ -495,7 +495,8 @@ def _fallback_find_by_session() -> dict[str, Any] | None:
                         if is_valid:
                             return continue_session
 
-            except (json.JSONDecodeError, OSError, KeyError):
+            except (json.JSONDecodeError, OSError, KeyError) as e:
+                logger.debug(f"[SessionStart] Skipping corrupted handoff file: {e}")
                 continue  # Skip corrupted files
 
     except Exception:
