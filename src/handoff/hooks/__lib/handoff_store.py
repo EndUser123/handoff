@@ -573,7 +573,7 @@ class HandoffStore:
 
         # Add continue_session task to tasks dict (user-visible)
         task_data["tasks"][CONTINUE_SESSION_TASK_ID] = continue_task
-        task_data["last_update"] = datetime.now(UTC).isoformat()
+        task_data["last_update"] = utcnow_iso()
 
         # Atomic write: temp file + rename
         fd, temp_path = tempfile.mkstemp(
