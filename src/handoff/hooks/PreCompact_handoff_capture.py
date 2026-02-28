@@ -1053,6 +1053,7 @@ class PreCompactHandoffCapture:
                 last_user_message = ""
 
                 # Option 1: TranscriptParser - scans the ACTUAL transcript (PRIORITY 1 - most reliable)
+                transcript_unavailable = False
                 if self.transcript_path:
                     # Use the TranscriptParser's extract_last_user_message() which scans
                     # the ENTIRE parsed transcript, not just last 20 raw lines
@@ -1062,8 +1063,37 @@ class PreCompactHandoffCapture:
                             f"[PreCompact] Using last_user_message from TranscriptParser: "
                             f"{last_user_message[:50]}..."
                         )
+                    else:
+                        # Check if transcript is missing or empty (Issue #2, #3)
+                        transcript_path = Path(self.transcript_path)
+                        if not transcript_path.exists():
+                            print("[PreCompact] WARNING: Transcript file missing - cannot capture authentic context")
+                            transcript_unavailable = True
+                        else:
+                            # File exists but no user messages found (empty transcript or system-only)
+                            try:
+                                file_size = transcript_path.stat().st_size
+                                if file_size == 0:
+                                    print("[PreCompact] WARNING: Transcript file is empty - skipping handoff capture")
+                                    transcript_unavailable = True
+                                else:
+                                    # File has content but no user messages - system-only transcript
+                                    print("[PreCompact] WARNING: Transcript has no user messages - skipping handoff capture to avoid stale data")
+                                    transcript_unavailable = True
+                            except OSError:
+                                print("[PreCompact] WARNING: Could not read transcript - skipping handoff capture")
+                                transcript_unavailable = True
+                else:
+                    print("[PreCompact] WARNING: No transcript path available - skipping handoff capture")
+                    transcript_unavailable = True
 
-                # Option 2: Read from hook_input if available
+                # Issue #2 & #3: If transcript is unavailable, skip handoff capture
+                # Don't fall back to potentially stale hook_input/active_command/blocker
+                if transcript_unavailable:
+                    print("[PreCompact] Handoff capture skipped - transcript required for authentic context")
+                    return True  # Continue with compaction, but don't create handoff
+
+                # Option 2: Read from hook_input if available (fallback, less reliable)
                 if not last_user_message:
                     handoff_input_data = self.hook_input.get("handoff_data") or self.hook_input
                     if isinstance(handoff_input_data, dict):
