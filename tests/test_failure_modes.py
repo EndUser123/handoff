@@ -11,11 +11,9 @@ Run with: pytest P:/packages/handoff/tests/test_failure_modes.py -v
 """
 
 import json
+import sys
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch
-
-import sys
 
 # Add hooks to path
 hooks_dir = Path("P:/packages/handoff/src/handoff/hooks").resolve()
@@ -120,7 +118,13 @@ class TestEmptyTranscript:
                     "Should return None when transcript has no user messages"
 
             finally:
-                transcript_path.unlink(missing_ok=True)
+                # Windows file locking workaround
+                import gc
+                gc.collect()
+                try:
+                    transcript_path.unlink(missing_ok=True)
+                except PermissionError:
+                    pass  # File will be cleaned up by temp directory
 
     def test_transcript_with_only_meta_tags(self):
         """
@@ -220,7 +224,7 @@ class TestFirstUserMessageExtraction:
                 # This means it would MISS the user message at line 26
 
                 # Verify the bug exists
-                with open(transcript_path, 'r') as tf:
+                with open(transcript_path) as tf:
                     lines = tf.readlines()
 
                 # Simulate current implementation
@@ -252,7 +256,13 @@ class TestFirstUserMessageExtraction:
                     "Correct implementation should find user message anywhere"
 
             finally:
-                transcript_path.unlink(missing_ok=True)
+                # Windows file locking workaround
+                import gc
+                gc.collect()
+                try:
+                    transcript_path.unlink(missing_ok=True)
+                except PermissionError:
+                    pass  # File will be cleaned up by temp directory
 
 
 class TestHandoffValidation:
@@ -265,7 +275,7 @@ class TestHandoffValidation:
         This prevents Issue #1 (multiple compaction cycles)
         by rejecting stale handoffs that don't match current context.
         """
-        from datetime import datetime, timedelta, UTC
+        from datetime import UTC, datetime, timedelta
 
         # Create recent handoff (should be accepted)
         recent_handoff = {
