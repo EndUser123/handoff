@@ -511,25 +511,17 @@ class PreCompactHandoffCapture:
                     continue
         return last_todos
 
-    def _extract_recent_errors(self, max_errors: int = 5) -> list[dict]:
-        """Extract recent tool errors from the transcript.
+    def _build_tool_name_map(self, recent_lines: list[str]) -> dict[str, str]:
+        """Build tool_use id→name map from transcript entries.
 
-        Scans for tool_result entries with is_error=True or Bash results
-        with non-zero exit codes. Returns the last max_errors occurrences.
+        Args:
+            recent_lines: List of transcript JSONL lines to scan
 
         Returns:
-            List of dicts with 'tool', 'error', 'truncated_output' keys.
+            Dict mapping tool_use IDs to tool names
         """
-        if not self.transcript_path:
-            return []
-        errors: list[dict] = []
-        with open(self.transcript_path, encoding="utf-8") as f:
-            lines = f.readlines()
-        # Only scan the last 200 lines for performance
-        recent = lines[-200:] if len(lines) > 200 else lines
-        # Build tool_use id→name map from recent entries
         tool_name_map: dict[str, str] = {}
-        for line in recent:
+        for line in recent_lines:
             try:
                 entry = json.loads(line)
                 if entry.get("type") != "assistant":
@@ -543,38 +535,90 @@ class PreCompactHandoffCapture:
                         tool_name_map[block.get("id", "")] = block.get("name", "unknown")
             except (json.JSONDecodeError, KeyError, TypeError):
                 continue
-        # Now collect errors from tool_result entries
+        return tool_name_map
+
+    def _extract_error_from_tool_result(
+        self,
+        block: dict[str, Any],
+        tool_name_map: dict[str, str]
+    ) -> dict[str, Any] | None:
+        """Extract error from a tool_result block.
+
+        Args:
+            block: tool_result block from transcript
+            tool_name_map: Mapping of tool_use IDs to tool names
+
+        Returns:
+            Error dict with 'tool' and 'error' keys, or None if not an error
+        """
+        if not block.get("is_error", False):
+            return None
+
+        tool_id = block.get("tool_use_id", "")
+        tool_name = tool_name_map.get(tool_id, "unknown")
+        raw = block.get("content", "")
+
+        # Handle list content format
+        if isinstance(raw, list):
+            raw = " ".join(
+                r.get("text", "") for r in raw if isinstance(r, dict)
+            )
+
+        return {
+            "tool": tool_name,
+            "error": str(raw)[:500],  # cap at 500 chars
+        }
+
+    def _extract_recent_errors(self, max_errors: int = 5) -> list[dict]:
+        """Extract recent tool errors from the transcript.
+
+        Scans for tool_result entries with is_error=True or Bash results
+        with non-zero exit codes. Returns the last max_errors occurrences.
+
+        Returns:
+            List of dicts with 'tool', 'error', 'truncated_output' keys.
+        """
+        if not self.transcript_path:
+            return []
+
+        with open(self.transcript_path, encoding="utf-8") as f:
+            lines = f.readlines()
+
+        # Only scan the last 200 lines for performance
+        recent = lines[-200:] if len(lines) > 200 else lines
+
+        # Build tool_use id→name map
+        tool_name_map = self._build_tool_name_map(recent)
+
+        # Collect errors from tool_result entries
+        errors: list[dict] = []
         for line in recent:
             try:
                 entry = json.loads(line)
                 if entry.get("type") != "tool":
                     continue
+
                 msg = entry.get("message", {})
                 if not isinstance(msg, dict):
                     continue
+
                 content_list = msg.get("content", [])
                 if not isinstance(content_list, list):
                     continue
+
                 for block in content_list:
                     if not isinstance(block, dict):
                         continue
                     if block.get("type") != "tool_result":
                         continue
-                    if not block.get("is_error", False):
-                        continue
-                    tool_id = block.get("tool_use_id", "")
-                    tool_name = tool_name_map.get(tool_id, "unknown")
-                    raw = block.get("content", "")
-                    if isinstance(raw, list):
-                        raw = " ".join(
-                            r.get("text", "") for r in raw if isinstance(r, dict)
-                        )
-                    errors.append({
-                        "tool": tool_name,
-                        "error": str(raw)[:500],  # cap at 500 chars
-                    })
+
+                    error = self._extract_error_from_tool_result(block, tool_name_map)
+                    if error:
+                        errors.append(error)
+
             except (json.JSONDecodeError, KeyError, TypeError):
                 continue
+
         return errors[-max_errors:]
 
     def _extract_recent_exchanges(self, max_pairs: int = 6) -> list[dict]:
