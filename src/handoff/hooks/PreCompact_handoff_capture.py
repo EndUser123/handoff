@@ -860,16 +860,15 @@ class PreCompactHandoffCapture:
             command_context_data = None
             active_cmd_file = self.project_root / ".claude" / "active_command.json"
             if active_cmd_file.exists():
-                try:
-                    cmd_data = json.loads(active_cmd_file.read_text())
+                from handoff.config import load_json_file
+                cmd_data = load_json_file(active_cmd_file)
+                if cmd_data:
                     command_context_data = {
                         "command": cmd_data.get("command"),
                         "phase": cmd_data.get("phase"),
                         "started_at": cmd_data.get("started_at"),
                         "metadata": cmd_data.get("metadata", {}),
                     }
-                except (OSError, json.JSONDecodeError):
-                    pass
 
             # Build handoff data payload for file storage
             handoff_payload = {
