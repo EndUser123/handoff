@@ -5,7 +5,6 @@ Tests invalid message handling - ensures the function gracefully skips invalid
 messages and continues processing valid ones.
 """
 
-import pytest
 
 from handoff.hooks.__lib.transcript import extract_transcript_from_messages
 
