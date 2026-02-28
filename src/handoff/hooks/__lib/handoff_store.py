@@ -12,6 +12,7 @@ Note: Renamed from checkpoint_store.py to avoid Claude Code checkpoint naming co
 from __future__ import annotations
 
 import json
+import logging
 import os
 import tempfile
 import time
@@ -19,6 +20,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
+
+logger = logging.getLogger(__name__)
 
 # Import utility functions
 try:
