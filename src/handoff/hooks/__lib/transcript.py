@@ -325,7 +325,7 @@ class TranscriptLines(Sequence[str]):
                 for line in f:
                     yield line
         except (OSError, UnicodeDecodeError) as e:
-            print(f"[TranscriptLines] Warning: Could not iterate: {e}")
+            logger.warning(f"[TranscriptLines] Could not iterate: {e}")
 
 
 class TranscriptParser:
