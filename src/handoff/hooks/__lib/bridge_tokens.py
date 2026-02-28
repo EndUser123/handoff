@@ -10,8 +10,11 @@ in handoff data, following the /hod skill specification.
 
 from __future__ import annotations
 
+import logging
 from datetime import UTC, datetime
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 # Bridge token prefix
 BRIDGE_TOKEN_PREFIX = "BRIDGE_"
