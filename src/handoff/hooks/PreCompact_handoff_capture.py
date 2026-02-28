@@ -228,13 +228,11 @@ class PreCompactHandoffCapture:
 
             if not session_id:
                 # Read from current_session.json
+                from handoff.config import load_json_file
                 current_session_file = self.project_root / ".claude" / "current_session.json"
-                if current_session_file.exists():
-                    try:
-                        session_data = json.loads(current_session_file.read_text())
-                        session_id = session_data.get("session_id")
-                    except (OSError, json.JSONDecodeError):
-                        pass
+                session_data = load_json_file(current_session_file)
+                if session_data:
+                    session_id = session_data.get("session_id")
 
             if not session_id:
                 return None
