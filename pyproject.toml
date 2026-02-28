@@ -43,9 +43,9 @@ docs = [
     "mkdocs-material>=9.0",
 ]
 
-# CLI removed - hook-only architecture
-# [project.scripts]
-# handoff = "handoff.cli:main"
+# CLI entry points for package-native commands
+[project.scripts]
+handoff = "handoff.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/csf-nip/handoff"

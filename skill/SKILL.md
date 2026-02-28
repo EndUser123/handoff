@@ -23,24 +23,29 @@ Generate comprehensive handover documentation that ensures **100% work continuit
 ## Architecture
 
 ### Implementation
-- **Backend**: `handoff` package at `P:/packages/handoff/src`
-- **CLI Wrapper**: `P:/.claude/skills/hod/lib/hod.py`
+- **Package**: `handoff` at `P:/packages/handoff`
+- **CLI Entry Point**: `handoff` command (installed via package)
 - **Storage**: `P:/.claude/state/task_tracker/` (via handoff package)
 - **Automatic**: PreCompact hooks invoke handoff capture automatically
-- **Manual**: `/hod` command for on-demand handoff generation
+- **Manual**: `handoff` CLI for on-demand handoff generation
 
-### Integration with Handoff Package
+### Consolidation (2026-02-28)
 
-The `/hod` skill now wraps the handoff package, providing:
+The HOD skill has been consolidated into the handoff package to achieve **fail-fast** behavior and eliminate cohesion violations:
 
-| Feature | Handoff Package | /hod CLI |
-|---------|----------------|----------|
+| Feature | Handoff Package | CLI (`handoff`) |
+|---------|----------------|-----------------|
 | Automatic capture | ✅ PreCompact hook | ❌ Manual only |
 | Quality scoring | ✅ Implemented | ✅ Displays |
 | Bridge tokens | ✅ Implemented | ✅ Shows in output |
 | Markdown output | ❌ | ✅ |
 | JSON output | ✅ | ✅ |
 | Cleanup | ❌ | ✅ --cleanup mode |
+
+**Rationale**: The HOD skill is a thin wrapper that cannot exist without the handoff package. Consolidating both into a single package provides:
+- **Fail-fast errors**: ImportError detected at package import time
+- **Single installation**: `pip install handoff` provides both hooks and CLI
+- **Reduced coupling**: No symlink maintenance or separate skill directory
 
 ## Your Workflow
 
@@ -80,21 +85,25 @@ After compact/handover:
 ## Quick Start
 
 ```bash
+# Install the handoff package (includes CLI and hooks)
+pip install -e P:/packages/handoff
+
 # The handoff package automatically captures session state before compaction
 # No manual invocation needed for basic handoff
 
-# /hod provides manual modes for on-demand handoff generation:
-python P:/.claude/skills/hod/lib/hod.py           # Generate detailed handoff (markdown)
-python P:/.claude/skills/hod/lib/hod.py summary   # Quick context summary
-python P:/.claude/skills/hod/lib/hod.py quality   # Show quality metrics
-python P:/.claude/skills/hod/lib/hod.py --cleanup # Show old handoffs (dry-run)
-python P:/.claude/skills/hod/lib/hod.py --cleanup-force # Delete old handoffs
-python P:/.claude/skills/hod/lib/hod.py --format json # JSON output
-python P:/.claude/skills/hod/lib/hod.py --llm --clipboard # Copy LLM handoff to clipboard
+# The handoff CLI provides manual modes for on-demand handoff generation:
+handoff                    # Generate detailed handoff (markdown)
+handoff summary            # Quick context summary
+handoff detailed           # Comprehensive handoff with quality metrics
+handoff quality            # Show quality metrics only
+handoff --cleanup          # Show old handoffs (dry-run)
+handoff --cleanup-force    # Delete old handoffs
+handoff --format json      # JSON output
+handoff --llm --clipboard  # Copy LLM handoff to clipboard
 
 # Bridge tokens are expanded by default for external LLMs
 # Use --no-expand-tokens to keep compact tokens:
-python P:/.claude/skills/hod/lib/hod.py --no-expand-tokens
+handoff --no-expand-tokens
 ```
 
 ## Bridge Token Expansion
@@ -157,10 +166,10 @@ After 90 days, handoffs are candidates for cleanup because:
 
 ```bash
 # Check what would be deleted
-python P:/.claude/skills/hod/lib/hod.py --cleanup
+handoff --cleanup
 
 # Actually delete old handoffs
-python P:/.claude/skills/hod/lib/hod.py --cleanup-force
+handoff --cleanup-force
 
 # Custom retention period
 export HANDOFF_RETENTION_DAYS=30
@@ -204,33 +213,33 @@ export HANDOFF_RETENTION_DAYS=30
 
 ### Basic Handover
 ```bash
-/hod
+handoff
 # Output: Complete handover document with session summary and continuity tokens
 ```
 
 ### Quick Context Summary
 ```bash
-/hod summary
+handoff summary
 # Output: Concise overview of current work state and next steps
 ```
 
 ### Detailed Analysis
 ```bash
-/hod detailed
+handoff detailed
 # Output: Comprehensive handover with quality metrics and decision analysis
 ```
 
 ### Session Quality Assessment
 ```bash
-/hod quality
+handoff quality
 # Output: Session quality score with breakdown and recommendations
 ```
 
 ### Maintenance and Cleanup
 ```bash
-/hod cleanup            # Show what would be deleted (dry-run)
-/hod cleanup --force    # Delete files older than retention period
-/hod cleanup --days 30  # Custom retention period (default: 90)
+handoff --cleanup            # Show what would be deleted (dry-run)
+handoff --cleanup-force      # Delete files older than retention period
+handoff --cleanup --days 30  # Custom retention period (default: 90)
 ```
 
 **Auto-cleanup behavior**:
@@ -357,9 +366,9 @@ export HANDOFF_RETENTION_DAYS=30
 **Cleanup options**:
 ```bash
 # Manual cleanup of old handovers
-/hod cleanup          # Show what would be deleted
-/hod cleanup --force  # Delete files older than 90 days
+handoff --cleanup          # Show what would be deleted
+handoff --cleanup-force    # Delete files older than 90 days
 
 # Custom retention period
-export HOD_RETENTION_DAYS=30  # Default: 90
+export HANDOFF_RETENTION_DAYS=30  # Default: 90
 ```
