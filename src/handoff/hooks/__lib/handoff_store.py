@@ -574,7 +574,8 @@ class HandoffStore:
             try:
                 with open(task_file_path, encoding="utf-8") as f:
                     task_data = json.load(f)
-            except (json.JSONDecodeError, OSError):
+            except (json.JSONDecodeError, OSError) as e:
+                logger.warning(f"[HandoffStore] Failed to load task file {task_file_path}, creating new: {e}")
                 task_data = _create_empty_task_data()
         else:
             task_data = _create_empty_task_data()
