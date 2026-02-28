@@ -544,7 +544,8 @@ def _load_active_session_task(
             if continue_session:
                 return continue_session
 
-        except (json.JSONDecodeError, OSError):
+        except (json.JSONDecodeError, OSError) as e:
+            logger.debug(f"[SessionStart] Could not load handoff from task file: {e}")
             pass  # Fall through to session-based fallback
 
     # Priority 2: Fallback to session-based search
