@@ -970,7 +970,7 @@ class TranscriptParser:
                         }
 
         except Exception as e:
-            print(f"[TranscriptParser] Warning: Could not extract visual context: {e}")
+            logger.error(f"[TranscriptParser] Could not extract visual context: {e}")
 
         return None
 
