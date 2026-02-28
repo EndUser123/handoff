@@ -40,6 +40,7 @@ if str(_hooks_path) not in sys.path:
 try:
     from terminal_detection import detect_terminal_id
 except ImportError:
+    logger.debug("[Migrate] terminal_detection module not available")
     # Fallback if terminal_detection unavailable
     def detect_terminal_id() -> str:  # type: ignore[misc]
         return f"term_{os.getpid()}"
