@@ -737,7 +737,7 @@ class TranscriptParser:
                     structure_info = detect_structure_type(content_text)
 
                     decision_entry = {
-                        "timestamp": entry.get("timestamp", datetime.now(UTC).isoformat()),
+                        "timestamp": entry.get("timestamp", (lambda: (__import__("handoff.config", fromlist=["utcnow_iso"]).utcnow_iso()))()),
                         "topic": topic,
                         "decision": decision_text[:200],
                         "direct_quote": content_text[:1000],
