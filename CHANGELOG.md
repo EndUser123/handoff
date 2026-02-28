@@ -33,7 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Handoff trash recovery system
 - Atomic write operations with temp file pattern
 - Checksum validation on handoff load
-- **21 passing tests** including checkpoint-chain traversal coverage
+- **217 passing tests** including checkpoint-chain traversal coverage
 
 ### Changed
 - Replaced broken CKS-only system with JSON-based persistence
