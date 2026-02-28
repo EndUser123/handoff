@@ -562,7 +562,7 @@ class TranscriptParser:
                                 "source": "transcript",
                             }
         except Exception as e:
-            print(f"[TranscriptParser] Warning: Could not read transcript: {e}")
+            logger.error(f"[TranscriptParser] Could not read transcript: {e}")
 
         return None
 
