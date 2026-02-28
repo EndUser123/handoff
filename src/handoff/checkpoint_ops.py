@@ -162,6 +162,12 @@ class PendingOperation:
             "failed": set(),  # No transitions out of failed
         }
 
+        # Validate current state before checking transitions
+        if self.state not in valid_transitions:
+            raise ValueError(
+                f"Invalid current state: {self.state}. Must be one of {list(valid_transitions.keys())}"
+            )
+
         if new_state not in valid_transitions[self.state]:
             raise ValueError(
                 f"Invalid state transition: cannot transition from {self.state} to {new_state}"
