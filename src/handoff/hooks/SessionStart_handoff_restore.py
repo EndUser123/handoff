@@ -749,7 +749,7 @@ def main() -> int:
     if not is_valid:
         # Issue #8: Make checksum errors visible to users (was silent DEBUG log)
         logger.error(f"[SessionStart] Checksum verification failed: {error}")
-        print(f"[SessionStart] Warning: Handoff data corrupted, skipping restoration")
+        print("[SessionStart] Warning: Handoff data corrupted, skipping restoration")
         print(f"[SessionStart] Error: {error}")
         # Still return 0 to allow session start, but inform user
         return 0

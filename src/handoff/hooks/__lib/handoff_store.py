@@ -681,11 +681,48 @@ class HandoffStore:
         task_data["tasks"][CONTINUE_SESSION_TASK_ID] = continue_task
         task_data["last_update"] = utcnow_iso()
 
-        # Atomic write: temp file + rename
-        fd, temp_path = tempfile.mkstemp(
-            suffix=".tmp", dir=str(task_tracker_dir), prefix=f"{self.terminal_id}_tasks_"
-        )
+        # Issue #6: Add file locking to prevent concurrent compaction race condition
+        # Use exclusive lock file to serialize writes across terminals/processes
+        lock_file_path = task_file_path.with_suffix(".lock")
+        lock_fd = None
         try:
+            # Try to create lock file exclusively (fails if lock exists)
+            import time
+            max_lock_wait = 5  # Wait up to 5 seconds for lock
+            lock_acquired = False
+            for attempt in range(max_lock_wait * 10):  # 10 checks per second
+                try:
+                    lock_fd = os.open(lock_file_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+                    lock_acquired = True
+                    break
+                except FileExistsError:
+                    # Lock exists, wait and retry
+                    time.sleep(0.1)
+                    # Check if lock is stale (older than 10 seconds)
+                    try:
+                        lock_stat = os.stat(lock_file_path)
+                        lock_age = time.time() - lock_stat.st_mtime
+                        if lock_age > 10:
+                            # Stale lock, remove it
+                            os.unlink(lock_file_path)
+                            logger.warning(
+                                f"[HandoffStore] Removed stale lock file: {lock_file_path.name}"
+                            )
+                    except OSError:
+                        pass
+
+            if not lock_acquired:
+                logger.warning(
+                    f"[HandoffStore] Could not acquire lock for {task_file_path.name} after "
+                    f"{max_lock_wait}s - proceeding with write anyway"
+                )
+                lock_fd = None
+
+            # Atomic write: temp file + rename
+            fd, temp_path = tempfile.mkstemp(
+                suffix=".tmp", dir=str(task_tracker_dir), prefix=f"{self.terminal_id}_tasks_"
+            )
+            try:
             with os.fdopen(fd, "w", encoding="utf-8") as f:
                 json.dump(task_data, f, indent=2)
 
