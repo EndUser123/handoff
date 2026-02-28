@@ -639,8 +639,8 @@ def _cleanup_active_command_file(terminal_id: str) -> None:
         for file_path in matching_files:
             try:
                 file_path.unlink()
-            except OSError:
-                pass
+            except OSError as e:
+                logger.debug(f"[SessionStart] Could not update handoff reference: {e}")
 
     except (OSError, json.JSONDecodeError):
         pass
