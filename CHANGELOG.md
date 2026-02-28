@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Handoff priority system bug** - Fixed stale `original_user_request` capture by reversing priority order to use TranscriptParser (source of truth) before potentially stale cached files (active_command, blocker, hook_input). See `docs/priority-fix-2026-02-28.md` for details.
+- **Issue #2 & #3: Transcript missing/empty fallback** - Skip handoff capture when transcript is missing or empty (no user messages) instead of falling back to potentially stale data from hook_input/active_command/blocker.
+- **Issue #4: Task file corruption cleanup** - Log corrupted task files at ERROR level (not DEBUG) and automatically delete them to prevent persistent failures.
+- **Issue #6: Concurrent compaction race condition** - Add file locking (`.lock` files with exclusive creation) to prevent two terminals from overwriting each other's task files.
+- **Issue #7: First user message extraction** - Fix 20-line limit bug by using TranscriptParser to scan entire transcript for first user message (not just first 20 lines).
+- **Issue #8: Checksum mismatch visibility** - Make checksum errors visible to users with print() statements (not just DEBUG logs) when handoff data is corrupted.
+- **Issue #9: Cleanup failure retry** - Add retry mechanism for active_session cleanup failures by marking tasks for later cleanup instead of silently failing.
 
 ### Added
 - **Code quality improvements** - 3-phase refactoring completed:
