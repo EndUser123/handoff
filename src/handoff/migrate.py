@@ -177,7 +177,7 @@ def handoff_to_task(handoff_data: dict[str, Any], terminal_id: str) -> dict[str,
         "id": "migrated_handoff",
         "subject": f"Handoff: {migrated_handoff.get('task_name', 'unknown')}",
         "status": "completed",
-        "created_at": migrated_handoff.get("saved_at") or migrated_handoff.get("timestamp") or datetime.now(UTC).isoformat(),
+        "created_at": migrated_handoff.get("saved_at") or migrated_handoff.get("timestamp") or utcnow_iso(),
         "terminal": terminal_id,
         "metadata": {
             "handoff": {
