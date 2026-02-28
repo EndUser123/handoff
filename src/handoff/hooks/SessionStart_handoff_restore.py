@@ -499,7 +499,8 @@ def _fallback_find_by_session() -> dict[str, Any] | None:
                 logger.debug(f"[SessionStart] Skipping corrupted handoff file: {e}")
                 continue  # Skip corrupted files
 
-    except Exception:
+    except Exception as e:
+        logger.debug(f"[SessionStart] Fallback handler failed: {e}")
         pass  # Fallback failure - not critical
 
     return None
