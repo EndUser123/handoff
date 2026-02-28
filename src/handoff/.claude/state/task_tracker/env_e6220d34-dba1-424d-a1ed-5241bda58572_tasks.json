@@ -5,15 +5,15 @@
       "id": "active_session",
       "subject": "Session Restore",
       "status": "pending",
-      "created_at": "2026-02-28T17:01:27.562880+00:00",
+      "created_at": "2026-02-28T18:26:42.065271+00:00",
       "terminal": "env_e6220d34-dba1-424d-a1ed-5241bda58572",
       "metadata": {
         "handoff": {
-          "task_name": "session_20260228_170127",
+          "task_name": "session_20260228_182641",
           "task_type": "informal",
           "progress_percent": 0,
           "blocker": {
-            "description": "User's last question: This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.\n\nAnalysis:\nLet me chronologically analyze this c...",
+            "description": "User's last question: Remove the alias from LLM API and LLM CLI.",
             "severity": "info",
             "source": "transcript"
           },
@@ -23,8 +23,17 @@
           "recent_tools": [
             {
               "name": "Edit",
-              "timestamp": "2026-02-28T17:01:20.127138+00:00",
-              "command": "P:\\.claude\\skills\\llm-cli\\ask_cli.py",
+              "timestamp": "2026-02-28T18:26:36.677642+00:00",
+              "command": "P:\\.claude\\skills\\llm-cli\\SKILL.md",
+              "cwd": "",
+              "session_id": "44428982-4dbb-4ea7-ab93-38c7051544d4",
+              "terminal_id": "fallback_1",
+              "output": ""
+            },
+            {
+              "name": "Edit",
+              "timestamp": "2026-02-28T18:26:41.674817+00:00",
+              "command": "P:\\.claude\\skills\\llm-cli\\SKILL.md",
               "cwd": "",
               "session_id": "44428982-4dbb-4ea7-ab93-38c7051544d4",
               "terminal_id": "fallback_1",
@@ -32,8 +41,8 @@
             }
           ],
           "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\44428982-4dbb-4ea7-ab93-38c7051544d4.jsonl",
-          "transcript_offset": 2518096,
-          "transcript_entry_count": 1079,
+          "transcript_offset": 4532440,
+          "transcript_entry_count": 1764,
           "handover": {
             "decisions": [
               {
@@ -51,6 +60,22 @@
                   "conversation"
                 ],
                 "bridge_token": "BRIDGE_20260228-165422_CONTEXT"
+              },
+              {
+                "timestamp": "2026-02-28T17:02:33.294Z",
+                "topic": "context",
+                "decision": "This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.\n\nAnalysis:\nLet me chronologically analyze this c",
+                "direct_quote": "This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.\n\nAnalysis:\nLet me chronologically analyze this conversation:\n\n1. **Initial Context**: The conversation started with system reminders about a previous plan at `P:\\.claude\\plans\\plan-20260227-skill-consolidation.md` that was \"READY-FOR-IMPLEMENTATION\" for consolidating skills.\n\n2. **User's Primary Request**: The user invoked `/plan-workflow` with specific constraints:\n   - \"but you don't know what models are best for which prompts. We need to use all the cli models. we need to track performance metrics so in the future, when you are confident, we can make optimal model choices. we need to be multi terminal friendly, don't use TTL, and be immune to stale data.\"\n   \n   This was the CRITICAL feedback that changed the approach from my initial plan.\n\n3. **Plan Creation**: I invoked the plan-workflow skill and created a comprehensive implementa",
+                "source": "session_transcript",
+                "format": "analysis_table",
+                "search_keys": [
+                  "session",
+                  "being",
+                  "continued",
+                  "previous",
+                  "conversation"
+                ],
+                "bridge_token": "BRIDGE_20260228-170233_CONTEXT"
               }
             ],
             "patterns_learned": [],
@@ -62,9 +87,9 @@
           "resolved_issues": [],
           "modifications": [],
           "pending_operations": [],
-          "original_user_request": "This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.\n\nAnalysis:\nLet me chronologically analyze this c...",
+          "original_user_request": "Remove the alias from LLM API and LLM CLI.",
           "first_user_request": "we were working in a previous session on rationalizing skills.  please find the plan and conversation so you can find out what is done and what is outstanding.  Perhaps we created tasks for it.",
-          "saved_at": "2026-02-28T17:01:27.562230+00:00",
+          "saved_at": "2026-02-28T18:26:42.064677+00:00",
           "version": 1,
           "implementation_status": {
             "test_results": null,
@@ -77,106 +102,96 @@
           "recent_exchanges": [
             {
               "role": "assistant",
-              "text": "I'll create a comprehensive implementation plan for enhancing `/llm-cli` with task classification, performance tracking, and multi-terminal safety. Let me start by performing documentation discovery and understanding the current implementation."
-            },
-            {
-              "role": "assistant",
-              "text": "Let me continue reading the core logic sections:"
-            },
-            {
-              "role": "assistant",
-              "text": "Now I'll deploy a subagent for documentation discovery and then create the implementation plan."
-            },
-            {
-              "role": "assistant",
-              "text": "Excellent documentation discovery! Now I'll create the comprehensive implementation plan with all required sections."
-            },
-            {
-              "role": "assistant",
-              "text": "I've created a comprehensive implementation plan for enhancing `/llm-cli`. The plan follows the `/plan-workflow` skill requirements with all 7 required sections, documentation discovery findings, and specific implementation tasks.\n\n## Plan Summary\n\n**Location:** `P:\\.claude\\plans\\plan-20260228-llm-cli-intelligent-enhancement.md`\n\n### Key Components\n\n1. **Task Type Classifier** - Classifies queries into 7 types (code_review, planning, brainstorm, research, debug, refactor, general) using keyword matching\n\n2. **Prompt Template System** - Task-specific prompts for each type with solo-dev constraints\n\n3. **CLI Performance Logger** - Thread-safe JSONL append-only logging tracking:\n   - Duration, outcome, output_length for each CLI\n   - Multi-terminal safe (threading.Lock())\n   - No TTL caches ("
+              "text": "\u2705 **Git sync completed successfully!**\n\n**Sync Summary:**\n- All merges successful\n- Diff verification: **PASSED** (worktree and main are identical)\n- No conflicts or issues detected\n\n**This confirms the `/llm-cli` enhancement is fully synchronized:**\n- \u2705 Task classification modules integrated\n- \u2705 Prompt templates with solo-dev constraints\n- \u2705 Performance tracking for all CLI models\n- \u2705 94 comprehensive unit tests (100% pass rate)\n- \u2705 Integration tests and end-to-end validation\n- \u2705 Multi-terminal safety verified\n\nAll changes have been properly propagated between the worktree and main branches."
             },
             {
               "role": "user",
-              "text": "proceed"
+              "text": "It's been committed and pushed. What should we do now?"
             },
             {
               "role": "assistant",
-              "text": "## Goal and Planned Steps\n\n**Goal:** Enhance `/llm-cli` with task classification, performance tracking, and multi-terminal safety per the plan at `P:\\.claude\\plans\\plan-20260228-llm-cli-intelligent-enhancement.md`\n\n**Planned Steps:**\n1. **Phase 1 (Foundation):** Create 3 new modules (task_classifier.py, prompt_templates.py, performance_logger.py)\n2. **Phase 2 (Integration):** Update ask_cli.py to use the new modules\n3. **Phase 3 (Testing):** Create unit tests and verify functionality\n4. **Phase 4 (QA):** Performance validation and multi-terminal stress test\n\n---\n\n## Phase 1: Foundation - Creating New Modules\n\nStarting with **T-001: Create task_classifier.py**"
+              "text": "The implementation is complete and deployed. Based on your original goal (\"track performance metrics so in the future, when you are confident, we can make optimal model choices\"), here's what I recommend:\n\n## Immediate Next: Use the System and Collect Data\n\n**No further development needed right now.** The system is now tracking:\n- Task type for each query\n- CLI used (qwen, gemini, codex, vibe, opencode, glm-4.7-flash)\n- Duration, outcome, output length\n- Timestamp\n\n**Just use `/llm-cli` normally** for your daily work. Over the next few weeks, as you run queries, the performance log (`P:/__csf/data/llm_cli_performance.jsonl`) will accumulate real-world data.\n\n## When You Have Enough Data\n\nAfter collecting 100+ executions across different task types, we can:\n\n1. **Analyze the data** to ident"
+            },
+            {
+              "role": "user",
+              "text": "What LLM skill parallels LLM CLI, except as LLM API?"
             },
             {
               "role": "assistant",
-              "text": "Good! Task classifier is working. Now creating **T-002: prompt_templates.py**"
+              "text": "**`/llm-review`** is the API-based parallel to `/llm-cli`.\n\n## Comparison\n\n| Aspect | `/llm-cli` | `/llm-review` |\n|--------|-----------|---------------|\n| **Invocation** | External CLI tools (qwen, gemini, codex, vibe, opencode) | Direct API calls to 47+ LLM providers |\n| **Use case** | General queries across CLI models | Code review specialized |\n| **Speed** | ~60-160s per CLI | Faster (no CLI overhead) |\n| **Providers** | 6 CLI tools | 47+ LLM providers via APIs |\n| **Routing** | Run all by default | Intelligent provider selection |\n\n## Key Difference\n\n- **`/llm-cli`**: Wrapper around existing CLI tools installed via npm/pip\n- **`/llm-review`**: Direct API integration with providers like OpenAI, Anthropic, Google, etc.\n\nBoth provide multi-LLM perspectives, but `/llm-review` is the API-n"
+            },
+            {
+              "role": "user",
+              "text": "rename it to /llm-api"
             },
             {
               "role": "assistant",
-              "text": "Excellent! Now creating **T-003: performance_logger.py**"
+              "text": "I'll rename the `/llm-review` skill to `/llm-api`."
             },
             {
               "role": "assistant",
-              "text": "Perfect! Phase 1 complete. All three modules tested and working. Now moving to **Phase 2: Integration into ask_cli.py**\n\nLet me add the necessary imports and integration:"
+              "text": "Perfect! Now let me check the git status and commit the rename:"
             },
             {
               "role": "assistant",
-              "text": "I need to fix the import order - the new imports should be at the top of the file with the other imports:"
+              "text": "\u2705 **Rename complete and committed!**\n\n**Summary:**\n- Directory renamed: `llm-review` \u2192 `llm-api`\n- Updated all references in `SKILL.md`:\n  - name: `llm-api`\n  - triggers: `/llm-api`\n  - aliases: `/llm-api`\n  - Updated title and description to emphasize API-based (not CLI) access\n  - Updated command examples from `/llm-review` to `/llm-api`\n\n**Commit:**\n```\n6ef44d9d0 refactor(skills): rename /llm-review to /llm-api\n```\n\nThe skill is now accessible via `/llm-api` command and clearly distinguishes itself as the API-based parallel to `/llm-cli`."
+            },
+            {
+              "role": "user",
+              "text": "Remove the alias from LLM API and LLM CLI."
             },
             {
               "role": "assistant",
-              "text": "I need to fix the import order - all module imports must be at the very top of the file. Let me restructure this properly:"
+              "text": "I'll read both skill files first to understand the current aliases before removing them."
+            },
+            {
+              "role": "assistant",
+              "text": "**Understanding current state:**\n\n**llm-cli**: Has aliases for backward compatibility after renaming from `/ask-olymp`\n- Triggers: `/llm-cli`, `/ask-olymp`\n- Aliases: `/llm-cli`, `/ask-olymp`, `/olymp`, `/multi-llm`\n\n**llm-api**: Has redundant alias matching trigger\n- Triggers: `/llm-api`\n- Aliases: `/llm-api`\n\nRemoving aliases as requested:"
             }
           ],
           "recent_edits": [
             {
-              "tool": "Write",
-              "file": "P:\\.claude\\plans\\plan-20260228-llm-cli-intelligent-enhancement.md",
-              "snippet": "# Implementation Plan: LLM-CLI Intelligent Enhancement  **Created:** 2026-02-28 **Status:** READY-FOR-IMPLEMENTATION **Priority:** HIGH  ---  ## Executive Summary  Enhance `/llm-cli` (formerly `/ask-o"
-            },
-            {
-              "tool": "Write",
-              "file": "P:\\.claude\\skills\\llm-cli\\task_classifier.py",
-              "snippet": "\"\"\"Task type classifier for LLM CLI queries.  Classifies user queries into task types (code_review, planning, brainstorm, etc.) using keyword matching. Provides confidence scoring and matched keywords"
-            },
-            {
-              "tool": "Write",
-              "file": "P:\\.claude\\skills\\llm-cli\\prompt_templates.py",
-              "snippet": "\"\"\"Prompt template system for task-specific LLM prompts.  Provides specialized prompts for different task types (code review, planning, brainstorm, etc.) to improve LLM output quality and relevance. \""
-            },
-            {
-              "tool": "Write",
-              "file": "P:\\.claude\\skills\\llm-cli\\performance_logger.py",
-              "snippet": "\"\"\"CLI performance logger for tracking execution metrics.  Thread-safe append-only JSONL logging for CLI performance tracking. Multi-terminal safe: no shared state, no TTL caches, immune to stale data"
+              "tool": "Edit",
+              "file": "P:\\.claude\\skills\\llm-api\\SKILL.md",
+              "snippet": "--- name: llm-api description: Multi-provider LLM API calls using 47+ LLMs across 4 providers with 12 specialized categories category: ai-llm triggers:   - /llm-api aliases:   - /llm-api  suggest:   -"
             },
             {
               "tool": "Edit",
-              "file": "P:\\.claude\\skills\\llm-cli\\ask_cli.py",
-              "snippet": "from parallel_llm import calc_timeout, run_parallel_commands, run_parallel_glm  # Import task classification and performance tracking modules from .task_classifier import classify_task, TaskType from "
+              "file": "P:\\.claude\\skills\\llm-api\\SKILL.md",
+              "snippet": "## Quick Start  ```bash /llm-api src/main.py --mode chill /llm-api src/ --mode mid /llm-api src/ --mode chad ```"
             },
             {
               "tool": "Edit",
-              "file": "P:\\.claude\\skills\\llm-cli\\ask_cli.py",
-              "snippet": "from dotenv import load_dotenv  # Load .env file from repo root (P:\\) _repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))) load_dotenv(dotenv_path=os.path.join(_re"
+              "file": "P:\\.claude\\skills\\llm-cli\\SKILL.md",
+              "snippet": "--- name: llm_cli version: 1.3.0 description: Parallel Multi-LLM Command - Run qwen, gemini, codex, vibe, opencode, glm-4.7-flash CLI tools in parallel category: llm triggers:   - /llm-cli   - /ask-ol"
+            },
+            {
+              "tool": "Edit",
+              "file": "P:\\.claude\\skills\\llm-cli\\SKILL.md",
+              "snippet": "# /llm-cli (formerly /ask-olymp)  **Renamed February 2026:** `/ask-olymp` \u2192 `/llm-cli` for clearer naming as CLI-based multi-LLM tool. Legacy trigger `/ask-olymp` preserved for backward compatibility."
             }
           ],
-          "checksum": "sha256:6cf497b144c3e6f21369576cb350c7d20521577ded3b99cf0d60aac8ab7696e9"
+          "checksum": "sha256:01ee44e79167bed2708ffe7cde77caf84905e295cad2bceb2608562896be20b4"
         },
-        "task_id": "task_session_20260228_170127",
-        "task_name": "session_20260228_170127",
-        "pid": 59500,
+        "task_id": "task_session_20260228_182641",
+        "task_name": "session_20260228_182641",
+        "pid": 83892,
         "restore_pending": true
       }
     },
     "continue_session": {
       "id": "continue_session",
-      "subject": "Continue: session_20260228_170127",
+      "subject": "Continue: session_20260228_182641",
       "status": "pending",
-      "created_at": "2026-02-28T17:01:27.562886+00:00",
+      "created_at": "2026-02-28T18:26:42.065276+00:00",
       "terminal": "env_e6220d34-dba1-424d-a1ed-5241bda58572",
       "metadata": {
         "handoff": {
-          "task_name": "session_20260228_170127",
+          "task_name": "session_20260228_182641",
           "task_type": "informal",
           "progress_percent": 0,
           "blocker": {
-            "description": "User's last question: This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.\n\nAnalysis:\nLet me chronologically analyze this c...",
+            "description": "User's last question: Remove the alias from LLM API and LLM CLI.",
             "severity": "info",
             "source": "transcript"
           },
@@ -186,8 +201,17 @@
           "recent_tools": [
             {
               "name": "Edit",
-              "timestamp": "2026-02-28T17:01:20.127138+00:00",
-              "command": "P:\\.claude\\skills\\llm-cli\\ask_cli.py",
+              "timestamp": "2026-02-28T18:26:36.677642+00:00",
+              "command": "P:\\.claude\\skills\\llm-cli\\SKILL.md",
+              "cwd": "",
+              "session_id": "44428982-4dbb-4ea7-ab93-38c7051544d4",
+              "terminal_id": "fallback_1",
+              "output": ""
+            },
+            {
+              "name": "Edit",
+              "timestamp": "2026-02-28T18:26:41.674817+00:00",
+              "command": "P:\\.claude\\skills\\llm-cli\\SKILL.md",
               "cwd": "",
               "session_id": "44428982-4dbb-4ea7-ab93-38c7051544d4",
               "terminal_id": "fallback_1",
@@ -195,8 +219,8 @@
             }
           ],
           "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\44428982-4dbb-4ea7-ab93-38c7051544d4.jsonl",
-          "transcript_offset": 2518096,
-          "transcript_entry_count": 1079,
+          "transcript_offset": 4532440,
+          "transcript_entry_count": 1764,
           "handover": {
             "decisions": [
               {
@@ -214,6 +238,22 @@
                   "conversation"
                 ],
                 "bridge_token": "BRIDGE_20260228-165422_CONTEXT"
+              },
+              {
+                "timestamp": "2026-02-28T17:02:33.294Z",
+                "topic": "context",
+                "decision": "This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.\n\nAnalysis:\nLet me chronologically analyze this c",
+                "direct_quote": "This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.\n\nAnalysis:\nLet me chronologically analyze this conversation:\n\n1. **Initial Context**: The conversation started with system reminders about a previous plan at `P:\\.claude\\plans\\plan-20260227-skill-consolidation.md` that was \"READY-FOR-IMPLEMENTATION\" for consolidating skills.\n\n2. **User's Primary Request**: The user invoked `/plan-workflow` with specific constraints:\n   - \"but you don't know what models are best for which prompts. We need to use all the cli models. we need to track performance metrics so in the future, when you are confident, we can make optimal model choices. we need to be multi terminal friendly, don't use TTL, and be immune to stale data.\"\n   \n   This was the CRITICAL feedback that changed the approach from my initial plan.\n\n3. **Plan Creation**: I invoked the plan-workflow skill and created a comprehensive implementa",
+                "source": "session_transcript",
+                "format": "analysis_table",
+                "search_keys": [
+                  "session",
+                  "being",
+                  "continued",
+                  "previous",
+                  "conversation"
+                ],
+                "bridge_token": "BRIDGE_20260228-170233_CONTEXT"
               }
             ],
             "patterns_learned": [],
@@ -225,9 +265,9 @@
           "resolved_issues": [],
           "modifications": [],
           "pending_operations": [],
-          "original_user_request": "This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.\n\nAnalysis:\nLet me chronologically analyze this c...",
+          "original_user_request": "Remove the alias from LLM API and LLM CLI.",
           "first_user_request": "we were working in a previous session on rationalizing skills.  please find the plan and conversation so you can find out what is done and what is outstanding.  Perhaps we created tasks for it.",
-          "saved_at": "2026-02-28T17:01:27.562230+00:00",
+          "saved_at": "2026-02-28T18:26:42.064677+00:00",
           "version": 1,
           "implementation_status": {
             "test_results": null,
@@ -240,91 +280,81 @@
           "recent_exchanges": [
             {
               "role": "assistant",
-              "text": "I'll create a comprehensive implementation plan for enhancing `/llm-cli` with task classification, performance tracking, and multi-terminal safety. Let me start by performing documentation discovery and understanding the current implementation."
-            },
-            {
-              "role": "assistant",
-              "text": "Let me continue reading the core logic sections:"
-            },
-            {
-              "role": "assistant",
-              "text": "Now I'll deploy a subagent for documentation discovery and then create the implementation plan."
-            },
-            {
-              "role": "assistant",
-              "text": "Excellent documentation discovery! Now I'll create the comprehensive implementation plan with all required sections."
-            },
-            {
-              "role": "assistant",
-              "text": "I've created a comprehensive implementation plan for enhancing `/llm-cli`. The plan follows the `/plan-workflow` skill requirements with all 7 required sections, documentation discovery findings, and specific implementation tasks.\n\n## Plan Summary\n\n**Location:** `P:\\.claude\\plans\\plan-20260228-llm-cli-intelligent-enhancement.md`\n\n### Key Components\n\n1. **Task Type Classifier** - Classifies queries into 7 types (code_review, planning, brainstorm, research, debug, refactor, general) using keyword matching\n\n2. **Prompt Template System** - Task-specific prompts for each type with solo-dev constraints\n\n3. **CLI Performance Logger** - Thread-safe JSONL append-only logging tracking:\n   - Duration, outcome, output_length for each CLI\n   - Multi-terminal safe (threading.Lock())\n   - No TTL caches ("
+              "text": "\u2705 **Git sync completed successfully!**\n\n**Sync Summary:**\n- All merges successful\n- Diff verification: **PASSED** (worktree and main are identical)\n- No conflicts or issues detected\n\n**This confirms the `/llm-cli` enhancement is fully synchronized:**\n- \u2705 Task classification modules integrated\n- \u2705 Prompt templates with solo-dev constraints\n- \u2705 Performance tracking for all CLI models\n- \u2705 94 comprehensive unit tests (100% pass rate)\n- \u2705 Integration tests and end-to-end validation\n- \u2705 Multi-terminal safety verified\n\nAll changes have been properly propagated between the worktree and main branches."
             },
             {
               "role": "user",
-              "text": "proceed"
+              "text": "It's been committed and pushed. What should we do now?"
             },
             {
               "role": "assistant",
-              "text": "## Goal and Planned Steps\n\n**Goal:** Enhance `/llm-cli` with task classification, performance tracking, and multi-terminal safety per the plan at `P:\\.claude\\plans\\plan-20260228-llm-cli-intelligent-enhancement.md`\n\n**Planned Steps:**\n1. **Phase 1 (Foundation):** Create 3 new modules (task_classifier.py, prompt_templates.py, performance_logger.py)\n2. **Phase 2 (Integration):** Update ask_cli.py to use the new modules\n3. **Phase 3 (Testing):** Create unit tests and verify functionality\n4. **Phase 4 (QA):** Performance validation and multi-terminal stress test\n\n---\n\n## Phase 1: Foundation - Creating New Modules\n\nStarting with **T-001: Create task_classifier.py**"
+              "text": "The implementation is complete and deployed. Based on your original goal (\"track performance metrics so in the future, when you are confident, we can make optimal model choices\"), here's what I recommend:\n\n## Immediate Next: Use the System and Collect Data\n\n**No further development needed right now.** The system is now tracking:\n- Task type for each query\n- CLI used (qwen, gemini, codex, vibe, opencode, glm-4.7-flash)\n- Duration, outcome, output length\n- Timestamp\n\n**Just use `/llm-cli` normally** for your daily work. Over the next few weeks, as you run queries, the performance log (`P:/__csf/data/llm_cli_performance.jsonl`) will accumulate real-world data.\n\n## When You Have Enough Data\n\nAfter collecting 100+ executions across different task types, we can:\n\n1. **Analyze the data** to ident"
+            },
+            {
+              "role": "user",
+              "text": "What LLM skill parallels LLM CLI, except as LLM API?"
             },
             {
               "role": "assistant",
-              "text": "Good! Task classifier is working. Now creating **T-002: prompt_templates.py**"
+              "text": "**`/llm-review`** is the API-based parallel to `/llm-cli`.\n\n## Comparison\n\n| Aspect | `/llm-cli` | `/llm-review` |\n|--------|-----------|---------------|\n| **Invocation** | External CLI tools (qwen, gemini, codex, vibe, opencode) | Direct API calls to 47+ LLM providers |\n| **Use case** | General queries across CLI models | Code review specialized |\n| **Speed** | ~60-160s per CLI | Faster (no CLI overhead) |\n| **Providers** | 6 CLI tools | 47+ LLM providers via APIs |\n| **Routing** | Run all by default | Intelligent provider selection |\n\n## Key Difference\n\n- **`/llm-cli`**: Wrapper around existing CLI tools installed via npm/pip\n- **`/llm-review`**: Direct API integration with providers like OpenAI, Anthropic, Google, etc.\n\nBoth provide multi-LLM perspectives, but `/llm-review` is the API-n"
+            },
+            {
+              "role": "user",
+              "text": "rename it to /llm-api"
             },
             {
               "role": "assistant",
-              "text": "Excellent! Now creating **T-003: performance_logger.py**"
+              "text": "I'll rename the `/llm-review` skill to `/llm-api`."
             },
             {
               "role": "assistant",
-              "text": "Perfect! Phase 1 complete. All three modules tested and working. Now moving to **Phase 2: Integration into ask_cli.py**\n\nLet me add the necessary imports and integration:"
+              "text": "Perfect! Now let me check the git status and commit the rename:"
             },
             {
               "role": "assistant",
-              "text": "I need to fix the import order - the new imports should be at the top of the file with the other imports:"
+              "text": "\u2705 **Rename complete and committed!**\n\n**Summary:**\n- Directory renamed: `llm-review` \u2192 `llm-api`\n- Updated all references in `SKILL.md`:\n  - name: `llm-api`\n  - triggers: `/llm-api`\n  - aliases: `/llm-api`\n  - Updated title and description to emphasize API-based (not CLI) access\n  - Updated command examples from `/llm-review` to `/llm-api`\n\n**Commit:**\n```\n6ef44d9d0 refactor(skills): rename /llm-review to /llm-api\n```\n\nThe skill is now accessible via `/llm-api` command and clearly distinguishes itself as the API-based parallel to `/llm-cli`."
+            },
+            {
+              "role": "user",
+              "text": "Remove the alias from LLM API and LLM CLI."
             },
             {
               "role": "assistant",
-              "text": "I need to fix the import order - all module imports must be at the very top of the file. Let me restructure this properly:"
+              "text": "I'll read both skill files first to understand the current aliases before removing them."
+            },
+            {
+              "role": "assistant",
+              "text": "**Understanding current state:**\n\n**llm-cli**: Has aliases for backward compatibility after renaming from `/ask-olymp`\n- Triggers: `/llm-cli`, `/ask-olymp`\n- Aliases: `/llm-cli`, `/ask-olymp`, `/olymp`, `/multi-llm`\n\n**llm-api**: Has redundant alias matching trigger\n- Triggers: `/llm-api`\n- Aliases: `/llm-api`\n\nRemoving aliases as requested:"
             }
           ],
           "recent_edits": [
             {
-              "tool": "Write",
-              "file": "P:\\.claude\\plans\\plan-20260228-llm-cli-intelligent-enhancement.md",
-              "snippet": "# Implementation Plan: LLM-CLI Intelligent Enhancement  **Created:** 2026-02-28 **Status:** READY-FOR-IMPLEMENTATION **Priority:** HIGH  ---  ## Executive Summary  Enhance `/llm-cli` (formerly `/ask-o"
-            },
-            {
-              "tool": "Write",
-              "file": "P:\\.claude\\skills\\llm-cli\\task_classifier.py",
-              "snippet": "\"\"\"Task type classifier for LLM CLI queries.  Classifies user queries into task types (code_review, planning, brainstorm, etc.) using keyword matching. Provides confidence scoring and matched keywords"
-            },
-            {
-              "tool": "Write",
-              "file": "P:\\.claude\\skills\\llm-cli\\prompt_templates.py",
-              "snippet": "\"\"\"Prompt template system for task-specific LLM prompts.  Provides specialized prompts for different task types (code review, planning, brainstorm, etc.) to improve LLM output quality and relevance. \""
-            },
-            {
-              "tool": "Write",
-              "file": "P:\\.claude\\skills\\llm-cli\\performance_logger.py",
-              "snippet": "\"\"\"CLI performance logger for tracking execution metrics.  Thread-safe append-only JSONL logging for CLI performance tracking. Multi-terminal safe: no shared state, no TTL caches, immune to stale data"
+              "tool": "Edit",
+              "file": "P:\\.claude\\skills\\llm-api\\SKILL.md",
+              "snippet": "--- name: llm-api description: Multi-provider LLM API calls using 47+ LLMs across 4 providers with 12 specialized categories category: ai-llm triggers:   - /llm-api aliases:   - /llm-api  suggest:   -"
             },
             {
               "tool": "Edit",
-              "file": "P:\\.claude\\skills\\llm-cli\\ask_cli.py",
-              "snippet": "from parallel_llm import calc_timeout, run_parallel_commands, run_parallel_glm  # Import task classification and performance tracking modules from .task_classifier import classify_task, TaskType from "
+              "file": "P:\\.claude\\skills\\llm-api\\SKILL.md",
+              "snippet": "## Quick Start  ```bash /llm-api src/main.py --mode chill /llm-api src/ --mode mid /llm-api src/ --mode chad ```"
             },
             {
               "tool": "Edit",
-              "file": "P:\\.claude\\skills\\llm-cli\\ask_cli.py",
-              "snippet": "from dotenv import load_dotenv  # Load .env file from repo root (P:\\) _repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))) load_dotenv(dotenv_path=os.path.join(_re"
+              "file": "P:\\.claude\\skills\\llm-cli\\SKILL.md",
+              "snippet": "--- name: llm_cli version: 1.3.0 description: Parallel Multi-LLM Command - Run qwen, gemini, codex, vibe, opencode, glm-4.7-flash CLI tools in parallel category: llm triggers:   - /llm-cli   - /ask-ol"
+            },
+            {
+              "tool": "Edit",
+              "file": "P:\\.claude\\skills\\llm-cli\\SKILL.md",
+              "snippet": "# /llm-cli (formerly /ask-olymp)  **Renamed February 2026:** `/ask-olymp` \u2192 `/llm-cli` for clearer naming as CLI-based multi-LLM tool. Legacy trigger `/ask-olymp` preserved for backward compatibility."
             }
           ],
-          "checksum": "sha256:6cf497b144c3e6f21369576cb350c7d20521577ded3b99cf0d60aac8ab7696e9"
+          "checksum": "sha256:01ee44e79167bed2708ffe7cde77caf84905e295cad2bceb2608562896be20b4"
         },
-        "original_task_id": "task_session_20260228_170127",
+        "original_task_id": "task_session_20260228_182641",
         "restored_from": "compaction"
       }
     }
   },
-  "last_update": "2026-02-28T17:01:27.570464+00:00"
+  "last_update": "2026-02-28T18:26:42.073625+00:00"
 }
