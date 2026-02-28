@@ -206,7 +206,7 @@ def handoff_to_task(handoff_data: dict[str, Any], terminal_id: str) -> dict[str,
                 "saved_at": migrated_handoff.get("saved_at") or migrated_handoff.get("timestamp"),
                 "checksum": migrated_handoff.get("checksum"),
                 "version": migrated_handoff.get("version", 1),
-                "migrated_at": datetime.now(UTC).isoformat(),
+                "migrated_at": utcnow_iso(),
                 "migrated_from": "handoff_json"
             },
             "pid": migrated_handoff.get("pid"),
