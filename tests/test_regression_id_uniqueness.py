@@ -57,20 +57,11 @@ class TestCheckpointIDUniquenessRegression:
             checkpoint_ids.add(handoff["checkpoint_id"])
 
         # Assert
-        # RED Phase: Force failure to demonstrate test would catch broken uniqueness
-        # TODO: Remove this intentional failure after verifying test works
-        assert False, (
-            f"RED PHASE: Intentional failure to verify test detects issues. "
-            f"Actual uniqueness check: {len(checkpoint_ids)} unique IDs out of {num_checkpoints}. "
-            f"Remove this 'assert False' to verify the feature works correctly."
+        assert len(checkpoint_ids) == num_checkpoints, (
+            f"Expected {num_checkpoints} unique checkpoint IDs, "
+            f"but got {len(checkpoint_ids)} unique IDs. "
+            f"This indicates {num_checkpoints - len(checkpoint_ids)} collision(s)."
         )
-
-        # Real assertion (uncomment after RED phase verification):
-        # assert len(checkpoint_ids) == num_checkpoints, (
-        #     f"Expected {num_checkpoints} unique checkpoint IDs, "
-        #     f"but got {len(checkpoint_ids)} unique IDs. "
-        #     f"This indicates {num_checkpoints - len(checkpoint_ids)} collision(s)."
-        # )
 
     def test_chain_id_persists_across_checkpoints(self):
         """

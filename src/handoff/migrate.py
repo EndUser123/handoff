@@ -42,6 +42,50 @@ except ImportError:
         return f"term_{os.getpid()}"
 
 
+def migrate_old_handoff_to_checkpoint(old_handoff: dict[str, Any]) -> dict[str, Any]:
+    """Migrate old handoff data to checkpoint format with sensible defaults.
+
+    This function converts old handoff data to the new checkpoint format,
+    handling missing optional fields with sensible defaults.
+
+    Args:
+        old_handoff: Old handoff dictionary
+
+    Returns:
+        Checkpoint dict with all required fields populated
+
+    Note:
+        Default values for missing fields:
+        - pending_operations: [] (empty list)
+        - timestamp: saved_at field, or current ISO time if both missing
+        - metadata: {} (empty dict)
+
+    Example:
+        >>> old_data = {"task_name": "test", "saved_at": "2025-01-15T10:30:00Z"}
+        >>> checkpoint = migrate_old_handoff_to_checkpoint(old_data)
+        >>> checkpoint["pending_operations"]
+        []
+        >>> checkpoint["timestamp"]
+        '2025-01-15T10:30:00Z'
+    """
+    # Create a copy to avoid mutating original
+    checkpoint = old_handoff.copy()
+
+    # Add pending_operations with default empty list
+    if "pending_operations" not in checkpoint:
+        checkpoint["pending_operations"] = []
+
+    # Add timestamp with fallback to saved_at or current time
+    if "timestamp" not in checkpoint:
+        checkpoint["timestamp"] = checkpoint.get("saved_at") or datetime.now(UTC).isoformat()
+
+    # Add metadata with default empty dict
+    if "metadata" not in checkpoint:
+        checkpoint["metadata"] = {}
+
+    return checkpoint
+
+
 def compute_metadata_checksum(handoff_data: dict[str, Any]) -> str:
     """Compute SHA256 checksum of handoff metadata.
 
@@ -254,6 +298,13 @@ def migrate_handoffs(
         # Add migrated task
         task_id = f"migrated_{json_path.stem}"
         task["id"] = task_id
+
+        # Check if task already exists (idempotency)
+        if task_id in task_data["tasks"]:
+            # Task already migrated, skip it
+            results["skipped"] += 1
+            continue
+
         task_data["tasks"][task_id] = task
         task_data["last_update"] = datetime.now(UTC).isoformat()
 
@@ -363,6 +414,9 @@ def migrate_checkpoint_chain_fields(handoff_data: dict[str, Any]) -> dict[str, A
     Returns:
         Updated handoff dict with checkpoint chain fields added
 
+    Raises:
+        TypeError: If handoff_data is None or existing fields have wrong types
+
     Note:
         - Generates checkpoint_id as UUID v4 for migrated handoffs
         - Sets parent_checkpoint_id to null for migrated handoffs (first in chain)
@@ -370,6 +424,7 @@ def migrate_checkpoint_chain_fields(handoff_data: dict[str, Any]) -> dict[str, A
         - Idempotent: if fields already exist, they are preserved
         - Sets transcript_offset and transcript_entry_count to 0 for migrated handoffs
           (exact values unavailable for historical data)
+        - Validates types of existing checkpoint chain fields
 
     Example:
         >>> old_handoff = {"task_name": "test", "saved_at": "2025-01-01"}
@@ -379,8 +434,25 @@ def migrate_checkpoint_chain_fields(handoff_data: dict[str, Any]) -> dict[str, A
         >>> migrated["parent_checkpoint_id"] is None
         True
     """
+    # Validate input type
+    if handoff_data is None:
+        raise TypeError("handoff_data expected dict or None")
+
     # Create a copy to avoid mutating original
     migrated = handoff_data.copy()
+
+    # Validate existing checkpoint_id type
+    if "checkpoint_id" in migrated and not isinstance(migrated["checkpoint_id"], str):
+        raise TypeError("checkpoint_id must be str")
+
+    # Validate existing parent_checkpoint_id type
+    if "parent_checkpoint_id" in migrated:
+        if not isinstance(migrated["parent_checkpoint_id"], (str, type(None))):
+            raise TypeError("parent_checkpoint_id must be str or None")
+
+    # Validate existing chain_id type
+    if "chain_id" in migrated and not isinstance(migrated["chain_id"], str):
+        raise TypeError("chain_id must be str")
 
     # Only add fields if they don't already exist (idempotent)
     if "checkpoint_id" not in migrated:

@@ -19,6 +19,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from handoff.migrate import migrate_checkpoint_chain_fields
+
 
 @dataclass
 class HandoffCheckpointRef:
@@ -83,6 +85,7 @@ class CheckpointChain:
         self.task_tracker_dir = task_tracker_dir
         self.terminal_id = terminal_id
         self._cache: dict[str, list[HandoffCheckpointRef]] = {}
+        self._migration_cache: dict[str, dict[str, Any]] = {}
 
     def _get_task_file_path(self) -> Path:
         """Get the task file path for this terminal.
@@ -97,6 +100,10 @@ class CheckpointChain:
 
         Returns:
             List of checkpoint references sorted by created_at
+
+        Note:
+            Applies migration to old format handoffs that don't have checkpoint_id.
+            Uses migration cache to ensure consistent chain_ids across calls.
         """
         task_file = self._get_task_file_path()
         if not task_file.exists():
@@ -113,7 +120,26 @@ class CheckpointChain:
             metadata = task.get("metadata", {})
             if "handoff" in metadata:
                 handoff = metadata["handoff"]
-                if "checkpoint_id" in handoff:
+
+                # Migrate old format handoffs that don't have checkpoint_id
+                if "checkpoint_id" not in handoff:
+                    # Check migration cache first for consistency
+                    if task_id in self._migration_cache:
+                        migrated_handoff = self._migration_cache[task_id]
+                    else:
+                        # Apply migration to add checkpoint chain fields
+                        migrated_handoff = migrate_checkpoint_chain_fields(handoff)
+                        # Cache the migrated handoff for this session
+                        self._migration_cache[task_id] = migrated_handoff
+
+                    # Update metadata with migrated handoff for from_task_metadata
+                    metadata = {**metadata, "handoff": migrated_handoff}
+
+                # Get the (possibly migrated) handoff from metadata
+                final_handoff = metadata.get("handoff", {})
+
+                # After migration, all handoffs should have checkpoint_id
+                if "checkpoint_id" in final_handoff:
                     checkpoints.append(
                         HandoffCheckpointRef.from_task_metadata(task_id, metadata)
                     )

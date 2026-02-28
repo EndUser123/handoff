@@ -167,7 +167,9 @@ def _build_restoration_prompt(handoff_data: dict[str, Any]) -> str:
             f"**Path:** `{transcript_path}`",
             "",
             "**When user asks about previous chat/transcript:**",
-            f"→ Read the file at: {transcript_path}",
+            f"→ For more context on this task: read `{transcript_path}`",
+            "→ To go further back: that file itself contains an earlier restoration",
+            "  prompt referencing the session before it — follow the chain.",
             "→ DO NOT search for files, DO NOT look in checkpoints",
             "",
             "",
@@ -209,6 +211,34 @@ def _build_restoration_prompt(handoff_data: dict[str, Any]) -> str:
             op_state = op.get("state", "unknown")
             lines.append(f"  - [{op_type.upper()}] {op_target} ({op_state})")
         lines.append("")
+
+    # Add implementation status (completion_state, test_results, etc.)
+    impl_status = handoff_data.get("implementation_status")
+    if impl_status and isinstance(impl_status, dict):
+        completion_state = impl_status.get("completion_state", "unknown")
+        if completion_state != "unknown":
+            state_emoji = {
+                "verified": "✅",
+                "implemented": "🔄",
+                "in_progress": "🔄",
+                "blocked": "🚫",
+                "failed": "❌",
+            }.get(completion_state, "❓")
+            lines.extend([
+                f"**Status at compaction:** {state_emoji} `{completion_state}`",
+                "",
+            ])
+
+        test_results = impl_status.get("test_results")
+        if test_results and isinstance(test_results, dict):
+            passed = test_results.get("passed", 0)
+            failed = test_results.get("failed", 0)
+            if passed or failed:
+                status_icon = "✅" if failed == 0 else "❌"
+                lines.extend([
+                    f"**Tests at compaction:** {status_icon} {passed} passed, {failed} failed",
+                    "",
+                ])
 
     # Add next steps
     next_steps = handoff_data.get("next_steps", "")
@@ -265,6 +295,58 @@ def _build_restoration_prompt(handoff_data: dict[str, Any]) -> str:
                 lines.append(f"    {reason}")
         if len(modifications) > 5:
             lines.append(f"  ... and {len(modifications) - 5} more modifications")
+        lines.append("")
+
+    # Add todo list (last TodoWrite state at compaction)
+    todo_list = handoff_data.get("todo_list", [])
+    if todo_list:
+        lines.extend(["**Todo List at Compaction:**"])
+        status_icons = {"completed": "✅", "in_progress": "🔄", "pending": "⬜"}
+        for todo in todo_list:
+            icon = status_icons.get(todo.get("status", ""), "⬜")
+            lines.append(f"  {icon} {todo.get('content', '')}")
+        lines.append("")
+
+    # Add recent errors (tool failures at compaction time)
+    recent_errors = handoff_data.get("recent_errors", [])
+    if recent_errors:
+        lines.extend(["**Recent Errors (at compaction):**"])
+        for err in recent_errors:
+            tool = err.get("tool", "unknown")
+            error_text = err.get("error", "")
+            lines.append(f"  - [{tool}] {error_text}")
+        lines.append("")
+
+    # Add recent edits (Edit/Write tool calls from transcript)
+    recent_edits = handoff_data.get("recent_edits", [])
+    if recent_edits:
+        lines.extend(["**Recent Edits:**"])
+        for edit in recent_edits:
+            tool = edit.get("tool", "Edit")
+            file_path = edit.get("file", "")
+            snippet = edit.get("snippet", "")
+            if snippet:
+                lines.append(f"  - [{tool}] {file_path}: `{snippet[:120]}`")
+            else:
+                lines.append(f"  - [{tool}] {file_path}")
+        lines.append("")
+
+    # Add recent conversation exchanges (inline context, no file read needed)
+    recent_exchanges = handoff_data.get("recent_exchanges", [])
+    if recent_exchanges:
+        lines.extend([
+            "## 💬 RECENT CONVERSATION (at compaction)",
+            "",
+            "> The last exchanges before compaction. Use this to understand",
+            "> exactly where the conversation was — no need to read the transcript",
+            "> unless you need even earlier context.",
+            "",
+        ])
+        for msg in recent_exchanges:
+            role = msg.get("role", "unknown")
+            text = msg.get("text", "")
+            prefix = "**User:**" if role == "user" else "**Assistant:**"
+            lines.extend([f"{prefix} {text}", ""])
         lines.append("")
 
     # Add handover summary

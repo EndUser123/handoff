@@ -124,8 +124,40 @@ class TaskIdentityManager:
         # Last resort: ask user
         return self._ask_user()
 
+    def _is_valid_task_name(self, task_name: str | None) -> bool:
+        """
+        Validate task name format.
+
+        Returns False for None, empty strings, whitespace-only, or dangerous characters.
+        """
+        if not task_name or not isinstance(task_name, str):
+            return False
+
+        # Reject whitespace-only task names
+        if not task_name.strip():
+            return False
+
+        # Reject dangerous characters (path separators, control characters)
+        dangerous_chars = ['/', '\\', '\n', '\r', '\t', '\0']
+        if any(char in task_name for char in dangerous_chars):
+            return False
+
+        return True
+
     def _from_env_var(self) -> str | None:
-        """Get task from TASK_NAME environment variable."""
+        """Get task from environment variable.
+
+        Priority:
+        1. Terminal-scoped: TASK_NAME_{terminal_id} (prevents cross-terminal bleeding)
+        2. Legacy global: TASK_NAME (backward compatibility)
+        """
+        # First try terminal-scoped env var (prevents cross-terminal bleeding)
+        env_var_name = f"TASK_NAME_{self.terminal_id}"
+        task = os.getenv(env_var_name)
+        if task:
+            return task
+
+        # Fall back to legacy global env var (backward compatibility)
         return os.getenv("TASK_NAME")
 
     def _from_session_file(self) -> str | None:
@@ -219,9 +251,14 @@ class TaskIdentityManager:
         Returns:
             True if successful
         """
+        # Input validation
+        if not self._is_valid_task_name(task_name):
+            return False
+
         try:
-            # Set environment variable
-            os.environ["TASK_NAME"] = task_name
+            # Set terminal-scoped environment variable (prevents cross-terminal bleeding)
+            env_var_name = f"TASK_NAME_{self.terminal_id}"
+            os.environ[env_var_name] = task_name
 
             # Write session file with terminal_id for verification
             session_data = {
@@ -255,6 +292,12 @@ class TaskIdentityManager:
         Returns:
             True if successful
         """
+        # Input validation
+        if not self._is_valid_task_name(task_name):
+            return False
+        if not handoff_id or not isinstance(handoff_id, str):
+            return False
+
         try:
             metadata = {
                 "task_name": task_name,
@@ -287,6 +330,12 @@ class TaskIdentityManager:
         Returns:
             True if successful
         """
+        # Input validation
+        if not self._is_valid_task_name(task_name):
+            return False
+        if not branch or not isinstance(branch, str):
+            return False
+
         try:
             # Load existing mapping
             if self.mapping_file.exists():
@@ -322,6 +371,12 @@ class TaskIdentityManager:
         Returns:
             True if successful
         """
+        # Input validation
+        if not command or not isinstance(command, str):
+            return False
+        if not phase or not isinstance(phase, str):
+            return False
+
         try:
             active_cmd_file = self.project_root / ".claude" / "active_command.json"
             active_cmd_file.parent.mkdir(parents=True, exist_ok=True)

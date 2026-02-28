@@ -1198,3 +1198,53 @@ def extract_user_message_from_blocker(blocker: dict[str, Any] | str | None) -> s
 
     # No prefix found - return description as-is (might already be clean)
     return description if description else None
+
+
+def extract_transcript_from_messages(messages: list[dict[str, Any]]) -> str:
+    """Extract transcript text from a list of messages.
+
+    This function extracts and concatenates the 'content' field from valid messages,
+    handling edge cases gracefully:
+    - Empty lists return empty string
+    - Missing 'content' fields are skipped
+    - None content values are skipped
+    - Empty/whitespace-only strings are skipped
+    - Non-string content types are converted to strings
+
+    Args:
+        messages: List of message dictionaries
+
+    Returns:
+        Concatenated transcript text with newlines between messages.
+        Returns empty string if no valid content found.
+    """
+    if not messages:
+        return ""
+
+    transcript_parts = []
+
+    for message in messages:
+        # Skip messages without 'content' field
+        if "content" not in message:
+            continue
+
+        content = message.get("content")
+
+        # Skip None values
+        if content is None:
+            continue
+
+        # Convert non-string types to string
+        if not isinstance(content, str):
+            content = str(content)
+
+        # Strip whitespace
+        content = content.strip()
+
+        # Skip empty strings after stripping
+        if not content:
+            continue
+
+        transcript_parts.append(content)
+
+    return "\n".join(transcript_parts)

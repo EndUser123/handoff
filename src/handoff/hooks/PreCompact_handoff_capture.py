@@ -407,6 +407,203 @@ class PreCompactHandoffCapture:
 
         return status
 
+    def _extract_todo_list(self) -> list[dict]:
+        """Extract the last TodoWrite state from the transcript.
+
+        Scans the transcript JSONL for the most recent TodoWrite tool_use call
+        and returns its todos array. Terminal-scoped via transcript_path.
+
+        Returns:
+            List of todo dicts (content, status, activeForm) or [] if none found.
+        """
+        if not self.transcript_path:
+            return []
+        last_todos: list[dict] = []
+        with open(self.transcript_path, encoding="utf-8") as f:
+            for line in f:
+                try:
+                    entry = json.loads(line)
+                    if entry.get("type") != "assistant":
+                        continue
+                    msg = entry.get("message", {})
+                    content = msg.get("content", []) if isinstance(msg, dict) else []
+                    if not isinstance(content, list):
+                        continue
+                    for block in content:
+                        if (
+                            isinstance(block, dict)
+                            and block.get("type") == "tool_use"
+                            and block.get("name") == "TodoWrite"
+                        ):
+                            todos = block.get("input", {}).get("todos", [])
+                            if isinstance(todos, list) and todos:
+                                last_todos = todos  # keep updating to get the LAST one
+                except (json.JSONDecodeError, KeyError, TypeError):
+                    continue
+        return last_todos
+
+    def _extract_recent_errors(self, max_errors: int = 5) -> list[dict]:
+        """Extract recent tool errors from the transcript.
+
+        Scans for tool_result entries with is_error=True or Bash results
+        with non-zero exit codes. Returns the last max_errors occurrences.
+
+        Returns:
+            List of dicts with 'tool', 'error', 'truncated_output' keys.
+        """
+        if not self.transcript_path:
+            return []
+        errors: list[dict] = []
+        with open(self.transcript_path, encoding="utf-8") as f:
+            lines = f.readlines()
+        # Only scan the last 200 lines for performance
+        recent = lines[-200:] if len(lines) > 200 else lines
+        # Build tool_use id→name map from recent entries
+        tool_name_map: dict[str, str] = {}
+        for line in recent:
+            try:
+                entry = json.loads(line)
+                if entry.get("type") != "assistant":
+                    continue
+                msg = entry.get("message", {})
+                content = msg.get("content", []) if isinstance(msg, dict) else []
+                if not isinstance(content, list):
+                    continue
+                for block in content:
+                    if isinstance(block, dict) and block.get("type") == "tool_use":
+                        tool_name_map[block.get("id", "")] = block.get("name", "unknown")
+            except (json.JSONDecodeError, KeyError, TypeError):
+                continue
+        # Now collect errors from tool_result entries
+        for line in recent:
+            try:
+                entry = json.loads(line)
+                if entry.get("type") != "tool":
+                    continue
+                msg = entry.get("message", {})
+                if not isinstance(msg, dict):
+                    continue
+                content_list = msg.get("content", [])
+                if not isinstance(content_list, list):
+                    continue
+                for block in content_list:
+                    if not isinstance(block, dict):
+                        continue
+                    if block.get("type") != "tool_result":
+                        continue
+                    if not block.get("is_error", False):
+                        continue
+                    tool_id = block.get("tool_use_id", "")
+                    tool_name = tool_name_map.get(tool_id, "unknown")
+                    raw = block.get("content", "")
+                    if isinstance(raw, list):
+                        raw = " ".join(
+                            r.get("text", "") for r in raw if isinstance(r, dict)
+                        )
+                    errors.append({
+                        "tool": tool_name,
+                        "error": str(raw)[:500],  # cap at 500 chars
+                    })
+            except (json.JSONDecodeError, KeyError, TypeError):
+                continue
+        return errors[-max_errors:]
+
+    def _extract_recent_exchanges(self, max_pairs: int = 6) -> list[dict]:
+        """Extract the last N user↔assistant conversation pairs from the transcript.
+
+        Provides inline context so the LLM doesn't need to read the full
+        transcript file just to understand what was happening at compaction.
+
+        Returns:
+            List of dicts with 'role' ('user'|'assistant') and 'text' keys,
+            in chronological order, capped at max_pairs*2 messages.
+        """
+        if not self.transcript_path:
+            return []
+        messages: list[dict] = []
+        with open(self.transcript_path, encoding="utf-8") as f:
+            lines = f.readlines()
+        recent = lines[-300:] if len(lines) > 300 else lines
+        for line in recent:
+            try:
+                entry = json.loads(line)
+                role = entry.get("type")
+                if role == "user":
+                    msg = entry.get("message", {})
+                    content = msg.get("content", "") if isinstance(msg, dict) else ""
+                    if isinstance(content, list):
+                        text = " ".join(
+                            c.get("text", "") for c in content
+                            if isinstance(c, dict) and c.get("type") == "text"
+                        )
+                    else:
+                        text = str(content)
+                    text = text.strip()
+                    if text and len(text) > 5:
+                        messages.append({"role": "user", "text": text[:800]})
+                elif role == "assistant":
+                    msg = entry.get("message", {})
+                    content = msg.get("content", []) if isinstance(msg, dict) else []
+                    text_parts = []
+                    if isinstance(content, list):
+                        for block in content:
+                            if isinstance(block, dict) and block.get("type") == "text":
+                                text_parts.append(block.get("text", ""))
+                    elif isinstance(content, str):
+                        text_parts = [content]
+                    text = " ".join(text_parts).strip()
+                    if text and len(text) > 5:
+                        messages.append({"role": "assistant", "text": text[:800]})
+            except (json.JSONDecodeError, KeyError, TypeError):
+                continue
+        # Return only the last max_pairs*2 messages (pairs = user+assistant)
+        return messages[-(max_pairs * 2):]
+
+    def _extract_recent_edits(self, max_edits: int = 10) -> list[dict]:
+        """Extract recent Edit/Write tool calls from the transcript.
+
+        Captures file path and a brief snippet of what changed, providing
+        more context than just the file list in active_files.
+
+        Returns:
+            List of dicts with 'tool', 'file', 'snippet' keys.
+        """
+        if not self.transcript_path:
+            return []
+        edits: list[dict] = []
+        with open(self.transcript_path, encoding="utf-8") as f:
+            lines = f.readlines()
+        recent = lines[-200:] if len(lines) > 200 else lines
+        for line in recent:
+            try:
+                entry = json.loads(line)
+                if entry.get("type") != "assistant":
+                    continue
+                msg = entry.get("message", {})
+                content = msg.get("content", []) if isinstance(msg, dict) else []
+                if not isinstance(content, list):
+                    continue
+                for block in content:
+                    if not isinstance(block, dict) or block.get("type") != "tool_use":
+                        continue
+                    tool = block.get("name", "")
+                    inp = block.get("input", {})
+                    if tool == "Edit":
+                        file_path = inp.get("file_path", "")
+                        new_str = inp.get("new_string", "")
+                        snippet = new_str[:200].replace("\n", " ") if new_str else ""
+                        if file_path:
+                            edits.append({"tool": "Edit", "file": file_path, "snippet": snippet})
+                    elif tool == "Write":
+                        file_path = inp.get("file_path", "")
+                        content_str = inp.get("content", "")
+                        snippet = content_str[:200].replace("\n", " ") if content_str else ""
+                        if file_path:
+                            edits.append({"tool": "Write", "file": file_path, "snippet": snippet})
+            except (json.JSONDecodeError, KeyError, TypeError):
+                continue
+        return edits[-max_edits:]
+
     def _build_handoff_metadata(
         self,
         task_name: str,
@@ -433,6 +630,12 @@ class PreCompactHandoffCapture:
         """
         # Extract implementation status
         impl_status = self._extract_implementation_status()
+
+        # Extract new enrichment data from transcript
+        todo_list = self._extract_todo_list()
+        recent_errors = self._extract_recent_errors()
+        recent_exchanges = self._extract_recent_exchanges()
+        recent_edits = self._extract_recent_edits()
 
         # Extract first_user_request from transcript if not provided
         if not first_user_request and self.transcript_path:
@@ -485,6 +688,11 @@ class PreCompactHandoffCapture:
             "version": 1,
             # Implementation status tracking
             "implementation_status": impl_status,
+            # Enrichment: captured from transcript at compaction time
+            "todo_list": todo_list,
+            "recent_errors": recent_errors,
+            "recent_exchanges": recent_exchanges,
+            "recent_edits": recent_edits,
         }
 
         # Apply size limits (truncate if necessary)
@@ -675,8 +883,12 @@ class PreCompactHandoffCapture:
                 "open_conversation_context": open_conversation_context,
                 "visual_context": visual_context,
                 "saved_at": datetime.now(UTC).isoformat(),
-                "checksum": handoff_data.get("checksum"),
             }
+            # Compute checksum over the payload itself (excluding checksum key)
+            import hashlib as _hashlib
+            import json as _json
+            _payload_bytes = _json.dumps(handoff_payload, sort_keys=True, default=str).encode("utf-8")
+            handoff_payload["checksum"] = f"sha256:{_hashlib.sha256(_payload_bytes).hexdigest()}"
 
             # Store handoff in task metadata
             handoff_saved = True

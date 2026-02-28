@@ -435,7 +435,7 @@ class HandoffStore:
         # Update current checkpoint for next call
         self._current_checkpoint_id = checkpoint_id
 
-        session_id = f"session_{int(datetime.now(UTC).isoformat())}_{task_name.lower()}"
+        session_id = f"session_{int(datetime.now(UTC).timestamp())}_{task_name.lower()}"
 
         handoff_data = {
             # Checkpoint chain fields (NEW)

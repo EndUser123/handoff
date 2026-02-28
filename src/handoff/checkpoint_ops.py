@@ -50,7 +50,7 @@ class PendingOperation:
 
     type: Literal["edit", "test", "read", "command", "skill"]
     target: str
-    state: Literal["pending", "in_progress", "failed"]
+    state: Literal["pending", "in_progress", "completed", "failed"]
     details: dict[str, Any]
     started_at: str | None = None
 
@@ -133,6 +133,42 @@ class PendingOperation:
         """
         return asdict(self)
 
+    def transition_to(self, new_state: str) -> None:
+        """Transition to a new state with validation.
+
+        Args:
+            new_state: The target state to transition to
+
+        Raises:
+            ValueError: If the transition is invalid or state is unknown
+
+        Valid transitions:
+            - pending -> in_progress
+            - in_progress -> completed
+            - in_progress -> failed
+        """
+        valid_states = {"pending", "in_progress", "completed", "failed"}
+        if new_state not in valid_states:
+            raise ValueError(f"Invalid state: {new_state}. Must be one of {valid_states}")
+
+        if self.state == new_state:
+            raise ValueError(f"Invalid state transition: already in {new_state} state")
+
+        # Define valid transitions
+        valid_transitions = {
+            "pending": {"in_progress"},
+            "in_progress": {"completed", "failed"},
+            "completed": set(),  # No transitions out of completed
+            "failed": set(),  # No transitions out of failed
+        }
+
+        if new_state not in valid_transitions[self.state]:
+            raise ValueError(
+                f"Invalid state transition: cannot transition from {self.state} to {new_state}"
+            )
+
+        self.state = new_state
+
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> PendingOperation:
         """Load from dict with validation.
@@ -164,7 +200,7 @@ class PendingOperation:
             raise ValueError(f"Invalid type: {data['type']}. Must be one of {valid_types}")
 
         # Validate state field
-        valid_states = {"pending", "in_progress", "failed"}
+        valid_states = {"pending", "in_progress", "completed", "failed"}
         if data["state"] not in valid_states:
             raise ValueError(f"Invalid state: {data['state']}. Must be one of {valid_states}")
 
