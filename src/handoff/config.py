@@ -10,10 +10,13 @@ Provides utility functions for common patterns:
 from __future__ import annotations
 
 import json
+import logging
 import os
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 # Project root (defaults to P:/ for CSF environment)
 PROJECT_ROOT = Path(os.getenv("HANDOFF_PROJECT_ROOT", "P:/")).resolve()
