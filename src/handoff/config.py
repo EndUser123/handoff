@@ -6,11 +6,8 @@ Zero dependencies - uses pathlib.Path and environment variables only.
 
 from __future__ import annotations
 
-import json
 import os
-from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
 
 # Project root (defaults to P:/ for CSF environment)
 PROJECT_ROOT = Path(os.getenv("HANDOFF_PROJECT_ROOT", "P:/")).resolve()
@@ -53,3 +50,85 @@ def ensure_directories() -> None:
     """Create handoff directories if they don't exist."""
     HANDOFF_DIR.mkdir(parents=True, exist_ok=True)
     TRASH_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def utcnow_iso() -> str:
+    """
+    Get current UTC time as ISO 8601 string.
+
+    Returns:
+        Current UTC time in ISO format (e.g., "2025-01-15T10:30:00+00:00")
+
+    Example:
+        >>> utcnow_iso()
+        '2025-01-15T10:30:00+00:00'
+    """
+    return datetime.now(UTC).isoformat()
+
+
+def load_json_file(file_path: Path) -> dict[str, Any] | None:
+    """
+    Load JSON file with error handling.
+
+    Args:
+        file_path: Path to JSON file
+
+    Returns:
+        Parsed dict or None if file doesn't exist or is invalid
+
+    Note:
+        - Returns None for missing files (not an error)
+        - Returns None for invalid JSON (logs error)
+        - Use this when file existence is optional
+    """
+    try:
+        if not file_path.exists():
+            return None
+        return json.loads(file_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as e:
+        # Log error but don't raise - caller decides if None is fatal
+        import logging
+        logging.getLogger(__name__).warning(f"Error loading {file_path}: {e}")
+        return None
+
+
+def save_json_file(file_path: Path, data: dict[str, Any]) -> bool:
+    """
+    Save dict to JSON file with error handling.
+
+    Args:
+        file_path: Path to write (creates parent dirs)
+        data: Dict to serialize
+
+    Returns:
+        True if successful, False otherwise
+
+    Note:
+        - Creates parent directories automatically
+        - Uses atomic write (temp file + rename)
+        - Returns False on error (doesn't raise)
+    """
+    import tempfile
+
+    try:
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Atomic write: temp file + rename
+        fd, temp_path = tempfile.mkstemp(
+            suffix=".tmp", dir=str(file_path.parent)
+        )
+        try:
+            with open(fd, "w", encoding="utf-8") as f:
+                f.write(json.dumps(data, indent=2))
+            Path(temp_path).replace(file_path)
+            return True
+        except OSError:
+            try:
+                Path(temp_path).unlink()
+            except OSError:
+                pass
+            raise
+    except (OSError, TypeError) as e:
+        import logging
+        logging.getLogger(__name__).error(f"Error saving {file_path}: {e}")
+        return False
