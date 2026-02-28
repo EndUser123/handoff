@@ -1200,6 +1200,53 @@ def extract_user_message_from_blocker(blocker: dict[str, Any] | str | None) -> s
     return description if description else None
 
 
+def filter_valid_messages(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Filter valid messages from a list, removing invalid entries.
+
+    This function validates and filters messages, handling:
+    - Non-dict items (None, strings, numbers, lists, etc.)
+    - Messages missing required 'role' field
+    - Messages with invalid value types (e.g., role not a string, content not a string)
+
+    Args:
+        messages: List of message items (may contain non-dict items)
+
+    Returns:
+        Filtered list of valid message dictionaries with all fields preserved.
+        Returns empty list if no valid messages found.
+    """
+    if not messages:
+        return []
+
+    valid_messages = []
+
+    for message in messages:
+        # Skip if message is not a dict
+        if not isinstance(message, dict):
+            continue
+
+        # Check for required 'role' field
+        if "role" not in message:
+            continue
+
+        # Validate that 'role' is a string
+        role = message.get("role")
+        if not isinstance(role, str):
+            continue
+
+        # If 'content' field exists, validate it's a string
+        if "content" in message:
+            content = message.get("content")
+            # Content must be a string (can be empty string, but not None, list, dict, etc.)
+            if not isinstance(content, str):
+                continue
+
+        # Message is valid - preserve all fields
+        valid_messages.append(message)
+
+    return valid_messages
+
+
 def extract_transcript_from_messages(messages: list[dict[str, Any]]) -> str:
     """Extract transcript text from a list of messages.
 
