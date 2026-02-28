@@ -69,6 +69,10 @@ class TestTaskIdentityMatching:
         """
         Test that different task IDs are kept separate.
 
+        BUG: Currently FAILS because environment variable set in set_current_task()
+        causes cross-terminal bleeding. The env var TASK_NAME is global and persists
+        across all terminals, causing manager_2 to retrieve manager_1's task.
+
         Given: Two different terminals with different task IDs
         When: Task identity is retrieved from each terminal
         Then: Each terminal should have its own task identity
@@ -90,6 +94,11 @@ class TestTaskIdentityMatching:
             # Act: Set different tasks for each terminal
             manager_1.set_current_task("TASK_A")
             manager_2.set_current_task("TASK_B")
+
+            # Clear environment variables to test session file isolation
+            import os
+            if "TASK_NAME" in os.environ:
+                del os.environ["TASK_NAME"]
 
             # Assert: Each terminal should have its own task
             task_1 = manager_1.get_current_task()
