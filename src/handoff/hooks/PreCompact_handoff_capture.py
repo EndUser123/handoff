@@ -684,7 +684,9 @@ class PreCompactHandoffCapture:
             "pending_operations": handoff_data.get("pending_operations", []),
             "original_user_request": original_user_request,
             "first_user_request": first_user_request,
-            "saved_at": datetime.now(UTC).isoformat(),
+            # Import utility for DRY compliance
+            from handoff.config import utcnow_iso
+            "saved_at": utcnow_iso(),
             "version": 1,
             # Implementation status tracking
             "implementation_status": impl_status,
