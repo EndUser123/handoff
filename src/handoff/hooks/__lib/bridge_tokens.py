@@ -126,5 +126,6 @@ def get_bridge_token_age(token: str) -> int | None:
         dt = dt.replace(tzinfo=UTC)
         age = int((datetime.now(UTC) - dt).total_seconds())
         return age
-    except (ValueError, IndexError):
+    except (ValueError, IndexError) as e:
+        logger.debug(f"[BridgeTokens] Could not parse bridge token: {e}")
         return None
