@@ -275,11 +275,10 @@ def calculate_quality_score(handoff_data: dict[str, Any]) -> float:
         "knowledge": 0.0,
     }
 
-    # 30% Completion: resolved issues vs total modifications
+    # 30% Completion: whether modifications exist (resolved_issues is never populated)
     modifications = handoff_data.get("modifications", [])
-    resolved_issues = handoff_data.get("resolved_issues", [])
     if modifications:
-        scores["completion"] = min(1.0, len(resolved_issues) / len(modifications)) * QUALITY_WEIGHT_COMPLETION
+        scores["completion"] = 1.0 * QUALITY_WEIGHT_COMPLETION
     else:
         # No modifications means no work done - neutral score
         scores["completion"] = 0.5 * QUALITY_WEIGHT_COMPLETION

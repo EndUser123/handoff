@@ -257,11 +257,23 @@ def migrate_handoffs(
         task_data["tasks"][task_id] = task
         task_data["last_update"] = datetime.now(UTC).isoformat()
 
-        # Write task file with atomic write
+        # Write task file with atomic write (mkstemp avoids concurrent migration races)
+        import tempfile
         try:
-            temp_path = task_file_path.with_suffix(".tmp")
-            temp_path.write_text(json.dumps(task_data, indent=2), encoding='utf-8')
-            temp_path.replace(task_file_path)
+            fd, temp_path_str = tempfile.mkstemp(
+                suffix=".tmp", dir=str(task_file_path.parent)
+            )
+            temp_path = Path(temp_path_str)
+            try:
+                with open(fd, "w", encoding="utf-8") as f:
+                    f.write(json.dumps(task_data, indent=2))
+                temp_path.replace(task_file_path)
+            except OSError:
+                try:
+                    temp_path.unlink()
+                except OSError:
+                    pass
+                raise
             print(f"Migrated: {json_path.name} -> {task_id}")
             results["migrated"] += 1
         except OSError as e:

@@ -20,6 +20,7 @@ import os
 import re
 import subprocess
 import sys
+import traceback
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -477,6 +478,7 @@ class PreCompactHandoffCapture:
             "visual_context": handoff_payload.get("visual_context") if handoff_payload else None,
             "resolved_issues": handoff_data.get("resolved_issues", []),
             "modifications": handoff_data.get("modifications", []),
+            "pending_operations": handoff_data.get("pending_operations", []),
             "original_user_request": original_user_request,
             "first_user_request": first_user_request,
             "saved_at": datetime.now(UTC).isoformat(),
@@ -566,7 +568,7 @@ class PreCompactHandoffCapture:
                 current_session = ""
 
         # Extract handoff session from transcript path
-        handoff_session = Path(self.transcript_path).stem
+        handoff_session = Path(self.transcript_path).stem if self.transcript_path else ""
 
         # Edge case: No current session (allow handoff creation)
         if not current_session:

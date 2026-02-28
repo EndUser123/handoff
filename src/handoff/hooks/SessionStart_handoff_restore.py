@@ -139,6 +139,9 @@ def _build_restoration_prompt(handoff_data: dict[str, Any]) -> str:
             "",
         ]
 
+    # Extract transcript_path EARLY for quick reference (prevents file search mistakes)
+    transcript_path = handoff_data.get("transcript_path", "")
+
     lines = [
         "# ═══════════════════════════════════════════════════════════════",
         "# ⚠️  SESSION RESTORED FROM COMPACTION - READ CAREFULLY",
@@ -150,7 +153,27 @@ def _build_restoration_prompt(handoff_data: dict[str, Any]) -> str:
         "",
     ]
 
-    # Insert last command FIRST (right after header)
+    # ═══════════════════════════════════════════════════════════════
+    # ⚠️  QUICK REFERENCE - CHECK THIS FIRST
+    # ═══════════════════════════════════════════════════════════════
+    # When asked about "previous chat history" or "transcript", use THIS path.
+    # DO NOT search for files, DO NOT guess, DO NOT look in task tracker.
+    # ═══════════════════════════════════════════════════════════════
+
+    if transcript_path:
+        lines.extend([
+            "## 📌 QUICK REFERENCE - PREVIOUS CHAT HISTORY",
+            "",
+            f"**Path:** `{transcript_path}`",
+            "",
+            "**When user asks about previous chat/transcript:**",
+            f"→ Read the file at: {transcript_path}",
+            "→ DO NOT search for files, DO NOT look in checkpoints",
+            "",
+            "",
+        ])
+
+    # Insert last command AFTER quick reference
     lines.extend(last_command_section)
 
     # Then continue with context sections
@@ -216,6 +239,14 @@ def _build_restoration_prompt(handoff_data: dict[str, Any]) -> str:
     if git_branch:
         lines.extend([
             f"**Git Branch:** {git_branch}",
+            "",
+        ])
+
+    # Add previous transcript path so LLM can reference pre-compact history
+    transcript_path = handoff_data.get("transcript_path")
+    if transcript_path:
+        lines.extend([
+            f"**Previous Chat History:** `{transcript_path}`",
             "",
         ])
 
@@ -471,15 +502,18 @@ def _cleanup_active_session_task(terminal_id: str) -> None:
 
 
 def _safe_id(value: str) -> str:
-    """Make a value safe for use in file paths.
+    """Make a value safe for use in file paths and glob patterns.
+
+    Uses an allow-list approach to prevent glob metacharacters and other
+    unsafe characters from appearing in constructed paths/patterns.
 
     Args:
         value: String to sanitize
 
     Returns:
-        Sanitized string safe for file paths
+        Sanitized string safe for file paths and glob patterns
     """
-    return re.sub(r'[\/*?:"<>|]', '_', value)
+    return re.sub(r"[^a-zA-Z0-9_.-]+", "_", str(value))
 
 
 def _cleanup_active_command_file(terminal_id: str) -> None:

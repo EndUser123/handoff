@@ -27,16 +27,17 @@ import json
 import logging
 import os
 import subprocess
+
+# For package-based hooks, add P:/.claude/hooks to path for terminal_detection import
+# Path: P:/packages/handoff/src/handoff/hooks/__lib/task_identity_manager.py
+# Need to reach: P:/.claude/hooks/terminal_detection.py
+import sys
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import TypeAlias
 
-# For package-based hooks, add P:/.claude/hooks to path for terminal_detection import
-# Path: P:/packages/handoff/src/handoff/hooks/__lib/task_identity_manager.py
-# Need to reach: P:/.claude/hooks/terminal_detection.py
-import sys
 _hooks_project_root = Path(__file__).resolve().parent.parent.parent.parent.parent.parent  # Up to packages/handoff
 claude_root = _hooks_project_root.parent  # Up to P:/
 hooks_dir = claude_root / ".claude" / "hooks"
@@ -155,6 +156,8 @@ class TaskIdentityManager:
                     timestamp_str = data.get("timestamp", "")
                     if timestamp_str:
                         timestamp = datetime.fromisoformat(timestamp_str)
+                        if timestamp.tzinfo is None:
+                            timestamp = timestamp.replace(tzinfo=UTC)
                         age = (datetime.now(UTC) - timestamp).total_seconds()
                         if age < 300:  # 5 minutes
                             return task

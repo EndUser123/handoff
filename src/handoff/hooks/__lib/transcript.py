@@ -907,7 +907,8 @@ class TranscriptParser:
 
         try:
             # Scan last 50 entries for visual context
-            for entry in entries[-50:]:
+            start_idx = max(0, len(entries) - 50)
+            for abs_idx, entry in enumerate(entries[-50:], start=start_idx):
                 # Check for tool_use entries that might be image-related
                 if entry.get("type") == "tool_use":
                     tool_name = entry.get("name", "")
@@ -932,11 +933,10 @@ class TranscriptParser:
                             desc_parts.append(f"- prompt: '{prompt[:100]}...'")
 
                         # Check if there's a user message right after this (user responding to image)
-                        # Look ahead a few entries
-                        entry_idx = entries.index(entry) if entry in entries else -1
+                        # Look ahead a few entries using absolute index (avoids duplicate-dict issue)
                         user_response = ""
-                        if 0 <= entry_idx < len(entries) - 1:
-                            for next_entry in entries[entry_idx + 1:min(entry_idx + 5, len(entries))]:
+                        if 0 <= abs_idx < len(entries) - 1:
+                            for next_entry in entries[abs_idx + 1:min(abs_idx + 5, len(entries))]:
                                 if next_entry.get("type") == "user":
                                     user_response = self._extract_text_from_entry(next_entry)[:200]
                                     break
