@@ -219,9 +219,10 @@ class TaskIdentityManager:
                 return None
 
             # Load task-worktree mapping
-            if self.mapping_file.exists():
-                mapping = json.loads(self.mapping_file.read_text())
-                return mapping.get(branch)
+            from handoff.config import load_json_file
+            mapping_data = load_json_file(self.mapping_file)
+            if mapping_data:
+                return mapping_data.get(branch)
 
         except subprocess.TimeoutExpired:
             logger.warning("[TaskID] Git command timed out")
