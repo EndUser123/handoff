@@ -83,10 +83,11 @@ class TestSessionStartHookIntegration:
             from SessionStart_handoff_restore import _load_active_session_task
 
             # Act - Call the actual function (it will read from the hard-coded path)
-            loaded_task = _load_active_session_task(terminal_id)
+            loaded_task, source_terminal = _load_active_session_task(terminal_id)
 
             # Assert
             assert loaded_task is not None, "active_session task should be loaded"
+            assert source_terminal == terminal_id, "source_terminal should match for exact match"
             assert loaded_task["id"] == "active_session"
             assert "handoff" in loaded_task["metadata"]
             assert loaded_task["metadata"]["handoff"]["task_name"] == "Implement feature X"

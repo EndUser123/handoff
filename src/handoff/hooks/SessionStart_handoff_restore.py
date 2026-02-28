@@ -558,83 +558,110 @@ def _build_restoration_prompt(handoff_data: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def _load_active_session_task(terminal_id: str) -> dict[str, Any] | None:
-    """Load active_session task from task tracker.
+def _load_active_session_task(terminal_id: str) -> tuple[dict[str, Any] | None, str | None]:
+    """Load active_session or continue_session task from task tracker.
 
     Uses terminal-scoped task file to prevent cross-terminal contamination.
-    The global current_session.json is NOT used because it causes terminals
-    to load each other's handoff data.
+    Falls back to searching all terminal task files for restoration tasks.
 
     Args:
         terminal_id: Terminal identifier for isolation
 
     Returns:
-        Task dict with handoff in metadata, or None if not found
+        Tuple of (task dict with handoff in metadata, or None; source terminal_id)
     """
-    # Exact terminal_id match required
     task_tracker_dir = Path("P:/.claude/state/task_tracker")
+
+    # Fast path: check current terminal first
     task_file_path = task_tracker_dir / f"{terminal_id}_tasks.json"
+    if task_file_path.exists():
+        try:
+            with open(task_file_path, encoding="utf-8") as f:
+                task_data = json.load(f)
 
-    if not task_file_path.exists():
-        return None
+            # Look for active_session task (restoration after compaction)
+            active_session = task_data.get("tasks", {}).get("active_session")
+            if active_session:
+                return active_session, terminal_id
 
-    try:
-        with open(task_file_path, encoding="utf-8") as f:
-            task_data = json.load(f)
+            # Fallback to continue_session task (also for restoration)
+            continue_session = task_data.get("tasks", {}).get("continue_session")
+            if continue_session:
+                return continue_session, terminal_id
 
-        # Look for active_session task (restoration after compaction)
-        active_session = task_data.get("tasks", {}).get("active_session")
-        if active_session:
-            return active_session
+        except (json.JSONDecodeError, OSError) as e:
+            logger.debug(f"[SessionStart] Could not load handoff from task file: {e}")
 
-        # Fallback to continue_session task (also for restoration)
-        continue_session = task_data.get("tasks", {}).get("continue_session")
-        if continue_session:
-            return continue_session
+    # Slow path: search all terminal task files (handles terminal_id change after compaction)
+    for task_file in task_tracker_dir.glob("*_tasks.json"):
+        try:
+            with open(task_file, encoding="utf-8") as f:
+                task_data = json.load(f)
 
-    except (json.JSONDecodeError, OSError) as e:
-        logger.debug(f"[SessionStart] Could not load handoff from task file: {e}")
+            # Look for active_session task
+            active_session = task_data.get("tasks", {}).get("active_session")
+            if active_session:
+                source_terminal = task_file.stem.replace("_tasks", "")
+                logger.debug(f"[SessionStart] Found active_session in {source_terminal}_tasks.json")
+                return active_session, source_terminal
 
-    return None
+            # Fallback to continue_session task
+            continue_session = task_data.get("tasks", {}).get("continue_session")
+            if continue_session:
+                source_terminal = task_file.stem.replace("_tasks", "")
+                logger.debug(f"[SessionStart] Found continue_session in {source_terminal}_tasks.json")
+                return continue_session, source_terminal
+
+        except (json.JSONDecodeError, OSError) as e:
+            logger.debug(f"[SessionStart] Error reading {task_file.name}: {e}")
+            continue
+
+    return None, None
 
 
-def _cleanup_active_session_task(terminal_id: str) -> None:
-    """Remove active_session task after successful restoration.
-
-    Uses terminal-scoped task file to prevent cross-terminal contamination.
+def _cleanup_active_session_task(source_terminal_id: str) -> None:
+    """Remove active_session or continue_session task after successful restoration.
 
     Args:
-        terminal_id: Terminal identifier for task file
+        source_terminal_id: Terminal identifier where the handoff was loaded from
     """
-    # Use terminal-scoped task file directly
+    # Use the source terminal's task file (where the handoff was found)
     task_tracker_dir = Path("P:/.claude/state/task_tracker")
-    task_file_path = task_tracker_dir / f"{terminal_id}_tasks.json"
+    task_file_path = task_tracker_dir / f"{source_terminal_id}_tasks.json"
 
     if not task_file_path.exists():
+        logger.debug(f"[SessionStart] Task file not found: {task_file_path}")
         return
 
     try:
         with open(task_file_path, encoding="utf-8") as f:
             task_data = json.load(f)
 
-        # Remove active_session task
-        if "active_session" in task_data.get("tasks", {}):
-            del task_data["tasks"]["active_session"]
+        # Remove both active_session and continue_session tasks
+        removed = False
+        for task_name in ("active_session", "continue_session"):
+            if task_name in task_data.get("tasks", {}):
+                del task_data["tasks"][task_name]
+                removed = True
+                logger.debug(f"[SessionStart] Removed {task_name} from {source_terminal_id}_tasks.json")
 
-            # Write back
-            import tempfile
+        if not removed:
+            return
 
-            fd, temp_path = tempfile.mkstemp(suffix=".tmp", dir=str(task_file_path.parent))
+        # Write back
+        import tempfile
+
+        fd, temp_path = tempfile.mkstemp(suffix=".tmp", dir=str(task_file_path.parent))
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                json.dump(task_data, f, indent=2)
+            os.replace(temp_path, str(task_file_path))
+        except OSError as replace_error:
+            logger.debug(f"[SessionStart] Could not replace task file: {replace_error}")
             try:
-                with os.fdopen(fd, "w", encoding="utf-8") as f:
-                    json.dump(task_data, f, indent=2)
-                os.replace(temp_path, str(task_file_path))
-            except OSError as replace_error:
-                logger.debug(f"[SessionStart] Could not replace task file: {replace_error}")
-                try:
-                    os.unlink(temp_path)
-                except OSError as unlink_error:
-                    logger.debug(f"[SessionStart] Could not unlink temp file: {unlink_error}")
+                os.unlink(temp_path)
+            except OSError as unlink_error:
+                logger.debug(f"[SessionStart] Could not unlink temp file: {unlink_error}")
     except (json.JSONDecodeError, OSError) as e:
         logger.debug(f"[SessionStart] Could not load handoff data: {e}")
 
@@ -663,8 +690,8 @@ def main() -> int:
     """
     terminal_id = detect_terminal_id()  # Used in _load_active_session_task() and _cleanup_active_session_task()
 
-    # Load active_session task (these are restoration tasks by definition)
-    active_task = _load_active_session_task(terminal_id)
+    # Load active_session or continue_session task (returns tuple)
+    active_task, source_terminal = _load_active_session_task(terminal_id)
 
     if not active_task:
         # NOTE: Silently return - no active handoff is normal, not an error
@@ -703,8 +730,9 @@ def main() -> int:
     # Output JSON for SessionStart router to capture as additionalContext
     print(json.dumps({"hookEvent": "SessionStart", "additionalContext": restoration_prompt}))
 
-    # Clean up active_session task after successful restoration
-    _cleanup_active_session_task(terminal_id)
+    # Clean up the task from the source terminal where it was found
+    if source_terminal:
+        _cleanup_active_session_task(source_terminal)
 
     # NOTE: Removed diagnostic print() - router only needs JSON output
     # print(f"[SessionStart] Handoff restored for task: {handoff_data.get('task_name', 'unknown')}")
