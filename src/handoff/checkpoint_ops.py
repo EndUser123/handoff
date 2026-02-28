@@ -57,7 +57,7 @@ class PendingOperation:
     details: dict[str, Any]
     started_at: str | None = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Validate the target field after initialization.
 
         This validation runs automatically when a PendingOperation is instantiated
