@@ -702,9 +702,6 @@ class TranscriptParser:
         Returns:
             List of session decision dicts with topic, decision, rationale
         """
-        # Import utility for DRY compliance
-        from handoff.config import utcnow_iso
-
         decisions: list[dict[str, Any]] = []
 
         entries = self._get_parsed_entries()
