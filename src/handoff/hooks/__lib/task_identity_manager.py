@@ -305,7 +305,7 @@ class TaskIdentityManager:
             return False
 
         try:
-            from handoff.config import utcnow_iso
+            from handoff.config import save_json_file, utcnow_iso
 
             metadata = {
                 "task_name": task_name,
@@ -315,8 +315,7 @@ class TaskIdentityManager:
                 "version": "v1"
             }
 
-            self.metadata_file.parent.mkdir(parents=True, exist_ok=True)
-            self.metadata_file.write_text(json.dumps(metadata, indent=2))
+            save_json_file(self.metadata_file, metadata)
 
             logger.info(f"[TaskID] Stored compact metadata: {task_name}")
             return True
