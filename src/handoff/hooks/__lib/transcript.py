@@ -660,7 +660,10 @@ class TranscriptParser:
                         user_message = content.strip()
                         if not user_message.startswith("<"):
                             return {
-                                "description": f"User's last question: {user_message[:200]}{'...' if len(user_message) > 200 else ''}",
+                                "description": (
+                                    f"User's last question: {user_message[:200]}"
+                                    f"{'...' if len(user_message) > 200 else ''}"
+                                ),
                                 "severity": "info",
                                 "source": "transcript",
                             }
