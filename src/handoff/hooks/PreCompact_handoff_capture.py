@@ -75,6 +75,7 @@ try:
     )
     _SESSION_ACTIVITY_AVAILABLE = True
 except ImportError:
+    logger.debug("[PreCompact] session_activity module not available")
     _SESSION_ACTIVITY_AVAILABLE = False
 
 try:
