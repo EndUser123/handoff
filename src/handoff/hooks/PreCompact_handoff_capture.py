@@ -950,7 +950,8 @@ class PreCompactHandoffCapture:
         if impl_status.get("test_results"):
             test_res = impl_status["test_results"]
             print(
-                f"[PreCompact] Test results: {test_res.get('passed', 0)} passed, {test_res.get('failed', 0)} failed"
+                f"[PreCompact] Test results: {test_res.get('passed', 0)} passed, "
+                f"{test_res.get('failed', 0)} failed"
             )
 
         if blocker:
