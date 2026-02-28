@@ -908,7 +908,6 @@ class TranscriptParser:
 
         try:
             # Import utility for DRY compliance
-            from handoff.config import utcnow_iso
             # Scan last 50 entries for visual context
             start_idx = max(0, len(entries) - 50)
             for abs_idx, entry in enumerate(entries[-50:], start=start_idx):
@@ -944,12 +943,13 @@ class TranscriptParser:
                                     user_response = self._extract_text_from_entry(next_entry)[:200]
                                     break
 
+                        from handoff.config import utcnow_iso
                         return {
                             "description": " ".join(desc_parts),
                             "type": "image_analysis",
                             "tool": tool_name,
                             "user_response": user_response,
-                            "timestamp": entry.get("timestamp", datetime.now(UTC).isoformat()),
+                            "timestamp": entry.get("timestamp", utcnow_iso()),
                         }
 
                 # Check user messages for visual references
