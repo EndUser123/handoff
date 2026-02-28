@@ -266,7 +266,8 @@ class PreCompactHandoffCapture:
                     if command:
                         return command
 
-        except Exception:
+        except Exception as e:
+            logger.debug(f"[PreCompact] Could not extract implementation status: {e}")
             # Graceful failure - return None if any error occurs
             pass
 
