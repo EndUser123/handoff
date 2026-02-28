@@ -747,7 +747,11 @@ def main() -> int:
     # Verify checksum
     is_valid, error = _verify_handoff_checksum(handoff_data)
     if not is_valid:
-        # NOTE: Checksum failures are silent - don't spam on every session
+        # Issue #8: Make checksum errors visible to users (was silent DEBUG log)
+        logger.error(f"[SessionStart] Checksum verification failed: {error}")
+        print(f"[SessionStart] Warning: Handoff data corrupted, skipping restoration")
+        print(f"[SessionStart] Error: {error}")
+        # Still return 0 to allow session start, but inform user
         return 0
 
     # NOTE: Session-binding check REMOVED for restoration tasks
