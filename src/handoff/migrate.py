@@ -386,6 +386,7 @@ def migrate_handoffs(
             print(f"Migrated: {json_path.name} -> {task_id}")
             results["migrated"] += 1
         except OSError as e:
+            logger.warning(f"[Migrate] Failed to migrate {handoff_path.name}: {e}")
             results["failed"] += 1
             results["errors"].append(f"{json_path.name}: {e}")
 
