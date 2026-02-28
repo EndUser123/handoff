@@ -628,6 +628,9 @@ class PreCompactHandoffCapture:
         Returns:
             Complete handoff metadata dict ready for task storage
         """
+        # Import utility for DRY compliance
+        from handoff.config import utcnow_iso
+
         # Extract implementation status
         impl_status = self._extract_implementation_status()
 
