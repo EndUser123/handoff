@@ -235,17 +235,15 @@ class TestTaskIdentityMatching:
         """
         Test that terminal ID verification prevents task bleeding between terminals.
 
-        BUG DISCOVERED: This test reveals TWO bugs:
-        1. Session files are written to global path (P:/.claude/state/task-identity/)
-           instead of project_root, causing cross-test pollution
-        2. Environment variable TASK_NAME is global (not terminal-scoped), causing
-           task bleeding between terminals
+        BUG: Environment variable TASK_NAME is global (not terminal-scoped).
+        When set_current_task() is called on terminal_1, it sets os.environ["TASK_NAME"]
+        which is then read by terminal_2, causing task bleeding.
 
         Given: A session file from terminal_1 exists
-        When: Task identity is retrieved from terminal_2
+        When: Task identity is retrieved from terminal_2 WITHOUT clearing env var
         Then: Task should NOT be extracted (terminal mismatch)
 
-        Current behavior: Returns task from global state or env var
+        Current behavior: Returns task from environment variable (global state)
         Expected behavior: Should return None (no task for terminal_2)
         """
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -261,15 +259,13 @@ class TestTaskIdentityMatching:
             manager_1.set_current_task(task_name)
 
             # Verify session file was created in expected location
-            # BUG: Files go to P:/.claude/state/task-identity/ not tmpdir!
+            # Files go to P:/.claude/state/task-identity/ (global path)
             assert manager_1.session_file.parent == Path("P:/.claude/state/task-identity")
             assert manager_1.session_file.name == "session-task-terminal_1.json"
 
-            # CRITICAL: Clear env var AFTER set_current_task to isolate session file behavior
-            # This reveals the bug: env var is global, not terminal-scoped
-            import os
-            if "TASK_NAME" in os.environ:
-                del os.environ["TASK_NAME"]
+            # CRITICAL BUG TEST: Do NOT clear env var
+            # The bug is that set_current_task() sets os.environ["TASK_NAME"]
+            # which is global across all terminals
 
             # Act: Try to retrieve from terminal_2
             manager_2 = TaskIdentityManager(
@@ -280,8 +276,8 @@ class TestTaskIdentityMatching:
 
             # Assert: Should not get task_1's task (terminal mismatch)
             # Since there's no task for terminal_2, should return None
-            # BUG TEST: This assertion will FAIL due to cross-pollution
-            assert task is None, f"Expected None but got '{task}'. Task bleeding detected!"
+            # BUG TEST: This will FAIL because env var causes bleeding
+            assert task is None, f"Expected None but got '{task}'. Task bleeding detected via environment variable!"
 
     def test_task_identity_grouping_by_id(self):
         """
