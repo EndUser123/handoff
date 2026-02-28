@@ -137,10 +137,15 @@ class CheckpointChain:
                     if task_id in self._migration_cache:
                         migrated_handoff = self._migration_cache[task_id]
                     else:
-                        # Apply migration to add checkpoint chain fields
-                        migrated_handoff = migrate_checkpoint_chain_fields(handoff)
-                        # Cache the migrated handoff for this session
-                        self._migration_cache[task_id] = migrated_handoff
+                        # Apply migration with lock to prevent race conditions
+                        with self._migration_lock:
+                            # Double-check after acquiring lock
+                            if task_id not in self._migration_cache:
+                                migrated_handoff = migrate_checkpoint_chain_fields(handoff)
+                                # Cache the migrated handoff for this session
+                                self._migration_cache[task_id] = migrated_handoff
+                            else:
+                                migrated_handoff = self._migration_cache[task_id]
 
                     # Update metadata with migrated handoff for from_task_metadata
                     metadata = {**metadata, "handoff": migrated_handoff}
