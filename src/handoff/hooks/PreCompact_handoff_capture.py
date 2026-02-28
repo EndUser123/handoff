@@ -753,6 +753,9 @@ class PreCompactHandoffCapture:
         Returns:
             True if handoff process succeeded, False otherwise
         """
+        # Import utility for DRY compliance
+        from handoff.config import utcnow_iso
+
         print("[PreCompact] Starting handoff capture...")
 
         # Step 1: Get task identity
