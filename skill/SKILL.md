@@ -148,11 +148,8 @@ After 90 days, handoffs are candidates for cleanup because:
 ## Auto-Cleanup
 
 ```bash
-# Check what would be deleted
-handoff --cleanup
-
-# Actually delete old handoffs
-handoff --cleanup-force
+# Manual cleanup (for debugging):
+python -m handoff.cli --cleanup
 
 # Custom retention period
 export HANDOFF_RETENTION_DAYS=30
