@@ -12,9 +12,7 @@ Run with: pytest P:/packages/handoff/tests/test_sessionstart_hook_integration.py
 """
 
 import json
-import tempfile
 from pathlib import Path
-from unittest.mock import patch
 
 
 class TestSessionStartHookIntegration:
