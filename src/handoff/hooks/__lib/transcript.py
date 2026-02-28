@@ -651,7 +651,10 @@ class TranscriptParser:
                                     continue
                                 # Found substantial user message
                                 return {
-                                    "description": f"User's last question: {item[:200]}{'...' if len(item) > 200 else ''}",
+                                    "description": (
+                                        f"User's last question: {item[:200]}"
+                                        f"{'...' if len(item) > 200 else ''}"
+                                    ),
                                     "severity": "info",
                                     "source": "transcript",
                                 }
