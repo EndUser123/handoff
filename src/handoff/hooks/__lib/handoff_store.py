@@ -495,6 +495,8 @@ class HandoffStore:
             - Adds active_session and continue_session tasks with handoff in metadata
             - Prints status messages to stdout
         """
+        from handoff.config import utcnow_iso
+
         # CRITICAL: Always use terminal_id for task file naming to prevent cross-terminal contamination
         # Session ID is global across terminals and would cause context leakage between concurrent sessions
         task_tracker_dir = self.project_root / ".claude" / "state" / "task_tracker"
