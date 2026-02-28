@@ -681,14 +681,21 @@ def _cleanup_active_session_task(source_terminal_id: str) -> None:
                             task_data["tasks"][task_name].get("created_at", "")
                         )
                 # Write back the marked task for later cleanup
+                # Note: Create NEW temp file (fd was already consumed above)
+                fd_retry, temp_path_retry = tempfile.mkstemp(suffix=".tmp", dir=str(task_file_path.parent))
                 try:
-                    with os.fdopen(fd, "w", encoding="utf-8") as f:
+                    with os.fdopen(fd_retry, "w", encoding="utf-8") as f:
                         json.dump(task_data, f, indent=2)
-                    os.replace(temp_path, str(task_file_path))
+                    os.replace(temp_path_retry, str(task_file_path))
                     logger.info(f"[SessionStart] Marked task for cleanup retry: {task_file_path.name}")
                 except OSError:
                     try:
-                        os.unlink(temp_path)
+                        os.unlink(temp_path_retry)
+                    except OSError:
+                        pass
+                finally:
+                    try:
+                        os.close(fd_retry)
                     except OSError:
                         pass
             try:
