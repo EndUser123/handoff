@@ -779,7 +779,10 @@ class TranscriptParser:
                 for pattern in open_context_patterns:
                     if re.search(pattern, msg_lower):
                         return {
-                            "description": f"Open discussion: {msg[:200]}{'...' if len(msg) > 200 else ''}",
+                            "description": (
+                                f"Open discussion: {msg[:200]}"
+                                f"{'...' if len(msg) > 200 else ''}"
+                            ),
                             "context_type": "open_discussion",
                             "original_message": msg[:500],
                         }
