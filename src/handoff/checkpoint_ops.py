@@ -18,7 +18,7 @@ Usage:
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from typing import Any, ClassVar, Literal
+from typing import Any, Literal
 
 
 @dataclass(slots=True)
@@ -49,7 +49,7 @@ class PendingOperation:
     """
 
     # Class constants
-    MAX_TARGET_LENGTH: int = 255  # Filesystem NAME_MAX limit
+    MAX_TARGET_LENGTH: ClassVar[int] = 255  # Filesystem NAME_MAX limit
 
     type: Literal["edit", "test", "read", "command", "skill"]
     target: str
