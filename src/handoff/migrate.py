@@ -297,6 +297,154 @@ def _write_task_file_atomic(
         raise
 
 
+def _initialize_migration_results() -> dict[str, Any]:
+    """Initialize migration results dict.
+
+    Returns:
+        Dict with counters and error list
+    """
+    return {"migrated": 0, "failed": 0, "skipped": 0, "errors": []}
+
+
+def _collect_handoff_files(handoff_dir: Path) -> list[Path] | None:
+    """Find all handoff JSON files in directory.
+
+    Args:
+        handoff_dir: Directory to search
+
+    Returns:
+        List of JSON file paths, or None if directory not found
+    """
+    if not handoff_dir.exists():
+        return None
+
+    handoff_files = list(handoff_dir.glob("*.json"))
+    # Skip directories (like trash/)
+    return [f for f in handoff_files if f.is_file()]
+
+
+def _load_handoff_with_validation(
+    json_path: Path,
+    results: dict[str, Any]
+) -> dict[str, Any] | None:
+    """Load handoff JSON with error tracking.
+
+    Args:
+        json_path: Path to handoff JSON file
+        results: Results dict to update on failure
+
+    Returns:
+        Handoff data dict, or None if loading failed
+    """
+    handoff_data = load_handoff_json(json_path)
+    if not handoff_data:
+        results["failed"] += 1
+        results["errors"].append(f"{json_path.name}: Invalid or corrupt")
+    return handoff_data
+
+
+def _handle_dry_run_migration(
+    json_path: Path,
+    results: dict[str, Any]
+) -> None:
+    """Handle dry-run migration (no file writes).
+
+    Args:
+        json_path: Path to handoff JSON file
+        results: Results dict to update
+    """
+    print(f"[DRY RUN] Would migrate: {json_path.name}")
+    results["migrated"] += 1
+
+
+def _migrate_handoff_to_task_file(
+    json_path: Path,
+    task: dict[str, Any],
+    task_file_path: Path,
+    terminal_id: str,
+    results: dict[str, Any]
+) -> None:
+    """Migrate single handoff to task file with idempotency check.
+
+    Args:
+        json_path: Path to handoff JSON file
+        task: Task dict to migrate
+        task_file_path: Path to task tracker file
+        terminal_id: Terminal identifier
+        results: Results dict to update
+    """
+    # Load or create task file
+    task_data = _load_or_create_task_file(task_file_path, terminal_id)
+
+    # Add migrated task
+    task_id = f"migrated_{json_path.stem}"
+    task["id"] = task_id
+
+    # Check if task already exists (idempotency)
+    if task_id in task_data["tasks"]:
+        # Task already migrated, skip it
+        results["skipped"] += 1
+        return
+
+    task_data["tasks"][task_id] = task
+    from handoff.config import utcnow_iso
+    task_data["last_update"] = utcnow_iso()
+
+    # Write task file with atomic write
+    try:
+        _write_task_file_atomic(task_file_path, task_data)
+        print(f"Migrated: {json_path.name} -> {task_id}")
+        results["migrated"] += 1
+    except OSError as e:
+        logger.warning(f"[Migrate] Failed to migrate {json_path.name}: {e}")
+        results["failed"] += 1
+        results["errors"].append(f"{json_path.name}: {e}")
+
+
+def _process_single_handoff(
+    json_path: Path,
+    task_tracker_dir: Path,
+    terminal_id: str,
+    dry_run: bool,
+    results: dict[str, Any]
+) -> None:
+    """Process a single handoff file migration.
+
+    Args:
+        json_path: Path to handoff JSON file
+        task_tracker_dir: Directory for task tracker files
+        terminal_id: Terminal identifier
+        dry_run: If True, skip file writes
+        results: Results dict to update
+    """
+    # Load handoff data
+    handoff_data = _load_handoff_with_validation(json_path, results)
+    if not handoff_data:
+        return
+
+    # Convert to task format
+    task = handoff_to_task(handoff_data, terminal_id)
+
+    # Determine task file path
+    task_file_path = task_tracker_dir / f"{terminal_id}_tasks.json"
+
+    if dry_run:
+        _handle_dry_run_migration(json_path, results)
+        return
+
+    # Ensure task tracker directory exists
+    task_tracker_dir.mkdir(parents=True, exist_ok=True)
+
+    # Migrate to task file
+    _migrate_handoff_to_task_file(
+        json_path,
+        task,
+        task_file_path,
+        terminal_id,
+        results,
+    )
+
+
 def migrate_handoffs(
     handoff_dir: Path,
     task_tracker_dir: Path,
@@ -324,71 +472,29 @@ def migrate_handoffs(
         - Validates checksums before migration
         - Logs progress to stdout
     """
-    results = {"migrated": 0, "failed": 0, "skipped": 0, "errors": []}
+    results = _initialize_migration_results()
 
     # Auto-detect terminal ID if not provided
     if terminal_id is None:
         terminal_id = detect_terminal_id()
 
     # Find all handoff JSON files
-    if not handoff_dir.exists():
+    handoff_files = _collect_handoff_files(handoff_dir)
+    if handoff_files is None:
         results["errors"].append(f"Handoff directory not found: {handoff_dir}")
         return results
 
-    handoff_files = list(handoff_dir.glob("*.json"))
-    # Skip directories (like trash/)
-    handoff_files = [f for f in handoff_files if f.is_file()]
-
     print(f"Found {len(handoff_files)} handoff files")
 
+    # Process each handoff file
     for json_path in handoff_files:
-        # Load handoff data
-        handoff_data = load_handoff_json(json_path)
-        if not handoff_data:
-            results["failed"] += 1
-            results["errors"].append(f"{json_path.name}: Invalid or corrupt")
-            continue
-
-        # Convert to task format
-        task = handoff_to_task(handoff_data, terminal_id)
-
-        # Determine task file path
-        task_file_path = task_tracker_dir / f"{terminal_id}_tasks.json"
-
-        if dry_run:
-            print(f"[DRY RUN] Would migrate: {json_path.name}")
-            results["migrated"] += 1
-            continue
-
-        # Ensure task tracker directory exists
-        task_tracker_dir.mkdir(parents=True, exist_ok=True)
-
-        # Load or create task file
-        task_data = _load_or_create_task_file(task_file_path, terminal_id)
-
-        # Add migrated task
-        task_id = f"migrated_{json_path.stem}"
-        task["id"] = task_id
-
-        # Check if task already exists (idempotency)
-        if task_id in task_data["tasks"]:
-            # Task already migrated, skip it
-            results["skipped"] += 1
-            continue
-
-        task_data["tasks"][task_id] = task
-        from handoff.config import utcnow_iso
-        task_data["last_update"] = utcnow_iso()
-
-        # Write task file with atomic write
-        try:
-            _write_task_file_atomic(task_file_path, task_data)
-            print(f"Migrated: {json_path.name} -> {task_id}")
-            results["migrated"] += 1
-        except OSError as e:
-            logger.warning(f"[Migrate] Failed to migrate {handoff_path.name}: {e}")
-            results["failed"] += 1
-            results["errors"].append(f"{json_path.name}: {e}")
+        _process_single_handoff(
+            json_path,
+            task_tracker_dir,
+            terminal_id,
+            dry_run,
+            results,
+        )
 
     return results
 
