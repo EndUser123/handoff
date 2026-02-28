@@ -169,19 +169,16 @@ class TaskIdentityManager:
 
     def _from_session_file(self) -> str | None:
         """Read task from terminal-scoped session file with terminal_id verification."""
-        try:
-            if self.session_file.exists():
-                data = json.loads(self.session_file.read_text())
+        from handoff.config import load_json_file
+        data = load_json_file(self.session_file)
+        if data:
+            # VERIFY: Terminal ID matches before accepting (prevents cross-terminal bleeding)
+            file_terminal = data.get("terminal_id")
+            if file_terminal and file_terminal != self.terminal_id:
+                logger.warning(f"[TaskID] Terminal mismatch in session file: {file_terminal} != {self.terminal_id}")
+                return None
 
-                # VERIFY: Terminal ID matches before accepting (prevents cross-terminal bleeding)
-                file_terminal = data.get("terminal_id")
-                if file_terminal and file_terminal != self.terminal_id:
-                    logger.warning(f"[TaskID] Terminal mismatch in session file: {file_terminal} != {self.terminal_id}")
-                    return None
-
-                return data.get("task_name")
-        except (json.JSONDecodeError, OSError) as e:
-            logger.error(f"[TaskID] Error reading session file: {e}")
+            return data.get("task_name")
         return None
 
     def _from_compact_metadata(self) -> str | None:
