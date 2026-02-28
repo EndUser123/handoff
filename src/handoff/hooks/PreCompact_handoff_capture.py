@@ -480,8 +480,8 @@ class PreCompactHandoffCapture:
             if verification_found:
                 status["last_verification"] = "tests_or_verification_found"
 
-        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
-            pass
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as e:
+            logger.debug(f"[PreCompact] Could not read transcript for recent work: {e}")
 
         return status
 
