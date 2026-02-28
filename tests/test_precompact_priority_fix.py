@@ -8,12 +8,8 @@ last_user_message from cached files instead of the actual transcript.
 Run with: pytest P:/packages/handoff/tests/test_precompact_priority_fix.py -v
 """
 
-import json
-import tempfile
-from pathlib import Path
-from unittest.mock import MagicMock, patch
-
 import sys
+from pathlib import Path
 
 # Add hooks to path
 hooks_dir = Path("P:/packages/handoff/src/handoff/hooks").resolve()
