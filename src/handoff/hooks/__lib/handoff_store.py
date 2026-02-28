@@ -346,7 +346,8 @@ def _validate_handoff_data_size(handoff_data: dict[str, Any]) -> dict[str, Any]:
     estimated_size = len(json.dumps(validated).encode("utf-8"))
     if estimated_size > MAX_HANDOFF_SIZE_BYTES:
         print(
-            f"[HandoffStore] Warning: Handoff still exceeds {MAX_HANDOFF_SIZE_BYTES} bytes: {estimated_size} bytes"
+            f"[HandoffStore] Warning: Handoff still exceeds "
+            f"{MAX_HANDOFF_SIZE_BYTES} bytes: {estimated_size} bytes"
         )
         validated = _apply_last_resort_truncation(validated)
 
