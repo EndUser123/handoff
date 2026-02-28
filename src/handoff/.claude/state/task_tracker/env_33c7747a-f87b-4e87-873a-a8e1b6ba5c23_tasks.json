@@ -1,0 +1,172 @@
+{
+  "terminal_id": "env_33c7747a-f87b-4e87-873a-a8e1b6ba5c23",
+  "tasks": {
+    "active_session": {
+      "id": "active_session",
+      "subject": "Session Restore",
+      "status": "pending",
+      "created_at": 1772255492.917133,
+      "terminal": "env_33c7747a-f87b-4e87-873a-a8e1b6ba5c23",
+      "metadata": {
+        "handoff": {
+          "task_name": "session_20260228_051132",
+          "task_type": "informal",
+          "progress_percent": 0,
+          "blocker": null,
+          "next_steps": "",
+          "git_branch": "main",
+          "active_files": [],
+          "recent_tools": [
+            {
+              "name": "Write",
+              "timestamp": "2026-02-28T05:10:15.039709+00:00",
+              "command": "P:/packages/media-pipeline/test_graphviz_mindmap.py",
+              "cwd": "",
+              "session_id": "a70caf84-aca1-49ec-9926-aa61cd438fad",
+              "terminal_id": "fallback_1",
+              "output": "#!/usr/bin/env python3\n\"\"\"Test Graphviz mindmap generation with debugRCA.\"\"\"\n\nimport sys\nfrom pathlib import Path\n\n# Add src to path\nsys.path.insert(0, str(Path(__file__).parent / \"src\"))\n\nfrom media_pipeline.config import MediaConfig\nfrom media_pipeline.executor import Executor\nfrom media_pipeline.models import RepoInfo\nfrom media_pipeline.planning import plan_assets\nfrom media_pipeline.providers.notebooklm import NotebookLMClient\nfrom media_pipeline.providers.images import ImageGenerator\n\n# Target repo\nrepo_path = Path(\"P:/packages/debugRCA\")\n\nprint(f\"Testing Graphviz renderer with: {repo_path}\")\nprint(\"=\" * 60)\n\n# Analyze repo\nrepo_info = RepoInfo.from_repo(repo_path)\nprint(f\"Package: {repo_info.package_name}\")\n\n# Create config\nconfig = MediaConfig()\n\n# Create providers\nnlm_client = NotebookLMClient()\nimage_gen = ImageGenerator()\n\n# Create executor with Graphviz renderer\nexecutor = Executor(nlm_client, image_gen)\n\n# Check Graphviz availability\nprint(\"\\nChecking renderer status...\")\ntry:\n    from media_pipeline.renderers.mindmap_graphviz import (\n        GraphvizMindmapRenderer,\n    )\n    renderer = GraphvizMindmapRenderer()\n    status = renderer.check_installation()\n    print(f\"\u2705 Graphviz: {status['version']}\")\n    print(f\"   Available: {renderer.available}\")\nexcept Exception as e:\n    print(f\"\u274c Graphviz error: {e}\")\n    sys.exit(1)\n\n# Plan assets\nprint(\"\\nPlanning assets...\")\nplan = plan_assets(repo_info, config, assets=[\"architecture\"])\n\n# Execute architecture generation\nprint(\"\\nGenerating architecture diagram...\")\nresults = executor.execute_plan(\n    plan,\n    repo_info,\n    config,\n    dry_run=False,\n)\n\n# Check results\nprint(\"\\n\" + \"=\" * 60)\nprint(\"RESULTS:\")\nfor asset_type, result in results.items():\n    if hasattr(result, 'success') and result.success:\n        print(f\"\u2705 {asset_type}: {result.output_path}\")\n        if result.output_path and result.output_path.exists():\n            size_kb = result.output_path.stat().st_size / 1024\n            print(f\"   Siz"
+            },
+            {
+              "name": "Edit",
+              "timestamp": "2026-02-28T05:10:48.938350+00:00",
+              "command": "P:/packages/media-pipeline/test_graphviz_mindmap.py",
+              "cwd": "",
+              "session_id": "a70caf84-aca1-49ec-9926-aa61cd438fad",
+              "terminal_id": "fallback_1",
+              "output": ""
+            },
+            {
+              "name": "Edit",
+              "timestamp": "2026-02-28T05:11:07.034008+00:00",
+              "command": "P:/packages/media-pipeline/test_graphviz_mindmap.py",
+              "cwd": "",
+              "session_id": "a70caf84-aca1-49ec-9926-aa61cd438fad",
+              "terminal_id": "fallback_1",
+              "output": ""
+            },
+            {
+              "name": "Edit",
+              "timestamp": "2026-02-28T05:11:20.550454+00:00",
+              "command": "P:/packages/media-pipeline/test_graphviz_mindmap.py",
+              "cwd": "",
+              "session_id": "a70caf84-aca1-49ec-9926-aa61cd438fad",
+              "terminal_id": "fallback_1",
+              "output": ""
+            }
+          ],
+          "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\a70caf84-aca1-49ec-9926-aa61cd438fad.jsonl",
+          "transcript_offset": 32472473,
+          "transcript_entry_count": 0,
+          "handover": {
+            "decisions": [],
+            "patterns_learned": [],
+            "controversial_decisions": [],
+            "session_objectives": []
+          },
+          "open_conversation_context": null,
+          "visual_context": null,
+          "resolved_issues": [],
+          "modifications": [],
+          "original_user_request": null,
+          "first_user_request": "Please review the quality of the media in the package's folders.  I would like to determine how to improve our media pipeline to get the best quality outcomes possible.",
+          "saved_at": "2026-02-28T05:11:32.912869+00:00",
+          "version": 1,
+          "implementation_status": {
+            "test_results": null,
+            "files_modified": [],
+            "completion_state": "in_progress",
+            "last_verification": null
+          },
+          "checksum": "sha256:3e8c120255caa548cb6e2a3ad1ac0e936d87af29b2a0765595d6ceacc3edb90d"
+        },
+        "task_id": "task_session_20260228_051132",
+        "task_name": "session_20260228_051132",
+        "pid": 221724,
+        "restore_pending": true
+      }
+    },
+    "continue_session": {
+      "id": "continue_session",
+      "subject": "Continue: session_20260228_051132",
+      "status": "pending",
+      "created_at": 1772255492.917139,
+      "terminal": "env_33c7747a-f87b-4e87-873a-a8e1b6ba5c23",
+      "metadata": {
+        "handoff": {
+          "task_name": "session_20260228_051132",
+          "task_type": "informal",
+          "progress_percent": 0,
+          "blocker": null,
+          "next_steps": "",
+          "git_branch": "main",
+          "active_files": [],
+          "recent_tools": [
+            {
+              "name": "Write",
+              "timestamp": "2026-02-28T05:10:15.039709+00:00",
+              "command": "P:/packages/media-pipeline/test_graphviz_mindmap.py",
+              "cwd": "",
+              "session_id": "a70caf84-aca1-49ec-9926-aa61cd438fad",
+              "terminal_id": "fallback_1",
+              "output": "#!/usr/bin/env python3\n\"\"\"Test Graphviz mindmap generation with debugRCA.\"\"\"\n\nimport sys\nfrom pathlib import Path\n\n# Add src to path\nsys.path.insert(0, str(Path(__file__).parent / \"src\"))\n\nfrom media_pipeline.config import MediaConfig\nfrom media_pipeline.executor import Executor\nfrom media_pipeline.models import RepoInfo\nfrom media_pipeline.planning import plan_assets\nfrom media_pipeline.providers.notebooklm import NotebookLMClient\nfrom media_pipeline.providers.images import ImageGenerator\n\n# Target repo\nrepo_path = Path(\"P:/packages/debugRCA\")\n\nprint(f\"Testing Graphviz renderer with: {repo_path}\")\nprint(\"=\" * 60)\n\n# Analyze repo\nrepo_info = RepoInfo.from_repo(repo_path)\nprint(f\"Package: {repo_info.package_name}\")\n\n# Create config\nconfig = MediaConfig()\n\n# Create providers\nnlm_client = NotebookLMClient()\nimage_gen = ImageGenerator()\n\n# Create executor with Graphviz renderer\nexecutor = Executor(nlm_client, image_gen)\n\n# Check Graphviz availability\nprint(\"\\nChecking renderer status...\")\ntry:\n    from media_pipeline.renderers.mindmap_graphviz import (\n        GraphvizMindmapRenderer,\n    )\n    renderer = GraphvizMindmapRenderer()\n    status = renderer.check_installation()\n    print(f\"\u2705 Graphviz: {status['version']}\")\n    print(f\"   Available: {renderer.available}\")\nexcept Exception as e:\n    print(f\"\u274c Graphviz error: {e}\")\n    sys.exit(1)\n\n# Plan assets\nprint(\"\\nPlanning assets...\")\nplan = plan_assets(repo_info, config, assets=[\"architecture\"])\n\n# Execute architecture generation\nprint(\"\\nGenerating architecture diagram...\")\nresults = executor.execute_plan(\n    plan,\n    repo_info,\n    config,\n    dry_run=False,\n)\n\n# Check results\nprint(\"\\n\" + \"=\" * 60)\nprint(\"RESULTS:\")\nfor asset_type, result in results.items():\n    if hasattr(result, 'success') and result.success:\n        print(f\"\u2705 {asset_type}: {result.output_path}\")\n        if result.output_path and result.output_path.exists():\n            size_kb = result.output_path.stat().st_size / 1024\n            print(f\"   Siz"
+            },
+            {
+              "name": "Edit",
+              "timestamp": "2026-02-28T05:10:48.938350+00:00",
+              "command": "P:/packages/media-pipeline/test_graphviz_mindmap.py",
+              "cwd": "",
+              "session_id": "a70caf84-aca1-49ec-9926-aa61cd438fad",
+              "terminal_id": "fallback_1",
+              "output": ""
+            },
+            {
+              "name": "Edit",
+              "timestamp": "2026-02-28T05:11:07.034008+00:00",
+              "command": "P:/packages/media-pipeline/test_graphviz_mindmap.py",
+              "cwd": "",
+              "session_id": "a70caf84-aca1-49ec-9926-aa61cd438fad",
+              "terminal_id": "fallback_1",
+              "output": ""
+            },
+            {
+              "name": "Edit",
+              "timestamp": "2026-02-28T05:11:20.550454+00:00",
+              "command": "P:/packages/media-pipeline/test_graphviz_mindmap.py",
+              "cwd": "",
+              "session_id": "a70caf84-aca1-49ec-9926-aa61cd438fad",
+              "terminal_id": "fallback_1",
+              "output": ""
+            }
+          ],
+          "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\a70caf84-aca1-49ec-9926-aa61cd438fad.jsonl",
+          "transcript_offset": 32472473,
+          "transcript_entry_count": 0,
+          "handover": {
+            "decisions": [],
+            "patterns_learned": [],
+            "controversial_decisions": [],
+            "session_objectives": []
+          },
+          "open_conversation_context": null,
+          "visual_context": null,
+          "resolved_issues": [],
+          "modifications": [],
+          "original_user_request": null,
+          "first_user_request": "Please review the quality of the media in the package's folders.  I would like to determine how to improve our media pipeline to get the best quality outcomes possible.",
+          "saved_at": "2026-02-28T05:11:32.912869+00:00",
+          "version": 1,
+          "implementation_status": {
+            "test_results": null,
+            "files_modified": [],
+            "completion_state": "in_progress",
+            "last_verification": null
+          },
+          "checksum": "sha256:3e8c120255caa548cb6e2a3ad1ac0e936d87af29b2a0765595d6ceacc3edb90d"
+        },
+        "original_task_id": "task_session_20260228_051132",
+        "restored_from": "compaction"
+      }
+    }
+  },
+  "last_update": 1772255492.923321
+}

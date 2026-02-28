@@ -1,0 +1,118 @@
+{
+  "terminal_id": "env_fb6c88aa-f171-4187-b2f0-7f4ddd7bb0a8",
+  "tasks": {
+    "active_session": {
+      "id": "active_session",
+      "subject": "Session Restore",
+      "status": "pending",
+      "created_at": 1772254899.686972,
+      "terminal": "env_fb6c88aa-f171-4187-b2f0-7f4ddd7bb0a8",
+      "metadata": {
+        "handoff": {
+          "task_name": "session_20260228_050139",
+          "task_type": "informal",
+          "progress_percent": 0,
+          "blocker": null,
+          "next_steps": "",
+          "git_branch": "main",
+          "active_files": [],
+          "recent_tools": [
+            {
+              "name": "Write",
+              "timestamp": "2026-02-28T05:01:30.483607+00:00",
+              "command": "P:/packages/media-pipeline/src/media_pipeline/renderers/mindmap_graphviz.py",
+              "cwd": "",
+              "session_id": "a70caf84-aca1-49ec-9926-aa61cd438fad",
+              "terminal_id": "fallback_1",
+              "output": "\"\"\"Graphviz-based mindmap renderer.\n\nConverts NotebookLM mindmap JSON to professional recruiter-ready PNGs\nusing Graphviz DOT format with custom styling.\n\nRequirements:\n    - Graphviz installed: https://graphviz.org/download/\n    - Python graphviz library: pip install graphviz\n\"\"\"\n\nfrom asyncio import run as asyncio_run\nfrom dataclasses import dataclass\nfrom pathlib import Path\nfrom typing import TYPE_CHECKING\n\nif TYPE_CHECKING:\n    from graphviz import Digraph\n\n    from media_pipeline.providers.notebooklm import NotebookLMClient\n\n\nclass GraphvizRendererError(Exception):\n    \"\"\"Graphviz renderer errors.\"\"\"\n\n    def __init__(self, message: str, install_help: str | None = None) -> None:\n        super().__init__(message)\n        self.install_help = install_help\n\n\n@dataclass\nclass GraphvizTheme:\n    \"\"\"Theme configuration for mindmap rendering.\n\n    Attributes:\n        bg_color: Background color (hex or name).\n        font_name: Font family name.\n        font_size: Base font size in points.\n        root_color: Root node color (fill).\n        root_font_color: Root node text color.\n        level_colors: List of colors for hierarchy levels (fill).\n        edge_color: Edge/connection line color.\n        edge_style: Edge style (solid, dashed, dotted).\n        shape: Node shape (box, ellipse, circle, none).\n        dpi: Output resolution (dots per inch).\n    \"\"\"\n\n    bg_color: str = \"transparent\"\n    font_name: str = \"Arial\"\n    font_size: int = 14\n    root_color: str = \"#4A90E2\"  # Professional blue\n    root_font_color: str = \"#FFFFFF\"  # White text on blue\n    level_colors: list[str] | None = None\n    edge_color: str = \"#555555\"  # Dark gray\n    edge_style: str = \"solid\"\n    shape: str = \"box\"  # Boxy, professional look\n    dpi: int = 150  # High resolution for crisp output\n\n\nclass GraphvizMindmapRenderer:\n    \"\"\"Render NotebookLM mindmaps to recruiter-ready PNGs using Graphviz.\n\n    Example:\n        >>> renderer = GraphvizMindmapRenderer()\n        >>> png_path = renderer.r"
+            }
+          ],
+          "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\ff6f5ac9-a2e9-44ca-9130-998906a63147.jsonl",
+          "transcript_offset": 43383415,
+          "transcript_entry_count": 0,
+          "handover": {
+            "decisions": [],
+            "patterns_learned": [],
+            "controversial_decisions": [],
+            "session_objectives": []
+          },
+          "open_conversation_context": null,
+          "visual_context": null,
+          "resolved_issues": [],
+          "modifications": [],
+          "original_user_request": null,
+          "first_user_request": "<command-message>main</command-message>\n<command-name>/main</command-name>",
+          "saved_at": "2026-02-28T05:01:39.680160+00:00",
+          "version": 1,
+          "implementation_status": {
+            "test_results": null,
+            "files_modified": [],
+            "completion_state": "in_progress",
+            "last_verification": null
+          },
+          "checksum": "sha256:9385b513907012c410dc268f4bdf07c82e3c0f649537b4e746a7ffe0324fdb36"
+        },
+        "task_id": "task_session_20260228_050139",
+        "task_name": "session_20260228_050139",
+        "pid": 748048,
+        "restore_pending": true
+      }
+    },
+    "continue_session": {
+      "id": "continue_session",
+      "subject": "Continue: session_20260228_050139",
+      "status": "pending",
+      "created_at": 1772254899.686977,
+      "terminal": "env_fb6c88aa-f171-4187-b2f0-7f4ddd7bb0a8",
+      "metadata": {
+        "handoff": {
+          "task_name": "session_20260228_050139",
+          "task_type": "informal",
+          "progress_percent": 0,
+          "blocker": null,
+          "next_steps": "",
+          "git_branch": "main",
+          "active_files": [],
+          "recent_tools": [
+            {
+              "name": "Write",
+              "timestamp": "2026-02-28T05:01:30.483607+00:00",
+              "command": "P:/packages/media-pipeline/src/media_pipeline/renderers/mindmap_graphviz.py",
+              "cwd": "",
+              "session_id": "a70caf84-aca1-49ec-9926-aa61cd438fad",
+              "terminal_id": "fallback_1",
+              "output": "\"\"\"Graphviz-based mindmap renderer.\n\nConverts NotebookLM mindmap JSON to professional recruiter-ready PNGs\nusing Graphviz DOT format with custom styling.\n\nRequirements:\n    - Graphviz installed: https://graphviz.org/download/\n    - Python graphviz library: pip install graphviz\n\"\"\"\n\nfrom asyncio import run as asyncio_run\nfrom dataclasses import dataclass\nfrom pathlib import Path\nfrom typing import TYPE_CHECKING\n\nif TYPE_CHECKING:\n    from graphviz import Digraph\n\n    from media_pipeline.providers.notebooklm import NotebookLMClient\n\n\nclass GraphvizRendererError(Exception):\n    \"\"\"Graphviz renderer errors.\"\"\"\n\n    def __init__(self, message: str, install_help: str | None = None) -> None:\n        super().__init__(message)\n        self.install_help = install_help\n\n\n@dataclass\nclass GraphvizTheme:\n    \"\"\"Theme configuration for mindmap rendering.\n\n    Attributes:\n        bg_color: Background color (hex or name).\n        font_name: Font family name.\n        font_size: Base font size in points.\n        root_color: Root node color (fill).\n        root_font_color: Root node text color.\n        level_colors: List of colors for hierarchy levels (fill).\n        edge_color: Edge/connection line color.\n        edge_style: Edge style (solid, dashed, dotted).\n        shape: Node shape (box, ellipse, circle, none).\n        dpi: Output resolution (dots per inch).\n    \"\"\"\n\n    bg_color: str = \"transparent\"\n    font_name: str = \"Arial\"\n    font_size: int = 14\n    root_color: str = \"#4A90E2\"  # Professional blue\n    root_font_color: str = \"#FFFFFF\"  # White text on blue\n    level_colors: list[str] | None = None\n    edge_color: str = \"#555555\"  # Dark gray\n    edge_style: str = \"solid\"\n    shape: str = \"box\"  # Boxy, professional look\n    dpi: int = 150  # High resolution for crisp output\n\n\nclass GraphvizMindmapRenderer:\n    \"\"\"Render NotebookLM mindmaps to recruiter-ready PNGs using Graphviz.\n\n    Example:\n        >>> renderer = GraphvizMindmapRenderer()\n        >>> png_path = renderer.r"
+            }
+          ],
+          "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\ff6f5ac9-a2e9-44ca-9130-998906a63147.jsonl",
+          "transcript_offset": 43383415,
+          "transcript_entry_count": 0,
+          "handover": {
+            "decisions": [],
+            "patterns_learned": [],
+            "controversial_decisions": [],
+            "session_objectives": []
+          },
+          "open_conversation_context": null,
+          "visual_context": null,
+          "resolved_issues": [],
+          "modifications": [],
+          "original_user_request": null,
+          "first_user_request": "<command-message>main</command-message>\n<command-name>/main</command-name>",
+          "saved_at": "2026-02-28T05:01:39.680160+00:00",
+          "version": 1,
+          "implementation_status": {
+            "test_results": null,
+            "files_modified": [],
+            "completion_state": "in_progress",
+            "last_verification": null
+          },
+          "checksum": "sha256:9385b513907012c410dc268f4bdf07c82e3c0f649537b4e746a7ffe0324fdb36"
+        },
+        "original_task_id": "task_session_20260228_050139",
+        "restored_from": "compaction"
+      }
+    }
+  },
+  "last_update": 1772254899.693098
+}

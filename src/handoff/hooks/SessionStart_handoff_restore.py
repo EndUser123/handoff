@@ -111,6 +111,30 @@ def _build_restoration_prompt(handoff_data: dict[str, Any]) -> str:
     # This is the AUTHENTIC source of what the user was working on. Truncation causes
     # the LLM to lose context and hallucinate commands after compaction.
 
+    # ═══════════════════════════════════════════════════════════════
+    # ⚠️  MOST IMPORTANT SECTION: THE USER'S ACTUAL LAST COMMAND
+    # ═══════════════════════════════════════════════════════════════
+    # This MUST come FIRST to prevent LLM from forming wrong mental model
+    # from the core conversation summary that appears before this handoff.
+    # ═══════════════════════════════════════════════════════════════
+
+    original_request = handoff_data.get("original_user_request")
+    last_command_section = []
+
+    if original_request:
+        last_command_section = [
+            "## ⚠️  THE USER'S LAST COMMAND (AUTHENTIC - READ THIS FIRST)",
+            "",
+            original_request,  # FULL content, no truncation
+            "",
+            "",
+            "───",
+            "**CRITICAL:** This IS the user's last command. Start from here.",
+            "Do NOT guess, do NOT search memory, do NOT hallucinate.",
+            "",
+            "",
+        ]
+
     lines = [
         "# ═══════════════════════════════════════════════════════════════",
         "# ⚠️  SESSION RESTORED FROM COMPACTION - READ CAREFULLY",
@@ -120,12 +144,19 @@ def _build_restoration_prompt(handoff_data: dict[str, Any]) -> str:
         "# DO NOT search memory or guess - use this as your source of truth.",
         "#",
         "",
+    ]
+
+    # Insert last command FIRST (right after header)
+    lines.extend(last_command_section)
+
+    # Then continue with context sections
+    lines.extend([
         "## 📍 WHERE WE ARE IN THE TASK",
         "",
         f"**Task:** {handoff_data.get('task_name', 'unknown')}",
         f"**Progress:** {handoff_data.get('progress_percent', 0)}%",
         "",
-    ]
+    ])
 
     # Add blocker if present - this is what we're stuck on
     blocker = handoff_data.get("blocker")
@@ -209,28 +240,6 @@ def _build_restoration_prompt(handoff_data: dict[str, Any]) -> str:
                 lines.append(f"    - {pattern}")
             lines.append("")
 
-    # ═══════════════════════════════════════════════════════════════
-    # ⚠️  MOST IMPORTANT SECTION: THE USER'S ACTUAL LAST COMMAND
-    # ═══════════════════════════════════════════════════════════════
-    # This is NOT truncated. The LLM needs the full command context
-    # to understand what the user was actually working on.
-    # ═══════════════════════════════════════════════════════════════
-
-    original_request = handoff_data.get("original_user_request")
-    if original_request:
-        lines.extend([
-            "## ⚠️  THE USER'S LAST COMMAND (AUTHENTIC - DO NOT IGNORE)",
-            "",
-            original_request,  # FULL content, no truncation
-            "",
-            "",
-            "───",
-            "**IMPORTANT:** This IS the user's last command. Do NOT search memory,",
-            "do NOT guess, do NOT hallucinate. Use the above command as your",
-            "starting point for continuing the work.",
-            "",
-        ])
-
     # Also show open conversation context if available
     open_context = handoff_data.get("open_conversation_context")
     if open_context and isinstance(open_context, dict):
@@ -291,6 +300,68 @@ def _build_restoration_prompt(handoff_data: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _fallback_find_by_session() -> dict[str, Any] | None:
+    """Fallback: Find most recent task file with matching session_id.
+
+    Safety net for edge cases where terminal_id doesn't match
+    (test mode, environment variables, missing module).
+
+    Validates session_id to prevent cross-terminal contamination.
+
+    Returns:
+        Task dict with handoff in metadata, or None if not found
+    """
+    try:
+        session_id = os.environ.get("CLAUDE_SESSION_ID")
+        if not session_id:
+            return None  # Can't validate without session_id
+
+        task_tracker_dir = Path("P:/.claude/state/task_tracker")
+        if not task_tracker_dir.exists():
+            return None
+
+        # Find all task files, sort by modification time (most recent first)
+        task_files = list(task_tracker_dir.glob("*_tasks.json"))
+        if not task_files:
+            return None
+
+        task_files.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+
+        # Check 5 most recent files for matching session_id
+        for task_file in task_files[:5]:
+            try:
+                with open(task_file, encoding="utf-8") as f:
+                    task_data = json.load(f)
+
+                # Try active_session first
+                active_session = task_data.get("tasks", {}).get("active_session")
+                if active_session:
+                    handoff = active_session.get("metadata", {}).get("handoff", {})
+                    if handoff.get("session_id") == session_id:
+                        # Validate checksum before accepting
+                        is_valid, _ = _verify_handoff_checksum(handoff)
+                        if is_valid:
+                            return active_session
+                        # Checksum failed - corrupted data, skip
+
+                # Try continue_session as fallback
+                continue_session = task_data.get("tasks", {}).get("continue_session")
+                if continue_session:
+                    handoff = continue_session.get("metadata", {}).get("handoff", {})
+                    if handoff.get("session_id") == session_id:
+                        is_valid, _ = _verify_handoff_checksum(handoff)
+                        if is_valid:
+                            return continue_session
+
+            except (json.JSONDecodeError, OSError, KeyError):
+                continue  # Skip corrupted files
+
+    except Exception:
+        pass  # Fallback failure - not critical
+
+    return None
+
+
 def _load_active_session_task(
     terminal_id: str
 ) -> dict[str, Any] | None:
@@ -300,38 +371,41 @@ def _load_active_session_task(
     The global current_session.json is NOT used because it causes terminals
     to load each other's handoff data.
 
+    Priority:
+        1. Exact terminal_id match (fastest, most reliable)
+        2. Most recent file with matching session_id (fallback)
+
     Args:
         terminal_id: Terminal identifier for isolation
 
     Returns:
         Task dict with handoff in metadata, or None if not found
     """
-    # Use terminal-scoped task file directly
-    # This prevents cross-terminal handoff contamination
+    # Priority 1: Try exact terminal_id match
     task_tracker_dir = Path("P:/.claude/state/task_tracker")
     task_file_path = task_tracker_dir / f"{terminal_id}_tasks.json"
 
-    if not task_file_path.exists():
-        return None
+    if task_file_path.exists():
+        try:
+            with open(task_file_path, encoding="utf-8") as f:
+                task_data = json.load(f)
 
-    try:
-        with open(task_file_path, encoding="utf-8") as f:
-            task_data = json.load(f)
+            # Look for active_session task
+            active_session = task_data.get("tasks", {}).get("active_session")
+            if active_session:
+                return active_session
 
-        # Look for active_session task
-        active_session = task_data.get("tasks", {}).get("active_session")
-        if active_session:
-            return active_session
+            # Fallback to continue_session task
+            continue_session = task_data.get("tasks", {}).get("continue_session")
+            if continue_session:
+                return continue_session
 
-        # Fallback to continue_session task
-        continue_session = task_data.get("tasks", {}).get("continue_session")
-        if continue_session:
-            return continue_session
+        except (json.JSONDecodeError, OSError):
+            pass  # Fall through to session-based fallback
 
-    except (json.JSONDecodeError, OSError):
-        pass
-
-    return None
+    # Priority 2: Fallback to session-based search
+    # This handles edge cases (test mode, env variables) while preserving isolation
+    return _fallback_find_by_session()
 
 
 def _cleanup_active_session_task(terminal_id: str) -> None:
