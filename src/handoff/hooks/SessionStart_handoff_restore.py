@@ -590,7 +590,14 @@ def _load_active_session_task(terminal_id: str) -> tuple[dict[str, Any] | None, 
                 return continue_session, terminal_id
 
         except (json.JSONDecodeError, OSError) as e:
-            logger.debug(f"[SessionStart] Could not load handoff from task file: {e}")
+            # Issue #4: Log corrupted task files at ERROR level (not DEBUG)
+            logger.error(f"[SessionStart] CORRUPTED task file {task_file_path}: {e}")
+            # Delete corrupted file to prevent future failures
+            try:
+                task_file_path.unlink(missing_ok=True)
+                logger.info(f"[SessionStart] Deleted corrupted task file: {task_file_path}")
+            except OSError:
+                pass
 
     # Slow path: search all terminal task files (handles terminal_id change after compaction)
     for task_file in task_tracker_dir.glob("*_tasks.json"):
