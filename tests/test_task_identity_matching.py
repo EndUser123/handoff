@@ -253,11 +253,6 @@ class TestTaskIdentityMatching:
             project_root = Path(tmpdir)
             task_name = "SECURE_TASK"
 
-            # Clear environment variable to isolate session file behavior
-            import os
-            if "TASK_NAME" in os.environ:
-                del os.environ["TASK_NAME"]
-
             # Create session file for terminal_1
             manager_1 = TaskIdentityManager(
                 project_root=project_root,
