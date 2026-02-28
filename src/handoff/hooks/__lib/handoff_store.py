@@ -102,20 +102,23 @@ def atomic_write_with_retry(
             os.replace(temp_path, target_path_str)
             # Success - break out of retry loop
             return
-        except PermissionError:
+        except PermissionError as e:
             # Windows-specific file locking error
+            logger.warning(f"[HandoffStore] Atomic write PermissionError (attempt {attempt + 1}/{max_retries}): {target_path_str}")
             if attempt == max_retries - 1:
                 # Last attempt failed, clean up and raise
                 try:
                     os.unlink(temp_path)
                 except OSError:
                     pass
+                logger.error(f"[HandoffStore] Failed to write {target_path_str} after {max_retries} attempts")
                 raise
             # Exponential backoff: 5ms, 10ms, 20ms, 40ms
             delay = base_delay * (2 ** attempt)
             time.sleep(delay)
-        except OSError:
+        except OSError as e:
             # Other OS errors - don't retry, clean up and raise
+            logger.error(f"[HandoffStore] Atomic write OSError for {target_path_str}: {e}")
             try:
                 os.unlink(temp_path)
             except OSError:
