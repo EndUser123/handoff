@@ -791,7 +791,10 @@ class TranscriptParser:
                     q in last_msg.lower() for q in ["why", "how", "what", "when", "where", "which"]
                 ):
                     return {
-                        "description": f"User's last question: {last_msg[:200]}{'...' if len(last_msg) > 200 else ''}",
+                        "description": (
+                            f"User's last question: {last_msg[:200]}"
+                            f"{'...' if len(last_msg) > 200 else ''}"
+                        ),
                         "context_type": "question",
                         "original_message": last_msg[:500],
                     }
