@@ -123,9 +123,9 @@ class PendingOperation:
             raise ValueError("target cannot contain null bytes")
 
         # Check length (filesystem limit)
-        if len(target) > cls.MAX_TARGET_LENGTH:
+        if len(target) > PendingOperation.MAX_TARGET_LENGTH:
             raise ValueError(
-                f"target cannot exceed {cls.MAX_TARGET_LENGTH} characters"
+                f"target cannot exceed {PendingOperation.MAX_TARGET_LENGTH} characters"
             )
 
     def to_dict(self) -> dict[str, Any]:
