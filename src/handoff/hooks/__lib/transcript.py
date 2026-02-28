@@ -199,7 +199,8 @@ class TranscriptLines(Sequence[str]):
             with open(self._path, encoding="utf-8") as f:
                 self._length = sum(1 for _ in f)
             return self._length
-        except (OSError, UnicodeDecodeError):
+        except (OSError, UnicodeDecodeError) as e:
+            logger.debug(f"[TranscriptLines] Could not read transcript for length calculation: {e}")
             self._length = 0
             return 0
 
