@@ -1047,7 +1047,8 @@ class PreCompactHandoffCapture:
         if handoff_saved:
             try:
                 # Get last user message for handoff metadata
-                # Priority: 1) active_command file, 2) blocker.description, 3) hook_input, 4) transcript scraping
+                # Priority: 1) active_command file, 2) blocker.description,
+                # 3) hook_input, 4) transcript scraping
                 last_user_message = ""
 
                 # Option 1: Load from active_command file (PRIORITY 1 - most reliable)
