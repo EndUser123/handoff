@@ -435,7 +435,7 @@ class HandoffStore:
         # Update current checkpoint for next call
         self._current_checkpoint_id = checkpoint_id
 
-        session_id = f"session_{int(datetime.now().timestamp())}_{task_name.lower()}"
+        session_id = f"session_{int(datetime.now(UTC).isoformat())}_{task_name.lower()}"
 
         handoff_data = {
             # Checkpoint chain fields (NEW)
@@ -514,7 +514,7 @@ class HandoffStore:
             "id": "active_session",
             "subject": "Session Restore",
             "status": "pending",
-            "created_at": datetime.now().timestamp(),
+            "created_at": datetime.now(UTC).isoformat(),
             "terminal": self.terminal_id,
             "metadata": {
                 "handoff": validated_metadata,
@@ -530,7 +530,7 @@ class HandoffStore:
             "id": CONTINUE_SESSION_TASK_ID,
             "subject": subject,
             "status": CONTINUE_SESSION_STATUS_PENDING,
-            "created_at": datetime.now().timestamp(),
+            "created_at": datetime.now(UTC).isoformat(),
             "terminal": self.terminal_id,
             "metadata": {
                 "handoff": validated_metadata,
@@ -547,7 +547,7 @@ class HandoffStore:
             return {
                 "terminal_id": self.terminal_id,
                 "tasks": {},
-                "last_update": datetime.now().timestamp(),
+                "last_update": datetime.now(UTC).isoformat(),
             }
 
         if task_file_path.exists():
@@ -569,7 +569,7 @@ class HandoffStore:
 
         # Add continue_session task to tasks dict (user-visible)
         task_data["tasks"][CONTINUE_SESSION_TASK_ID] = continue_task
-        task_data["last_update"] = datetime.now().timestamp()
+        task_data["last_update"] = datetime.now(UTC).isoformat()
 
         # Atomic write: temp file + rename
         fd, temp_path = tempfile.mkstemp(
