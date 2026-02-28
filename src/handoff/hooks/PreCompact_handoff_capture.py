@@ -890,8 +890,6 @@ class PreCompactHandoffCapture:
                 "handover": handoff_data.get("handover"),
                 "open_conversation_context": open_conversation_context,
                 "visual_context": visual_context,
-                # Import utility for DRY compliance
-                from handoff.config import utcnow_iso
                 "saved_at": utcnow_iso(),
             }
             # Compute checksum over the payload itself (excluding checksum key)
