@@ -1,7 +1,10 @@
 """
 Handoff configuration - paths, retention policies, and defaults.
 
-Zero dependencies - uses pathlib.Path and environment variables only.
+Provides utility functions for common patterns:
+- utcnow_iso(): Current UTC time as ISO string
+- load_json_file(): Load JSON with error handling
+- save_json_file(): Save JSON with atomic write
 """
 
 from __future__ import annotations
