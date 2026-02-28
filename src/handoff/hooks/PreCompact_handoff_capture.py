@@ -186,8 +186,8 @@ class PreCompactHandoffCapture:
         if progress_file.exists():
             try:
                 return int(progress_file.read_text().strip().rstrip("%"))
-            except ValueError:
-                pass
+            except ValueError as e:
+                logger.debug(f"[PreCompact] Could not parse progress value: {e}")
         return 0
 
     def extract_modified_files(self) -> list[str]:
