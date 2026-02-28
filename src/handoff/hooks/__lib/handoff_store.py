@@ -33,6 +33,9 @@ except ImportError:
         return f"BRIDGE_{datetime.fromisoformat(timestamp).strftime('%Y%m%d-%H%M%S')}_{topic[:20].upper().replace(' ', '_')}"
     BRIDGE_TOKEN_PREFIX = "BRIDGE_"
 
+# Import utility functions
+from handoff.config import utcnow_iso
+
 # Constants for continue_session task creation
 CONTINUE_SESSION_TASK_ID = "continue_session"
 CONTINUE_SESSION_SUBJECT_PREFIX = "Continue: "
