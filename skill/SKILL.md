@@ -79,25 +79,14 @@ After compact/handover:
 ## Quick Start
 
 ```bash
-# Install the handoff package (includes CLI and hooks)
+# Install the handoff package
 pip install -e P:/packages/handoff
 
-# The handoff package automatically captures session state before compaction
-# No manual invocation needed for basic handoff
-
-# The handoff CLI provides manual modes for on-demand handoff generation:
-handoff                    # Generate detailed handoff (markdown)
-handoff summary            # Quick context summary
-handoff detailed           # Comprehensive handoff with quality metrics
-handoff quality            # Show quality metrics only
-handoff --cleanup          # Show old handoffs (dry-run)
-handoff --cleanup-force    # Delete old handoffs
-handoff --format json      # JSON output
-handoff --llm --clipboard  # Copy LLM handoff to clipboard
-
-# Bridge tokens are expanded by default for external LLMs
-# Use --no-expand-tokens to keep compact tokens:
-handoff --no-expand-tokens
+# That's it! Handoff capture is fully automatic:
+# - PreCompact hooks capture session state before /compact
+# - Quality scoring is computed automatically
+# - Bridge tokens are embedded in decisions
+# - No manual invocation needed
 ```
 
 ## Bridge Token Expansion
