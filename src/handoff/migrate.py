@@ -242,6 +242,8 @@ def migrate_handoffs(
         - Validates checksums before migration
         - Logs progress to stdout
     """
+    from handoff.config import utcnow_iso
+
     results = {"migrated": 0, "failed": 0, "skipped": 0, "errors": []}
 
     # Auto-detect terminal ID if not provided
