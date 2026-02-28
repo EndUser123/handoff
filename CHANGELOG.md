@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Handoff priority system bug** - Fixed stale `original_user_request` capture by reversing priority order to use TranscriptParser (source of truth) before potentially stale cached files (active_command, blocker, hook_input). See `docs/priority-fix-2026-02-28.md` for details.
+
 ### Added
 - **Code quality improvements** - 3-phase refactoring completed:
   - Phase 1: Error logging improvements (53 exception blocks)
