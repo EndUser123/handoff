@@ -121,6 +121,9 @@ class TestTaskIdentityMatching:
         """
         Test that task ID is correctly extracted from session file.
 
+        BUG: Currently FAILS because environment variable from previous test
+        (TASK_B) persists and takes priority over session file.
+
         Given: A session file exists with task metadata
         When: Task identity is retrieved (no env var set)
         Then: Task should be extracted from session file
@@ -130,6 +133,11 @@ class TestTaskIdentityMatching:
             project_root = Path(tmpdir)
             terminal_id = "test_terminal_extract"
             task_name = "EXTRACT01"
+
+            # Clear any existing environment variable
+            import os
+            if "TASK_NAME" in os.environ:
+                del os.environ["TASK_NAME"]
 
             manager = TaskIdentityManager(
                 project_root=project_root,
