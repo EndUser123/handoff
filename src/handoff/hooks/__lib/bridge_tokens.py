@@ -42,7 +42,8 @@ def generate_bridge_token(topic: str, timestamp: str) -> str:
     """
     try:
         dt = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
-    except (ValueError, AttributeError):
+    except (ValueError, AttributeError) as e:
+        logger.debug(f"[BridgeTokens] Could not parse timestamp, using current time: {e}")
         dt = datetime.now(UTC)
 
     # Format: YYYYMMDD-HHMMSS
