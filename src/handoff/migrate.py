@@ -23,11 +23,14 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import logging
 import sys
 import tempfile
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
+
+logger = logging.getLogger(__name__)
 
 # Add hooks directory to path for terminal_detection import
 _hooks_path = Path(__file__).parent.parent / "hooks"
