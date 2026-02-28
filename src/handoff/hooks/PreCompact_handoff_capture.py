@@ -16,6 +16,7 @@ Renamed from checkpoint package to handoff package.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 import subprocess
@@ -24,6 +25,8 @@ import traceback
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 # Modern path resolution
 HOOKS_DIR = Path(__file__).resolve().parent
