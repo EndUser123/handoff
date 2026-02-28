@@ -451,7 +451,7 @@ class TaskIdentityManager:
         Called on startup to prevent accumulation of stale terminal state.
 
         Args:
-            max_age_hours: Maximum age in hours (default: 24)
+            max_age_hours: Maximum age in hours (default: DEFAULT_CLEANUP_MAX_AGE_HOURS)
 
         Returns:
             Number of files deleted
