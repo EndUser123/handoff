@@ -261,7 +261,7 @@ class TaskIdentityManager:
             return False
 
         try:
-            from handoff.config import utcnow_iso
+            from handoff.config import save_json_file, utcnow_iso
 
             # Set terminal-scoped environment variable (prevents cross-terminal bleeding)
             env_var_name = f"TASK_NAME_{self.terminal_id}"
@@ -276,8 +276,7 @@ class TaskIdentityManager:
                 "checksum": hashlib.md5(task_name.encode()).hexdigest()
             }
 
-            self.session_file.parent.mkdir(parents=True, exist_ok=True)
-            self.session_file.write_text(json.dumps(session_data, indent=2))
+            save_json_file(self.session_file, session_data)
 
             logger.info(f"[TaskID] Set current task: {task_name}")
             return True
