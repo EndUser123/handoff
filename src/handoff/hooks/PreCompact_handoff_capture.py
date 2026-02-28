@@ -1062,7 +1062,8 @@ class PreCompactHandoffCapture:
                     last_user_message = transcript.extract_user_message_from_blocker(blocker)
                     if last_user_message:
                         print(
-                            f"[PreCompact] Using last_user_message from blocker: {last_user_message[:50]}..."
+                            f"[PreCompact] Using last_user_message from blocker: "
+                            f"{last_user_message[:50]}..."
                         )
 
                 # Option 3: Read from hook_input if available
