@@ -43,9 +43,9 @@ docs = [
     "mkdocs-material>=9.0",
 ]
 
-# CLI entry points for package-native commands
-[project.scripts]
-handoff = "handoff.cli:main"
+# CLI removed - hook-only architecture
+# Automatic handoff capture via PreCompact hooks
+# Manual invocation available via: python -m handoff.cli
 
 [project.urls]
 Homepage = "https://github.com/csf-nip/handoff"
