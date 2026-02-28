@@ -723,11 +723,11 @@ class HandoffStore:
                 suffix=".tmp", dir=str(task_tracker_dir), prefix=f"{self.terminal_id}_tasks_"
             )
             try:
-            with os.fdopen(fd, "w", encoding="utf-8") as f:
-                json.dump(task_data, f, indent=2)
+                with os.fdopen(fd, "w", encoding="utf-8") as f:
+                    json.dump(task_data, f, indent=2)
 
-            # Atomic rename with retry for Windows PermissionError (WinError 5)
-            atomic_write_with_retry(temp_path, task_file_path)
+                # Atomic rename with retry for Windows PermissionError (WinError 5)
+                atomic_write_with_retry(temp_path, task_file_path)
 
             print(
                 f"[HandoffStore] active_session task added to {task_file_path.name} (PID {os.getpid()})"
