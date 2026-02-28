@@ -302,7 +302,7 @@ class TranscriptLines(Sequence[str]):
                     if i >= start:
                         result.append(line)
         except (OSError, UnicodeDecodeError) as e:
-            print(f"[TranscriptLines] Warning: Could not read range {start}:{stop}: {e}")
+            logger.warning(f"[TranscriptLines] Could not read range {start}:{stop}: {e}")
             return []
 
         # Cache recent lines if this is a tail access
