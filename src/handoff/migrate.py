@@ -313,7 +313,7 @@ def migrate_handoffs(
             continue
 
         task_data["tasks"][task_id] = task
-        task_data["last_update"] = datetime.now(UTC).isoformat()
+        task_data["last_update"] = utcnow_iso()
 
         # Write task file with atomic write (mkstemp avoids concurrent migration races)
         try:
