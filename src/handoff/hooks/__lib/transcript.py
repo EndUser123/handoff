@@ -398,7 +398,7 @@ class TranscriptParser:
                 for line in f:
                     yield line
         except (OSError, UnicodeDecodeError) as e:
-            print(f"[TranscriptParser] Warning: Could not iterate transcript: {e}")
+            logger.warning(f"[TranscriptParser] Could not iterate transcript: {e}")
             return iter([])
 
     def _get_parsed_entries(self) -> list[dict[str, Any]]:
