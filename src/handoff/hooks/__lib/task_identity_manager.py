@@ -28,6 +28,8 @@ import logging
 import os
 import subprocess
 
+from handoff.config import utcnow_iso
+
 # For package-based hooks, add P:/.claude/hooks to path for terminal_detection import
 # Path: P:/packages/handoff/src/handoff/hooks/__lib/task_identity_manager.py
 # Need to reach: P:/.claude/hooks/terminal_detection.py
