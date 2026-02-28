@@ -200,9 +200,9 @@ class TaskIdentityManager:
     def _from_git_worktree(self) -> str | None:
         """Infer task from current git branch using mapping."""
         try:
+            # Get current branch (use getattr for CREATE_NO_WINDOW in case it doesn't exist)
             import sys
-            # Get current branch
-            creation_flags = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+            creation_flags = getattr(subprocess, 'CREATE_NO_WINDOW', 0) if sys.platform == "win32" else 0
             result = subprocess.run(
                 ["git", "branch", "--show-current"],
                 capture_output=True,
@@ -223,6 +223,8 @@ class TaskIdentityManager:
 
         except subprocess.TimeoutExpired:
             logger.warning("[TaskID] Git command timed out")
+        except subprocess.CalledProcessError:
+            logger.warning("[TaskID] Git command failed")
         except FileNotFoundError:
             logger.warning("[TaskID] Git not found")
         except (json.JSONDecodeError, OSError) as e:
