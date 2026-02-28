@@ -444,7 +444,7 @@ class TaskIdentityManager:
 
         return None
 
-    def cleanup_stale_terminal_files(self, max_age_hours: int = 24) -> int:
+    def cleanup_stale_terminal_files(self, max_age_hours: int = DEFAULT_CLEANUP_MAX_AGE_HOURS) -> int:
         """
         Delete orphaned session files older than max_age_hours.
 
