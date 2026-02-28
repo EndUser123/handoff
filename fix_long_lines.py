@@ -23,41 +23,14 @@ def fix_long_line(line: str) -> str:
     indent = len(line) - len(line.lstrip())
     base_indent = " " * indent
 
-    # Try to break at common break points
-    break_patterns = [
-        # After = in assignments
-        (r'(.+?) = (.+)', r'\1 =\n{indent}\2'),
-        # After opening parenthesis with content
-        (r'(.+?\(\s*)([^)]{20,})', r'\1\n{indent}\3'),
-        # After commas in function calls
-        (r'(.+?,\s*)([^,]+)', r'\1\n{indent}\2'),
-    ]
-
-    for pattern, replacement in break_patterns:
-        match = re.match(pattern, stripped)
-        if match:
-            # Apply replacement with proper indentation
-            result = re.sub(pattern, replacement, stripped)
-            # Add continuation indent (4 spaces)
-            result = result.replace("{indent}", base_indent + "    ")
-            # Ensure proper indentation
-            lines = result.split("\n")
-            if len(lines) > 1:
-                # First line stays as is
-                # Subsequent lines get base indent + continuation
-                return lines[0] + "\n" + "\n".join(
-                    base_indent + "    " + l.strip() for l in lines[1:]
-                )
-            return result
-
-    # Default: break at first space after 80 chars
+    # Default: break at first space after MAX_LENGTH
     if len(stripped) > MAX_LENGTH:
         break_point = MAX_LENGTH
-        # Find nearest space
-        while break_point > 0 and stripped[break_point] not in " ,)]}":
+        # Find nearest space or comma
+        while break_point > 0 and stripped[break_point] not in " ,)]}=":
             break_point -= 1
 
-        if break_point > 0:
+        if break_point > 0 and break_point < len(stripped):
             return (
                 stripped[:break_point] +
                 "\n" +
@@ -70,7 +43,7 @@ def fix_long_line(line: str) -> str:
 def fix_file(file_path: Path) -> int:
     """Fix long lines in a file, return number of fixes."""
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, encoding='utf-8') as f:
             lines = f.readlines()
 
         fixed_lines = []

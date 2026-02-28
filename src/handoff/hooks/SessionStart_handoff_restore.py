@@ -105,8 +105,8 @@ def _verify_handoff_checksum(handoff_data: dict[str, Any]) -> tuple[bool, str | 
     computed = compute_metadata_checksum(data_for_hash)
 
     if not stored_checksum.startswith(computed):
-        return False, f"Checksum mismatch: stored={stored_checksum[:16]}... computed={computed[:16]}..."
-
+        return False, 
+            f"Checksum mismatch: stored={stored_checksum[:16]}... computed={computed[:16]}..."
     return True, None
 
 
