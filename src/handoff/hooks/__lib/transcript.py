@@ -454,7 +454,8 @@ class TranscriptParser:
                 entry = json.loads(line)
                 entries.append(entry)
                 entry_count += 1
-            except json.JSONDecodeError:
+            except json.JSONDecodeError as e:
+                logger.debug(f"[TranscriptParser] Skipping invalid JSON entry at line {i}: {e}")
                 continue
 
         self._parsed_entries_cache = entries
