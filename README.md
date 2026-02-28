@@ -402,7 +402,7 @@ pytest --cov=handoff --cov-report=term-missing
 pytest tests/test_checkpoint_chain.py -v
 ```
 
-**Test Coverage**: 21 tests covering:
+**Test Coverage**: 217 tests covering:
 - PendingOperation creation and validation
 - HandoffCheckpoint serialization
 - Checkpoint chain linking and traversal
