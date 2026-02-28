@@ -226,6 +226,21 @@ class CheckpointChain:
         chain = self.get_chain(chain_id)
         return len(chain)
 
+    def invalidate_cache(self, chain_id: str | None = None) -> None:
+        """Invalidate cache for a chain or all chains.
+
+        Args:
+            chain_id: Specific chain to invalidate, or None to invalidate all
+
+        Example:
+            Invalidate all caches after creating a new checkpoint:
+                chain_manager.invalidate_cache()
+        """
+        if chain_id:
+            self._cache.pop(chain_id, None)
+        else:
+            self._cache.clear()
+
     def get_next(self, checkpoint_id: str) -> HandoffCheckpointRef | None:
         """Get the next checkpoint in chain (if any).
 
