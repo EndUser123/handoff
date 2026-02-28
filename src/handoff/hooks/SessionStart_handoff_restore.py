@@ -110,6 +110,358 @@ def _verify_handoff_checksum(handoff_data: dict[str, Any]) -> tuple[bool, str | 
     return True, None
 
 
+def _build_last_command_section(handoff_data: dict[str, Any]) -> list[str]:
+    """Build the last command section from original_user_request.
+
+    Args:
+        handoff_data: Validated handoff data
+
+    Returns:
+        List of formatted lines
+    """
+    original_request = handoff_data.get("original_user_request")
+    last_command_section = []
+
+    if original_request:
+        last_command_section = [
+            "## ⚠️  THE USER'S LAST COMMAND (AUTHENTIC - READ THIS FIRST)",
+            "",
+            original_request,  # FULL content, no truncation
+            "",
+            "",
+            "───",
+            "**CRITICAL:** This IS the user's last command. Start from here.",
+            "Do NOT guess, do NOT search memory, do NOT hallucinate.",
+            "",
+            "",
+        ]
+
+    return last_command_section
+
+
+def _build_quick_reference_section(handoff_data: dict[str, Any]) -> list[str]:
+    """Build the quick reference section with transcript path.
+
+    Args:
+        handoff_data: Validated handoff data
+
+    Returns:
+        List of formatted lines
+    """
+    lines = []
+    transcript_path = handoff_data.get("transcript_path", "")
+
+    if transcript_path:
+        lines.extend([
+            "## 📌 QUICK REFERENCE - PREVIOUS CHAT HISTORY",
+            "",
+            f"**Path:** `{transcript_path}`",
+            "",
+            "**When user asks about previous chat/transcript:**",
+            f"→ For more context on this task: read `{transcript_path}`",
+            "→ To go further back: that file itself contains an earlier restoration",
+            "  prompt referencing the session before it — follow the chain.",
+            "→ DO NOT search for files, DO NOT look in checkpoints",
+            "",
+            "",
+        ])
+
+    return lines
+
+
+def _build_task_status_section(handoff_data: dict[str, Any]) -> list[str]:
+    """Build the task status section with progress, blocker, and implementation status.
+
+    Args:
+        handoff_data: Validated handoff data
+
+    Returns:
+        List of formatted lines
+    """
+    lines = []
+
+    # Task location and progress
+    lines.extend([
+        "## 📍 WHERE WE ARE IN THE TASK",
+        "",
+        f"**Task:** {handoff_data.get('task_name', 'unknown')}",
+        f"**Progress:** {handoff_data.get('progress_percent', 0)}%",
+        "",
+    ])
+
+    # Add blocker if present
+    blocker = handoff_data.get("blocker")
+    if blocker:
+        if isinstance(blocker, dict):
+            blocker_desc = blocker.get("description", str(blocker))
+        else:
+            blocker_desc = str(blocker)
+        lines.extend([
+            f"**Current Blocker:** {blocker_desc}",
+            "",
+        ])
+
+    # Add pending operations
+    pending_operations = handoff_data.get("pending_operations", [])
+    if pending_operations:
+        lines.extend([
+            "⚠️ **Pending Operations:** (work in progress when compacted)",
+        ])
+        for op in pending_operations[:5]:  # Limit to 5
+            op_type = op.get("type", "unknown")
+            op_target = op.get("target", "unknown")
+            op_state = op.get("state", "unknown")
+            lines.append(f"  - [{op_type.upper()}] {op_target} ({op_state})")
+        lines.append("")
+
+    # Add implementation status
+    impl_status = handoff_data.get("implementation_status")
+    if impl_status and isinstance(impl_status, dict):
+        completion_state = impl_status.get("completion_state", "unknown")
+        if completion_state != "unknown":
+            state_emoji = {
+                "verified": "✅",
+                "implemented": "🔄",
+                "in_progress": "🔄",
+                "blocked": "🚫",
+                "failed": "❌",
+            }.get(completion_state, "❓")
+            lines.extend([
+                f"**Status at compaction:** {state_emoji} `{completion_state}`",
+                "",
+            ])
+
+        test_results = impl_status.get("test_results")
+        if test_results and isinstance(test_results, dict):
+            passed = test_results.get("passed", 0)
+            failed = test_results.get("failed", 0)
+            if passed or failed:
+                status_icon = "✅" if failed == 0 else "❌"
+                lines.extend([
+                    f"**Tests at compaction:** {status_icon} {passed} passed, {failed} failed",
+                    "",
+                ])
+
+    # Add next steps
+    next_steps = handoff_data.get("next_steps", "")
+    if next_steps:
+        lines.extend([
+            "**Next Steps:**",
+            next_steps,
+            "",
+        ])
+
+    return lines
+
+
+def _build_task_context_section(handoff_data: dict[str, Any]) -> list[str]:
+    """Build the task context section with active files, git branch, and modifications.
+
+    Args:
+        handoff_data: Validated handoff data
+
+    Returns:
+        List of formatted lines
+    """
+    lines = ["## 📋 TASK CONTEXT", ""]
+
+    # Add active files
+    active_files = handoff_data.get("active_files", [])
+    if active_files:
+        lines.extend([
+            "**Active Files:**",
+        ])
+        for file_path in active_files[:10]:  # Limit to 10
+            lines.append(f"  - {file_path}")
+        lines.append("")
+
+    # Add git branch
+    git_branch = handoff_data.get("git_branch")
+    if git_branch:
+        lines.extend([
+            f"**Git Branch:** {git_branch}",
+            "",
+        ])
+
+    # Add previous transcript path
+    transcript_path = handoff_data.get("transcript_path")
+    if transcript_path:
+        lines.extend([
+            f"**Previous Chat History:** `{transcript_path}`",
+            "",
+        ])
+
+    # Add recent modifications
+    modifications = handoff_data.get("modifications", [])
+    if modifications:
+        lines.extend([
+            "**Recent Modifications:**",
+        ])
+        for mod in modifications[:5]:  # Limit to 5 most recent
+            file_path = mod.get("file", "unknown")
+            line_num = mod.get("line", "?")
+            reason = mod.get("reason", "Edit operation")
+            lines.append(f"  - {file_path}:{line_num}")
+            if reason and reason != "Edit operation":
+                lines.append(f"    {reason}")
+        if len(modifications) > 5:
+            lines.append(f"  ... and {len(modifications) - 5} more modifications")
+        lines.append("")
+
+    return lines
+
+
+def _build_recent_work_section(handoff_data: dict[str, Any]) -> list[str]:
+    """Build the recent work section with todo list, errors, edits, and conversation.
+
+    Args:
+        handoff_data: Validated handoff data
+
+    Returns:
+        List of formatted lines
+    """
+    lines = []
+
+    # Add todo list
+    todo_list = handoff_data.get("todo_list", [])
+    if todo_list:
+        lines.extend(["**Todo List at Compaction:**"])
+        status_icons = {"completed": "✅", "in_progress": "🔄", "pending": "⬜"}
+        for todo in todo_list:
+            icon = status_icons.get(todo.get("status", ""), "⬜")
+            lines.append(f"  {icon} {todo.get('content', '')}")
+        lines.append("")
+
+    # Add recent errors
+    recent_errors = handoff_data.get("recent_errors", [])
+    if recent_errors:
+        lines.extend(["**Recent Errors (at compaction):**"])
+        for err in recent_errors:
+            tool = err.get("tool", "unknown")
+            error_text = err.get("error", "")
+            lines.append(f"  - [{tool}] {error_text}")
+        lines.append("")
+
+    # Add recent edits
+    recent_edits = handoff_data.get("recent_edits", [])
+    if recent_edits:
+        lines.extend(["**Recent Edits:**"])
+        for edit in recent_edits:
+            tool = edit.get("tool", "Edit")
+            file_path = edit.get("file", "")
+            snippet = edit.get("snippet", "")
+            if snippet:
+                lines.append(f"  - [{tool}] {file_path}: `{snippet[:120]}`")
+            else:
+                lines.append(f"  - [{tool}] {file_path}")
+        lines.append("")
+
+    # Add recent conversation exchanges
+    recent_exchanges = handoff_data.get("recent_exchanges", [])
+    if recent_exchanges:
+        lines.extend([
+            "## 💬 RECENT CONVERSATION (at compaction)",
+            "",
+            "> The last exchanges before compaction. Use this to understand",
+            "> exactly where the conversation was — no need to read the transcript",
+            "> unless you need even earlier context.",
+            "",
+        ])
+        for msg in recent_exchanges:
+            role = msg.get("role", "unknown")
+            text = msg.get("text", "")
+            prefix = "**User:**" if role == "user" else "**Assistant:**"
+            lines.extend([f"{prefix} {text}", ""])
+        lines.append("")
+
+    return lines
+
+
+def _build_handoff_data_section(handoff_data: dict[str, Any]) -> list[str]:
+    """Build the handoff data section with decisions and patterns.
+
+    Args:
+        handoff_data: Validated handoff data
+
+    Returns:
+        List of formatted lines
+    """
+    lines = []
+    handover = handoff_data.get("handover")
+
+    if not (handover and isinstance(handover, dict)):
+        return lines
+
+    lines.extend(["**Handover:**"])
+
+    decisions = handover.get("decisions", [])
+    if decisions:
+        lines.append("  Decisions:")
+        for decision in decisions[:5]:  # Limit to 5
+            # Truncate long decisions for readability
+            decision_str = str(decision)
+            if len(decision_str) > 300:
+                decision_str = decision_str[:300] + "..."
+            lines.append(f"    - {decision_str}")
+        lines.append("")
+
+    patterns = handover.get("patterns_learned", [])
+    if patterns:
+        lines.append("  Patterns:")
+        for pattern in patterns[:5]:  # Limit to 5
+            lines.append(f"    - {pattern}")
+        lines.append("")
+
+    return lines
+
+
+def _build_visual_context_section(handoff_data: dict[str, Any]) -> list[str]:
+    """Build the visual context section with screenshots and image analysis.
+
+    Args:
+        handoff_data: Validated handoff data
+
+    Returns:
+        List of formatted lines
+    """
+    lines = []
+    visual_context = handoff_data.get("visual_context")
+
+    if not (visual_context and isinstance(visual_context, dict)):
+        return lines
+
+    v_type = visual_context.get("type", "unknown")
+    v_desc = visual_context.get("description", "")
+    v_user_response = visual_context.get("user_response", "")
+
+    lines.extend([
+        "## 🖼️  VISUAL CONTEXT (Screenshots / Images)",
+        "",
+        f"**Type:** {v_type}",
+    ])
+
+    if v_desc:
+        lines.extend([
+            f"**Description:** {v_desc}",
+        ])
+
+    if v_user_response:
+        lines.extend([
+            "",
+            "**User's response to visual:**",
+            v_user_response,
+        ])
+
+    lines.extend([
+        "",
+        "**IMPORTANT:** The user provided visual evidence (screenshot/image) related to this task. ",
+        "The visual context above shows what the user was referring to.",
+        "",
+    ])
+
+    return lines
+
+
 def _build_restoration_prompt(handoff_data: dict[str, Any]) -> str:
     """Build restoration prompt from handoff data.
 
