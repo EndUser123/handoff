@@ -441,8 +441,8 @@ class TaskIdentityManager:
                 command = data.get("command")
                 if command:
                     return f"adhoc_{command}"
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"[TaskID] Failed to get transient task ID: {e}")
 
         return None
 
