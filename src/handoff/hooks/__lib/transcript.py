@@ -74,19 +74,13 @@ def extract_topic_from_content(content: str, task_name: str = "") -> str:
     return " ".join(words)[:80]
 
 
-def detect_structure_type(content: str) -> dict[str, Any] | None:
-    """Detect structured content format (tables, comparisons, assessments).
-
-    Args:
-        content: Text content to analyze
+def _get_table_indicators() -> list[str]:
+    """Get table structure indicator patterns.
 
     Returns:
-        Dict with "type" and optional "search_keys", or None if unstructured
+        List of box drawing, markdown, and ASCII table indicators
     """
-    content_lower = content.lower()
-
-    # Table indicators (box drawing, markdown tables, ASCII tables)
-    table_indicators = [
+    return [
         "\u250c",  # ┌ top-left corner
         "\u252c",  # ┬ tee-down
         "\u251c",  # ├ tee-right
@@ -110,10 +104,15 @@ def detect_structure_type(content: str) -> dict[str, Any] | None:
         "enhancement",
         "assessment",
     ]
-    has_table_structure = any(indicator in content for indicator in table_indicators)
 
-    # Value assessment indicators (priority matrices, rankings)
-    assessment_indicators = [
+
+def _get_assessment_indicators() -> list[str]:
+    """Get value assessment indicator patterns.
+
+    Returns:
+        List of assessment and priority matrix keywords
+    """
+    return [
         "high",
         "medium",
         "low",
@@ -122,10 +121,15 @@ def detect_structure_type(content: str) -> dict[str, Any] | None:
         "rationale",
         "assessment",
     ]
-    has_assessment = sum(1 for ind in assessment_indicators if ind in content_lower) >= 3
 
-    # Comparison indicators (options vs each other)
-    comparison_indicators = [
+
+def _get_comparison_indicators() -> list[str]:
+    """Get comparison indicator patterns.
+
+    Returns:
+        List of comparison and option keywords
+    """
+    return [
         "pros",
         "cons",
         "trade-off",
@@ -134,24 +138,93 @@ def detect_structure_type(content: str) -> dict[str, Any] | None:
         "option a",
         "option b",
     ]
-    has_comparison = any(ind in content_lower for ind in comparison_indicators)
 
-    # Extract search keys from content (nouns/technical terms)
-    search_keys = []
-    if has_table_structure or has_assessment or has_comparison:
-        # Extract key terms for searching (skip common words)
-        key_terms = [w for w in content_lower.split() if len(w) > 4 and w.isalpha()]
-        # Filter to unique, meaningful terms
-        seen = set()
-        for term in key_terms:
-            if term not in seen and term not in {"this", "that", "with", "from", "been"}:
-                search_keys.append(term)
-                seen.add(term)
-                if len(search_keys) >= 5:
-                    break
 
-    # Determine structure type
-    if has_table_structure:
+def _check_for_table_structure(content: str) -> bool:
+    """Check if content contains table structure indicators.
+
+    Args:
+        content: Text content to analyze
+
+    Returns:
+        True if table indicators found
+    """
+    table_indicators = _get_table_indicators()
+    return any(indicator in content for indicator in table_indicators)
+
+
+def _check_for_assessment(content_lower: str) -> bool:
+    """Check if content contains assessment indicators.
+
+    Args:
+        content_lower: Lowercase text content to analyze
+
+    Returns:
+        True if 3+ assessment indicators found
+    """
+    assessment_indicators = _get_assessment_indicators()
+    return sum(1 for ind in assessment_indicators if ind in content_lower) >= 3
+
+
+def _check_for_comparison(content_lower: str) -> bool:
+    """Check if content contains comparison indicators.
+
+    Args:
+        content_lower: Lowercase text content to analyze
+
+    Returns:
+        True if comparison indicators found
+    """
+    comparison_indicators = _get_comparison_indicators()
+    return any(ind in content_lower for ind in comparison_indicators)
+
+
+def _extract_search_keys(content_lower: str, max_keys: int = 5) -> list[str]:
+    """Extract search keys from content.
+
+    Args:
+        content_lower: Lowercase text content to analyze
+        max_keys: Maximum number of keys to extract
+
+    Returns:
+        List of unique, meaningful key terms
+    """
+    # Extract key terms for searching (skip common words)
+    key_terms = [w for w in content_lower.split() if len(w) > 4 and w.isalpha()]
+
+    # Filter to unique, meaningful terms
+    common_words = {"this", "that", "with", "from", "been"}
+    search_keys: list[str] = []
+    seen: set[str] = set()
+
+    for term in key_terms:
+        if term not in seen and term not in common_words:
+            search_keys.append(term)
+            seen.add(term)
+            if len(search_keys) >= max_keys:
+                break
+
+    return search_keys
+
+
+def _determine_structure_type(
+    has_table: bool,
+    has_assessment: bool,
+    has_comparison: bool,
+    search_keys: list[str],
+) -> dict[str, Any] | None:
+    """Determine structure type from detection results.
+
+    Args:
+        has_table: Whether table structure detected
+        has_assessment: Whether assessment detected
+        has_comparison: Whether comparison detected
+        search_keys: Extracted search keys
+
+    Returns:
+        Dict with "type" and "search_keys", or None if unstructured
+    """
+    if has_table:
         return {"type": "analysis_table", "search_keys": search_keys}
     elif has_assessment:
         return {"type": "priority_matrix", "search_keys": search_keys}
@@ -159,6 +232,36 @@ def detect_structure_type(content: str) -> dict[str, Any] | None:
         return {"type": "comparison", "search_keys": search_keys}
 
     return None
+
+
+def detect_structure_type(content: str) -> dict[str, Any] | None:
+    """Detect structured content format (tables, comparisons, assessments).
+
+    Args:
+        content: Text content to analyze
+
+    Returns:
+        Dict with "type" and optional "search_keys", or None if unstructured
+    """
+    content_lower = content.lower()
+
+    # Check for different structure types
+    has_table_structure = _check_for_table_structure(content)
+    has_assessment = _check_for_assessment(content_lower)
+    has_comparison = _check_for_comparison(content_lower)
+
+    # Extract search keys if any structure detected
+    search_keys: list[str] = []
+    if has_table_structure or has_assessment or has_comparison:
+        search_keys = _extract_search_keys(content_lower)
+
+    # Determine and return structure type
+    return _determine_structure_type(
+        has_table_structure,
+        has_assessment,
+        has_comparison,
+        search_keys,
+    )
 
 
 class TranscriptLines(Sequence[str]):
