@@ -269,7 +269,7 @@ class TranscriptLines(Sequence[str]):
                             self._cache.append(line)
                         return line
         except (OSError, UnicodeDecodeError) as e:
-            print(f"[TranscriptLines] Warning: Could not read line {index}: {e}")
+            logger.warning(f"[TranscriptLines] Could not read line {index}: {e}")
 
         raise IndexError(f"Could not read line {index}")
 
