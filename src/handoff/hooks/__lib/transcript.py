@@ -687,7 +687,7 @@ class TranscriptParser:
             return None
 
         except Exception as e:
-            print(f"[TranscriptParser] Warning: Could not extract conversation context: {e}")
+            logger.error(f"[TranscriptParser] Could not extract conversation context: {e}")
             return None
 
     def extract_session_decisions(self, task_name: str = "session") -> list[dict[str, Any]]:
