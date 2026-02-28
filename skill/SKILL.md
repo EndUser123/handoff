@@ -194,35 +194,21 @@ export HANDOFF_RETENTION_DAYS=30
 
 ## Usage Patterns
 
-### Basic Handover
+### Automatic Handoff Capture
+
 ```bash
-handoff
-# Output: Complete handover document with session summary and continuity tokens
+# Handoff is captured automatically before /compact
+# Just run /compact normally - no extra steps needed
 ```
 
-### Quick Context Summary
-```bash
-handoff summary
-# Output: Concise overview of current work state and next steps
-```
+### Manual Handoff Generation (Debugging)
 
-### Detailed Analysis
 ```bash
-handoff detailed
-# Output: Comprehensive handover with quality metrics and decision analysis
-```
-
-### Session Quality Assessment
-```bash
-handoff quality
-# Output: Session quality score with breakdown and recommendations
-```
-
-### Maintenance and Cleanup
-```bash
-handoff --cleanup            # Show what would be deleted (dry-run)
-handoff --cleanup-force      # Delete files older than retention period
-handoff --cleanup --days 30  # Custom retention period (default: 90)
+# For debugging or manual handoff generation:
+python -m handoff.cli            # Generate detailed handoff
+python -m handoff.cli summary    # Quick context summary
+python -m handoff.cli quality    # Show quality metrics
+python -m handoff.cli --cleanup  # Show old handoffs (dry-run)
 ```
 
 **Auto-cleanup behavior**:
