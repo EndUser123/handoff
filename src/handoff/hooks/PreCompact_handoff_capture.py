@@ -1075,7 +1075,8 @@ class PreCompactHandoffCapture:
                         if input_message:
                             last_user_message = input_message
                             print(
-                                f"[PreCompact] Using last_user_message from hook_input: {last_user_message[:50]}..."
+                                f"[PreCompact] Using last_user_message from hook_input: "
+                                f"{last_user_message[:50]}..."
                             )
 
                 # Option 4: Fallback to TranscriptParser (uses full transcript, not just 20 lines)
