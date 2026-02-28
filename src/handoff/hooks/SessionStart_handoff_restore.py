@@ -47,6 +47,7 @@ if str(claude_hooks_dir) not in sys.path:
 try:
     from terminal_detection import detect_terminal_id
 except ImportError:
+    logger.debug("[SessionStart] terminal_detection module not available")
     def detect_terminal_id() -> str:
         return f"term_{os.getpid()}"
 
