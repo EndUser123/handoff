@@ -391,13 +391,15 @@ class TaskIdentityManager:
             return False
 
         try:
+            from handoff.config import utcnow_iso
+
             active_cmd_file = self.project_root / ".claude" / "active_command.json"
             active_cmd_file.parent.mkdir(parents=True, exist_ok=True)
 
             command_data = {
                 "command": command,
                 "phase": phase,
-                "started_at": datetime.now(UTC).isoformat(),
+                "started_at": utcnow_iso(),
                 "metadata": metadata or {},
                 "terminal_id": self.terminal_id
             }
