@@ -48,8 +48,10 @@ try:
     from terminal_detection import detect_terminal_id
 except ImportError:
     logger.debug("[SessionStart] terminal_detection module not available")
+
     def detect_terminal_id() -> str:
         return f"term_{os.getpid()}"
+
 
 try:
     from __lib.hook_base import hook_main
@@ -106,8 +108,7 @@ def _verify_handoff_checksum(handoff_data: dict[str, Any]) -> tuple[bool, str | 
 
     if not stored_checksum.startswith(computed):
         return False, (
-            f"Checksum mismatch: stored={stored_checksum[:16]}... "
-            f"computed={computed[:16]}..."
+            f"Checksum mismatch: stored={stored_checksum[:16]}... computed={computed[:16]}..."
         )
     return True, None
 
@@ -154,19 +155,21 @@ def _build_quick_reference_section(handoff_data: dict[str, Any]) -> list[str]:
     transcript_path = handoff_data.get("transcript_path", "")
 
     if transcript_path:
-        lines.extend([
-            "## 📌 QUICK REFERENCE - PREVIOUS CHAT HISTORY",
-            "",
-            f"**Path:** `{transcript_path}`",
-            "",
-            "**When user asks about previous chat/transcript:**",
-            f"→ For more context on this task: read `{transcript_path}`",
-            "→ To go further back: that file itself contains an earlier restoration",
-            "  prompt referencing the session before it — follow the chain.",
-            "→ DO NOT search for files, DO NOT look in checkpoints",
-            "",
-            "",
-        ])
+        lines.extend(
+            [
+                "## 📌 QUICK REFERENCE - PREVIOUS CHAT HISTORY",
+                "",
+                f"**Path:** `{transcript_path}`",
+                "",
+                "**When user asks about previous chat/transcript:**",
+                f"→ For more context on this task: read `{transcript_path}`",
+                "→ To go further back: that file itself contains an earlier restoration",
+                "  prompt referencing the session before it — follow the chain.",
+                "→ DO NOT search for files, DO NOT look in checkpoints",
+                "",
+                "",
+            ]
+        )
 
     return lines
 
@@ -183,13 +186,15 @@ def _build_task_status_section(handoff_data: dict[str, Any]) -> list[str]:
     lines = []
 
     # Task location and progress
-    lines.extend([
-        "## 📍 WHERE WE ARE IN THE TASK",
-        "",
-        f"**Task:** {handoff_data.get('task_name', 'unknown')}",
-        f"**Progress:** {handoff_data.get('progress_percent', 0)}%",
-        "",
-    ])
+    lines.extend(
+        [
+            "## 📍 WHERE WE ARE IN THE TASK",
+            "",
+            f"**Task:** {handoff_data.get('task_name', 'unknown')}",
+            f"**Progress:** {handoff_data.get('progress_percent', 0)}%",
+            "",
+        ]
+    )
 
     # Add blocker if present
     blocker = handoff_data.get("blocker")
@@ -198,17 +203,21 @@ def _build_task_status_section(handoff_data: dict[str, Any]) -> list[str]:
             blocker_desc = blocker.get("description", str(blocker))
         else:
             blocker_desc = str(blocker)
-        lines.extend([
-            f"**Current Blocker:** {blocker_desc}",
-            "",
-        ])
+        lines.extend(
+            [
+                f"**Current Blocker:** {blocker_desc}",
+                "",
+            ]
+        )
 
     # Add pending operations
     pending_operations = handoff_data.get("pending_operations", [])
     if pending_operations:
-        lines.extend([
-            "⚠️ **Pending Operations:** (work in progress when compacted)",
-        ])
+        lines.extend(
+            [
+                "⚠️ **Pending Operations:** (work in progress when compacted)",
+            ]
+        )
         for op in pending_operations[:5]:  # Limit to 5
             op_type = op.get("type", "unknown")
             op_target = op.get("target", "unknown")
@@ -228,10 +237,12 @@ def _build_task_status_section(handoff_data: dict[str, Any]) -> list[str]:
                 "blocked": "🚫",
                 "failed": "❌",
             }.get(completion_state, "❓")
-            lines.extend([
-                f"**Status at compaction:** {state_emoji} `{completion_state}`",
-                "",
-            ])
+            lines.extend(
+                [
+                    f"**Status at compaction:** {state_emoji} `{completion_state}`",
+                    "",
+                ]
+            )
 
         test_results = impl_status.get("test_results")
         if test_results and isinstance(test_results, dict):
@@ -239,19 +250,23 @@ def _build_task_status_section(handoff_data: dict[str, Any]) -> list[str]:
             failed = test_results.get("failed", 0)
             if passed or failed:
                 status_icon = "✅" if failed == 0 else "❌"
-                lines.extend([
-                    f"**Tests at compaction:** {status_icon} {passed} passed, {failed} failed",
-                    "",
-                ])
+                lines.extend(
+                    [
+                        f"**Tests at compaction:** {status_icon} {passed} passed, {failed} failed",
+                        "",
+                    ]
+                )
 
     # Add next steps
     next_steps = handoff_data.get("next_steps", "")
     if next_steps:
-        lines.extend([
-            "**Next Steps:**",
-            next_steps,
-            "",
-        ])
+        lines.extend(
+            [
+                "**Next Steps:**",
+                next_steps,
+                "",
+            ]
+        )
 
     return lines
 
@@ -270,9 +285,11 @@ def _build_task_context_section(handoff_data: dict[str, Any]) -> list[str]:
     # Add active files
     active_files = handoff_data.get("active_files", [])
     if active_files:
-        lines.extend([
-            "**Active Files:**",
-        ])
+        lines.extend(
+            [
+                "**Active Files:**",
+            ]
+        )
         for file_path in active_files[:10]:  # Limit to 10
             lines.append(f"  - {file_path}")
         lines.append("")
@@ -280,25 +297,31 @@ def _build_task_context_section(handoff_data: dict[str, Any]) -> list[str]:
     # Add git branch
     git_branch = handoff_data.get("git_branch")
     if git_branch:
-        lines.extend([
-            f"**Git Branch:** {git_branch}",
-            "",
-        ])
+        lines.extend(
+            [
+                f"**Git Branch:** {git_branch}",
+                "",
+            ]
+        )
 
     # Add previous transcript path
     transcript_path = handoff_data.get("transcript_path")
     if transcript_path:
-        lines.extend([
-            f"**Previous Chat History:** `{transcript_path}`",
-            "",
-        ])
+        lines.extend(
+            [
+                f"**Previous Chat History:** `{transcript_path}`",
+                "",
+            ]
+        )
 
     # Add recent modifications
     modifications = handoff_data.get("modifications", [])
     if modifications:
-        lines.extend([
-            "**Recent Modifications:**",
-        ])
+        lines.extend(
+            [
+                "**Recent Modifications:**",
+            ]
+        )
         for mod in modifications[:5]:  # Limit to 5 most recent
             file_path = mod.get("file", "unknown")
             line_num = mod.get("line", "?")
@@ -361,14 +384,16 @@ def _build_recent_work_section(handoff_data: dict[str, Any]) -> list[str]:
     # Add recent conversation exchanges
     recent_exchanges = handoff_data.get("recent_exchanges", [])
     if recent_exchanges:
-        lines.extend([
-            "## 💬 RECENT CONVERSATION (at compaction)",
-            "",
-            "> The last exchanges before compaction. Use this to understand",
-            "> exactly where the conversation was — no need to read the transcript",
-            "> unless you need even earlier context.",
-            "",
-        ])
+        lines.extend(
+            [
+                "## 💬 RECENT CONVERSATION (at compaction)",
+                "",
+                "> The last exchanges before compaction. Use this to understand",
+                "> exactly where the conversation was — no need to read the transcript",
+                "> unless you need even earlier context.",
+                "",
+            ]
+        )
         for msg in recent_exchanges:
             role = msg.get("role", "unknown")
             text = msg.get("text", "")
@@ -436,30 +461,38 @@ def _build_visual_context_section(handoff_data: dict[str, Any]) -> list[str]:
     v_desc = visual_context.get("description", "")
     v_user_response = visual_context.get("user_response", "")
 
-    lines.extend([
-        "## 🖼️  VISUAL CONTEXT (Screenshots / Images)",
-        "",
-        f"**Type:** {v_type}",
-    ])
+    lines.extend(
+        [
+            "## 🖼️  VISUAL CONTEXT (Screenshots / Images)",
+            "",
+            f"**Type:** {v_type}",
+        ]
+    )
 
     if v_desc:
-        lines.extend([
-            f"**Description:** {v_desc}",
-        ])
+        lines.extend(
+            [
+                f"**Description:** {v_desc}",
+            ]
+        )
 
     if v_user_response:
-        lines.extend([
-            "",
-            "**User's response to visual:**",
-            v_user_response,
-        ])
+        lines.extend(
+            [
+                "",
+                "**User's response to visual:**",
+                v_user_response,
+            ]
+        )
 
-    lines.extend([
-        "",
-        "**IMPORTANT:** The user provided visual evidence (screenshot/image) related to this task. ",
-        "The visual context above shows what the user was referring to.",
-        "",
-    ])
+    lines.extend(
+        [
+            "",
+            "**IMPORTANT:** The user provided visual evidence (screenshot/image) related to this task. ",
+            "The visual context above shows what the user was referring to.",
+            "",
+        ]
+    )
 
     return lines
 
@@ -476,16 +509,18 @@ def _build_restoration_prompt(handoff_data: dict[str, Any]) -> str:
     lines = []
 
     # Header
-    lines.extend([
-        "# ═══════════════════════════════════════════════════════════════",
-        "# ⚠️  SESSION RESTORED FROM COMPACTION - READ CAREFULLY",
-        "# ═══════════════════════════════════════════════════════════════",
-        "#",
-        "# The user's session was compacted. This is the AUTHENTIC handoff data.",
-        "# DO NOT search memory or guess - use this as your source of truth.",
-        "#",
-        "",
-    ])
+    lines.extend(
+        [
+            "# ═══════════════════════════════════════════════════════════════",
+            "# ⚠️  SESSION RESTORED FROM COMPACTION - READ CAREFULLY",
+            "# ═══════════════════════════════════════════════════════════════",
+            "#",
+            "# The user's session was compacted. This is the AUTHENTIC handoff data.",
+            "# DO NOT search memory or guess - use this as your source of truth.",
+            "#",
+            "",
+        ]
+    )
 
     # Build sections using helper functions
     lines.extend(_build_quick_reference_section(handoff_data))
@@ -501,20 +536,24 @@ def _build_restoration_prompt(handoff_data: dict[str, Any]) -> str:
     if open_context and isinstance(open_context, dict):
         ctx_desc = open_context.get("description", "")
         if ctx_desc:
-            lines.extend([
-                "## 💬 LAST CONVERSATION CONTEXT",
-                "",
-                ctx_desc,
-                "",
-            ])
+            lines.extend(
+                [
+                    "## 💬 LAST CONVERSATION CONTEXT",
+                    "",
+                    ctx_desc,
+                    "",
+                ]
+            )
 
     # Footer with timestamp
-    lines.extend([
-        "# ═══════════════════════════════════════════════════════════════",
-        f"# Restored from handoff saved at {handoff_data.get('saved_at', 'unknown')}",
-        "# ═══════════════════════════════════════════════════════════════",
-        "",
-    ])
+    lines.extend(
+        [
+            "# ═══════════════════════════════════════════════════════════════",
+            f"# Restored from handoff saved at {handoff_data.get('saved_at', 'unknown')}",
+            "# ═══════════════════════════════════════════════════════════════",
+            "",
+        ]
+    )
 
     return "\n".join(lines)
 
@@ -583,9 +622,7 @@ def _fallback_find_by_session() -> dict[str, Any] | None:
     return None
 
 
-def _load_active_session_task(
-    terminal_id: str
-) -> dict[str, Any] | None:
+def _load_active_session_task(terminal_id: str) -> dict[str, Any] | None:
     """Load active_session task from task tracker.
 
     Uses terminal-scoped task file to prevent cross-terminal contamination.
@@ -655,9 +692,8 @@ def _cleanup_active_session_task(terminal_id: str) -> None:
 
             # Write back
             import tempfile
-            fd, temp_path = tempfile.mkstemp(
-                suffix=".tmp", dir=str(task_file_path.parent)
-            )
+
+            fd, temp_path = tempfile.mkstemp(suffix=".tmp", dir=str(task_file_path.parent))
             try:
                 with os.fdopen(fd, "w", encoding="utf-8") as f:
                     json.dump(task_data, f, indent=2)
@@ -695,6 +731,7 @@ def _cleanup_active_command_file(terminal_id: str) -> None:
     """
     try:
         from handoff.config import load_json_file
+
         current_session_file = Path("P:/.claude/current_session.json")
         session_data = load_json_file(current_session_file)
         if not session_data:
@@ -721,8 +758,6 @@ def _cleanup_active_command_file(terminal_id: str) -> None:
 
     except (OSError, json.JSONDecodeError) as e:
         logger.debug(f"[SessionStart] Could not load handoff metadata: {e}")
-
-
 
 
 @hook_main
@@ -798,11 +833,9 @@ def main() -> int:
 
     # Output restoration prompt for injection into context (JSON format for SessionStart router)
     import json
+
     # Output JSON for SessionStart router to capture as additionalContext
-    print(json.dumps({
-        "hookEvent": "SessionStart",
-        "additionalContext": restoration_prompt
-    }))
+    print(json.dumps({"hookEvent": "SessionStart", "additionalContext": restoration_prompt}))
 
     # Clean up active_session task after successful restoration
     _cleanup_active_session_task(terminal_id)

@@ -225,10 +225,18 @@ class HandoffCheckpoint:
         """
         # Validate required fields
         required_fields = [
-            "checkpoint_id", "chain_id", "created_at",
-            "task_name", "task_type", "progress_percent",
-            "next_steps", "active_files", "recent_tools",
-            "saved_at", "version", "checksum"
+            "checkpoint_id",
+            "chain_id",
+            "created_at",
+            "task_name",
+            "task_type",
+            "progress_percent",
+            "next_steps",
+            "active_files",
+            "recent_tools",
+            "saved_at",
+            "version",
+            "checksum",
         ]
         missing = [f for f in required_fields if f not in data]
         if missing:

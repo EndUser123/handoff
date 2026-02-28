@@ -98,6 +98,7 @@ def load_json_file(file_path: Path) -> dict[str, Any] | None:
         logger.debug(f"[Config] Could not load JSON file {file_path}: {e}")
         # Log error but don't raise - caller decides if None is fatal
         import logging
+
         logging.getLogger(__name__).warning(f"Error loading {file_path}: {e}")
         return None
 
@@ -124,9 +125,7 @@ def save_json_file(file_path: Path, data: dict[str, Any]) -> bool:
         file_path.parent.mkdir(parents=True, exist_ok=True)
 
         # Atomic write: temp file + rename
-        fd, temp_path = tempfile.mkstemp(
-            suffix=".tmp", dir=str(file_path.parent)
-        )
+        fd, temp_path = tempfile.mkstemp(suffix=".tmp", dir=str(file_path.parent))
         try:
             with open(fd, "w", encoding="utf-8") as f:
                 f.write(json.dumps(data, indent=2))

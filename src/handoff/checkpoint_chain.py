@@ -37,6 +37,7 @@ class HandoffCheckpointRef:
         transcript_offset: Character position in transcript (if available)
         transcript_entry_count: Number of entries in transcript (if available)
     """
+
     checkpoint_id: str
     parent_checkpoint_id: str | None
     chain_id: str
@@ -87,7 +88,7 @@ class CheckpointChain:
         self._cache: dict[str, list[HandoffCheckpointRef]] = {}
         self._cache_mtime: float = 0.0
         self._migration_cache: dict[str, dict[str, Any]] = {}
-        self._migration_lock = __import__('threading').Lock()
+        self._migration_lock = __import__("threading").Lock()
 
     def _get_task_file_path(self) -> Path:
         """Get the task file path for this terminal.
@@ -155,9 +156,7 @@ class CheckpointChain:
 
                 # After migration, all handoffs should have checkpoint_id
                 if "checkpoint_id" in final_handoff:
-                    checkpoints.append(
-                        HandoffCheckpointRef.from_task_metadata(task_id, metadata)
-                    )
+                    checkpoints.append(HandoffCheckpointRef.from_task_metadata(task_id, metadata))
 
         # Sort by created_at (oldest first)
         checkpoints.sort(key=lambda c: c.created_at)

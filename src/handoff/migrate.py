@@ -41,6 +41,7 @@ try:
     from terminal_detection import detect_terminal_id
 except ImportError:
     logger.debug("[Migrate] terminal_detection module not available")
+
     # Fallback if terminal_detection unavailable
     def detect_terminal_id() -> str:  # type: ignore[misc]
         return f"term_{os.getpid()}"
@@ -84,6 +85,7 @@ def migrate_old_handoff_to_checkpoint(old_handoff: dict[str, Any]) -> dict[str, 
     # Add timestamp with fallback to saved_at or current time
     if "timestamp" not in checkpoint:
         from handoff.config import utcnow_iso
+
         checkpoint["timestamp"] = checkpoint.get("saved_at") or utcnow_iso()
 
     # Add metadata with default empty dict
@@ -115,7 +117,7 @@ def compute_metadata_checksum(handoff_data: dict[str, Any]) -> str:
     # Serialize with sorted keys for deterministic output
     serialized = json.dumps(handoff_data, sort_keys=True, default=str)
     # Compute SHA256 hash
-    hash_obj = hashlib.sha256(serialized.encode('utf-8'))
+    hash_obj = hashlib.sha256(serialized.encode("utf-8"))
     return f"sha256:{hash_obj.hexdigest()}"
 
 
@@ -134,6 +136,7 @@ def load_handoff_json(json_path: Path) -> dict[str, Any] | None:
         - Returns None for invalid files
     """
     from handoff.config import load_json_file
+
     data = load_json_file(json_path)
     if not data:
         return None
@@ -187,18 +190,14 @@ def handoff_to_task(handoff_data: dict[str, Any], terminal_id: str) -> dict[str,
         "subject": f"Handoff: {migrated_handoff.get('task_name', 'unknown')}",
         "status": "completed",
         "created_at": (
-            migrated_handoff.get("saved_at")
-            or migrated_handoff.get("timestamp")
-            or utcnow_iso()
+            migrated_handoff.get("saved_at") or migrated_handoff.get("timestamp") or utcnow_iso()
         ),
         "terminal": terminal_id,
         "metadata": {
             "handoff": {
                 # Checkpoint chain fields (from migration if not present)
                 "checkpoint_id": migrated_handoff.get("checkpoint_id"),
-                "parent_checkpoint_id": migrated_handoff.get(
-                    "parent_checkpoint_id"
-                ),
+                "parent_checkpoint_id": migrated_handoff.get("parent_checkpoint_id"),
                 "chain_id": migrated_handoff.get("chain_id"),
                 # Existing fields
                 "task_name": (
@@ -218,33 +217,22 @@ def handoff_to_task(handoff_data: dict[str, Any], terminal_id: str) -> dict[str,
                     or migrated_handoff.get("files_modified", [])
                 ),
                 "recent_tools": migrated_handoff.get("recent_tools", []),
-                "transcript_path": str(
-                    migrated_handoff.get("transcript_path", "")
-                ),
-                "transcript_offset": migrated_handoff.get(
-                    "transcript_offset", 0
-                ),
-                "transcript_entry_count": migrated_handoff.get(
-                    "transcript_entry_count", 0
-                ),
+                "transcript_path": str(migrated_handoff.get("transcript_path", "")),
+                "transcript_offset": migrated_handoff.get("transcript_offset", 0),
+                "transcript_entry_count": migrated_handoff.get("transcript_entry_count", 0),
                 "handover": migrated_handoff.get("handover"),
-                "open_conversation_context": migrated_handoff.get(
-                    "open_conversation_context"
-                ),
+                "open_conversation_context": migrated_handoff.get("open_conversation_context"),
                 "resolved_issues": migrated_handoff.get("resolved_issues", []),
                 "modifications": migrated_handoff.get("modifications", []),
-                "saved_at": (
-                    migrated_handoff.get("saved_at")
-                    or migrated_handoff.get("timestamp")
-                ),
+                "saved_at": (migrated_handoff.get("saved_at") or migrated_handoff.get("timestamp")),
                 "checksum": migrated_handoff.get("checksum"),
                 "version": migrated_handoff.get("version", 1),
                 "migrated_at": utcnow_iso(),
-                "migrated_from": "handoff_json"
+                "migrated_from": "handoff_json",
             },
             "pid": migrated_handoff.get("pid"),
-            "restore_pending": False  # Migrated handoffs don't need restoration
-        }
+            "restore_pending": False,  # Migrated handoffs don't need restoration
+        },
     }
 
 
@@ -258,17 +246,11 @@ def _create_task_file_structure(terminal_id: str) -> dict[str, Any]:
         Dict with terminal_id, empty tasks dict, and last_update timestamp
     """
     from handoff.config import utcnow_iso
-    return {
-        "terminal_id": terminal_id,
-        "tasks": {},
-        "last_update": utcnow_iso()
-    }
+
+    return {"terminal_id": terminal_id, "tasks": {}, "last_update": utcnow_iso()}
 
 
-def _load_or_create_task_file(
-    task_file_path: Path,
-    terminal_id: str
-) -> dict[str, Any]:
+def _load_or_create_task_file(task_file_path: Path, terminal_id: str) -> dict[str, Any]:
     """Load existing task file or create new structure.
 
     Args:
@@ -292,10 +274,7 @@ def _load_or_create_task_file(
         return _create_task_file_structure(terminal_id)
 
 
-def _write_task_file_atomic(
-    task_file_path: Path,
-    task_data: dict[str, Any]
-) -> bool:
+def _write_task_file_atomic(task_file_path: Path, task_data: dict[str, Any]) -> bool:
     """Write task file using atomic write (temp file + rename).
 
     Args:
@@ -305,9 +284,7 @@ def _write_task_file_atomic(
     Returns:
         True if successful, raises OSError if failed
     """
-    fd, temp_path_str = tempfile.mkstemp(
-        suffix=".tmp", dir=str(task_file_path.parent)
-    )
+    fd, temp_path_str = tempfile.mkstemp(suffix=".tmp", dir=str(task_file_path.parent))
     temp_path = Path(temp_path_str)
     try:
         with open(fd, "w", encoding="utf-8") as f:
@@ -350,8 +327,7 @@ def _collect_handoff_files(handoff_dir: Path) -> list[Path] | None:
 
 
 def _load_handoff_with_validation(
-    json_path: Path,
-    results: dict[str, Any]
+    json_path: Path, results: dict[str, Any]
 ) -> dict[str, Any] | None:
     """Load handoff JSON with error tracking.
 
@@ -369,10 +345,7 @@ def _load_handoff_with_validation(
     return handoff_data
 
 
-def _handle_dry_run_migration(
-    json_path: Path,
-    results: dict[str, Any]
-) -> None:
+def _handle_dry_run_migration(json_path: Path, results: dict[str, Any]) -> None:
     """Handle dry-run migration (no file writes).
 
     Args:
@@ -388,7 +361,7 @@ def _migrate_handoff_to_task_file(
     task: dict[str, Any],
     task_file_path: Path,
     terminal_id: str,
-    results: dict[str, Any]
+    results: dict[str, Any],
 ) -> None:
     """Migrate single handoff to task file with idempotency check.
 
@@ -414,6 +387,7 @@ def _migrate_handoff_to_task_file(
 
     task_data["tasks"][task_id] = task
     from handoff.config import utcnow_iso
+
     task_data["last_update"] = utcnow_iso()
 
     # Write task file with atomic write
@@ -432,7 +406,7 @@ def _process_single_handoff(
     task_tracker_dir: Path,
     terminal_id: str,
     dry_run: bool,
-    results: dict[str, Any]
+    results: dict[str, Any],
 ) -> None:
     """Process a single handoff file migration.
 
@@ -472,10 +446,7 @@ def _process_single_handoff(
 
 
 def migrate_handoffs(
-    handoff_dir: Path,
-    task_tracker_dir: Path,
-    terminal_id: str | None = None,
-    dry_run: bool = False
+    handoff_dir: Path, task_tracker_dir: Path, terminal_id: str | None = None, dry_run: bool = False
 ) -> dict[str, Any]:
     """Migrate all handoff JSON files to task metadata.
 
@@ -565,15 +536,16 @@ def _truncate_handover_lists(handoff_data: dict[str, Any]) -> None:
         handover = handover.copy()
         if isinstance(handover.get("decisions"), list) and len(handover["decisions"]) > 10:
             handover["decisions"] = handover["decisions"][:10]
-        if isinstance(handover.get("patterns_learned"), list) and len(handover["patterns_learned"]) > 10:
+        if (
+            isinstance(handover.get("patterns_learned"), list)
+            and len(handover["patterns_learned"]) > 10
+        ):
             handover["patterns_learned"] = handover["patterns_learned"][:10]
         handoff_data["handover"] = handover
 
 
 def _truncate_list_keep_recent(
-    handoff_data: dict[str, Any],
-    field_name: str,
-    max_entries: int
+    handoff_data: dict[str, Any], field_name: str, max_entries: int
 ) -> None:
     """Truncate list field to max entries, keeping most recent.
 
@@ -596,7 +568,7 @@ def _warn_if_oversized(handoff_data: dict[str, Any], max_bytes: int = 500_000) -
         handoff_data: Handoff dictionary to check
         max_bytes: Maximum allowed size in bytes (default: 500 KB)
     """
-    estimated_size = len(json.dumps(handoff_data).encode('utf-8'))
+    estimated_size = len(json.dumps(handoff_data).encode("utf-8"))
     if estimated_size > max_bytes:
         print(f"Warning: Handoff metadata exceeds {max_bytes // 1000} KB: {estimated_size} bytes")
 
@@ -749,27 +721,14 @@ def main() -> int:
         Exit code (0 for success, 1 for failure)
     """
 
-    parser = argparse.ArgumentParser(
-        description="Migrate handoff JSON files to task metadata"
-    )
+    parser = argparse.ArgumentParser(description="Migrate handoff JSON files to task metadata")
     parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Show what would be done without making changes"
+        "--dry-run", action="store_true", help="Show what would be done without making changes"
     )
+    parser.add_argument("--terminal-id", help="Terminal ID (auto-detected if not specified)")
+    parser.add_argument("--handoff-dir", default=".claude/handoffs", help="Handoff directory")
     parser.add_argument(
-        "--terminal-id",
-        help="Terminal ID (auto-detected if not specified)"
-    )
-    parser.add_argument(
-        "--handoff-dir",
-        default=".claude/handoffs",
-        help="Handoff directory"
-    )
-    parser.add_argument(
-        "--task-tracker-dir",
-        default=".claude/state/task_tracker",
-        help="Task tracker directory"
+        "--task-tracker-dir", default=".claude/state/task_tracker", help="Task tracker directory"
     )
 
     args = parser.parse_args()
@@ -789,12 +748,7 @@ def main() -> int:
     print(f"Task tracker: {task_tracker_dir}")
     print()
 
-    results = migrate_handoffs(
-        handoff_dir,
-        task_tracker_dir,
-        terminal_id,
-        args.dry_run
-    )
+    results = migrate_handoffs(handoff_dir, task_tracker_dir, terminal_id, args.dry_run)
 
     print()
     print("Migration Results:")
@@ -802,13 +756,13 @@ def main() -> int:
     print(f"  Failed: {results['failed']}")
     print(f"  Skipped: {results['skipped']}")
 
-    if results['errors']:
+    if results["errors"]:
         print()
         print("Errors:")
-        for error in results['errors']:
+        for error in results["errors"]:
             print(f"  - {error}")
 
-    return 0 if results['failed'] == 0 else 1
+    return 0 if results["failed"] == 0 else 1
 
 
 if __name__ == "__main__":

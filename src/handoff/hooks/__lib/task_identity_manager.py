@@ -38,7 +38,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import TypeAlias
 
-_hooks_project_root = Path(__file__).resolve().parent.parent.parent.parent.parent.parent  # Up to packages/handoff
+_hooks_project_root = (
+    Path(__file__).resolve().parent.parent.parent.parent.parent.parent
+)  # Up to packages/handoff
 claude_root = _hooks_project_root.parent  # Up to P:/
 hooks_dir = claude_root / ".claude" / "hooks"
 if str(hooks_dir) not in sys.path:
@@ -63,6 +65,7 @@ SECONDS_PER_HOUR = 3600
 @dataclass(slots=True)
 class TaskMetadata:
     """Task identity metadata."""
+
     task_name: str
     task_id: str
     started: str
@@ -145,7 +148,7 @@ class TaskIdentityManager:
             return False
 
         # Reject dangerous characters (path separators, control characters)
-        dangerous_chars = ['/', '\\', '\n', '\r', '\t', '\0']
+        dangerous_chars = ["/", "\\", "\n", "\r", "\t", "\0"]
         if any(char in task_name for char in dangerous_chars):
             return False
 
@@ -170,12 +173,15 @@ class TaskIdentityManager:
     def _from_session_file(self) -> str | None:
         """Read task from terminal-scoped session file with terminal_id verification."""
         from handoff.config import load_json_file
+
         data = load_json_file(self.session_file)
         if data:
             # VERIFY: Terminal ID matches before accepting (prevents cross-terminal bleeding)
             file_terminal = data.get("terminal_id")
             if file_terminal and file_terminal != self.terminal_id:
-                logger.warning(f"[TaskID] Terminal mismatch in session file: {file_terminal} != {self.terminal_id}")
+                logger.warning(
+                    f"[TaskID] Terminal mismatch in session file: {file_terminal} != {self.terminal_id}"
+                )
                 return None
 
             return data.get("task_name")
@@ -184,6 +190,7 @@ class TaskIdentityManager:
     def _from_compact_metadata(self) -> str | None:
         """Read task from terminal-scoped compact metadata (last-compact-metadata-{terminal_id}.json)."""
         from handoff.config import load_json_file
+
         data = load_json_file(self.metadata_file)
         if data:
             task = data.get("task_name")
@@ -204,7 +211,10 @@ class TaskIdentityManager:
         try:
             # Get current branch (use getattr for CREATE_NO_WINDOW in case it doesn't exist)
             import sys
-            creation_flags = getattr(subprocess, 'CREATE_NO_WINDOW', 0) if sys.platform == "win32" else 0
+
+            creation_flags = (
+                getattr(subprocess, "CREATE_NO_WINDOW", 0) if sys.platform == "win32" else 0
+            )
             result = subprocess.run(
                 ["git", "branch", "--show-current"],
                 capture_output=True,
@@ -220,6 +230,7 @@ class TaskIdentityManager:
 
             # Load task-worktree mapping
             from handoff.config import load_json_file
+
             mapping_data = load_json_file(self.mapping_file)
             if mapping_data:
                 return mapping_data.get(branch)
@@ -273,7 +284,7 @@ class TaskIdentityManager:
                 "task_id": f"task_{task_name.lower()}",
                 "terminal_id": self.terminal_id,
                 "started": utcnow_iso(),
-                "checksum": hashlib.md5(task_name.encode()).hexdigest()
+                "checksum": hashlib.md5(task_name.encode()).hexdigest(),
             }
 
             save_json_file(self.session_file, session_data)
@@ -312,7 +323,7 @@ class TaskIdentityManager:
                 "task_id": f"task_{task_name.lower()}",
                 "handoff_id": handoff_id,
                 "timestamp": utcnow_iso(),
-                "version": "v1"
+                "version": "v1",
             }
 
             save_json_file(self.metadata_file, metadata)
@@ -346,6 +357,7 @@ class TaskIdentityManager:
         try:
             # Load existing mapping
             from handoff.config import load_json_file
+
             mapping = load_json_file(self.mapping_file)
             if not mapping:
                 mapping = {}
@@ -355,6 +367,7 @@ class TaskIdentityManager:
 
             # Save
             from handoff.config import save_json_file
+
             save_json_file(self.mapping_file, mapping)
 
             logger.info(f"[TaskID] Registered: {branch} -> {task_name}")
@@ -394,7 +407,7 @@ class TaskIdentityManager:
                 "phase": phase,
                 "started_at": utcnow_iso(),
                 "metadata": metadata or {},
-                "terminal_id": self.terminal_id
+                "terminal_id": self.terminal_id,
             }
 
             save_json_file(active_cmd_file, command_data)
@@ -435,6 +448,7 @@ class TaskIdentityManager:
         """
         try:
             from handoff.config import load_json_file
+
             active_cmd_file = self.project_root / ".claude" / "active_command.json"
             data = load_json_file(active_cmd_file)
             if data:
@@ -446,7 +460,9 @@ class TaskIdentityManager:
 
         return None
 
-    def cleanup_stale_terminal_files(self, max_age_hours: int = DEFAULT_CLEANUP_MAX_AGE_HOURS) -> int:
+    def cleanup_stale_terminal_files(
+        self, max_age_hours: int = DEFAULT_CLEANUP_MAX_AGE_HOURS
+    ) -> int:
         """
         Delete orphaned session files older than max_age_hours.
 

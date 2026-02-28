@@ -20,6 +20,7 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+
 # Module-level helper functions (extracted from HandoverBuilder static methods)
 def extract_topic_from_content(content: str, task_name: str = "") -> str:
     """Extract topic from content using keyword analysis.
@@ -410,7 +411,7 @@ class TranscriptLines(Sequence[str]):
 
         # Cache recent lines if this is a tail access
         if start >= length - 100:
-            self._cache = result[-min(len(result), 100):]
+            self._cache = result[-min(len(result), 100) :]
 
         return result
 
@@ -659,7 +660,9 @@ class TranscriptParser:
                                     "source": "transcript",
                                 }
                     # Handle string content (less common)
-                    elif isinstance(content, str) and len(content.strip()) > self._MIN_CONTENT_LENGTH:
+                    elif (
+                        isinstance(content, str) and len(content.strip()) > self._MIN_CONTENT_LENGTH
+                    ):
                         user_message = content.strip()
                         if not user_message.startswith("<"):
                             return {
@@ -849,6 +852,7 @@ class TranscriptParser:
                     structure_info = detect_structure_type(content_text)
 
                     from handoff.config import utcnow_iso
+
                     decision_entry = {
                         "timestamp": entry.get("timestamp", utcnow_iso()),
                         "topic": topic,
@@ -1027,10 +1031,17 @@ class TranscriptParser:
                 if entry.get("type") == "tool_use":
                     tool_name = entry.get("name", "")
                     # Image analysis tools
-                    if any(img_tool in tool_name.lower() for img_tool in [
-                        "analyze_image", "diagnose_error", "extract_text",
-                        "ui_to_artifact", "screenshot", "image"
-                    ]):
+                    if any(
+                        img_tool in tool_name.lower()
+                        for img_tool in [
+                            "analyze_image",
+                            "diagnose_error",
+                            "extract_text",
+                            "ui_to_artifact",
+                            "screenshot",
+                            "image",
+                        ]
+                    ):
                         # Get tool input/output for context
                         tool_input = entry.get("input", {})
                         tool_result = entry.get("result", {})
@@ -1054,12 +1065,13 @@ class TranscriptParser:
                         # Look ahead a few entries using absolute index (avoids duplicate-dict issue)
                         user_response = ""
                         if 0 <= abs_idx < len(entries) - 1:
-                            for next_entry in entries[abs_idx + 1:min(abs_idx + 5, len(entries))]:
+                            for next_entry in entries[abs_idx + 1 : min(abs_idx + 5, len(entries))]:
                                 if next_entry.get("type") == "user":
                                     user_response = self._extract_text_from_entry(next_entry)[:200]
                                     break
 
                         from handoff.config import utcnow_iso
+
                         return {
                             "description": " ".join(desc_parts),
                             "type": "image_analysis",
@@ -1071,11 +1083,20 @@ class TranscriptParser:
                 # Check user messages for visual references
                 if entry.get("type") == "user":
                     content_text = self._extract_text_from_entry(entry).lower()
-                    visual_keywords = ["screenshot", "image", "picture", "see the", "as shown", "visual", "ui mockup"]
+                    visual_keywords = [
+                        "screenshot",
+                        "image",
+                        "picture",
+                        "see the",
+                        "as shown",
+                        "visual",
+                        "ui mockup",
+                    ]
                     if any(keyword in content_text for keyword in visual_keywords):
                         # Get full text for context
                         full_text = self._extract_text_from_entry(entry)
                         from handoff.config import utcnow_iso
+
                         return {
                             "description": f"User referenced visual content: {full_text[:200]}",
                             "type": "visual_reference",
@@ -1130,7 +1151,9 @@ class TranscriptParser:
                                 # Return FULL message, not truncated
                                 return item
                     # Handle string content
-                    elif isinstance(content, str) and len(content.strip()) > self._MIN_CONTENT_LENGTH:
+                    elif (
+                        isinstance(content, str) and len(content.strip()) > self._MIN_CONTENT_LENGTH
+                    ):
                         user_message = content.strip()
                         if not user_message.startswith("<"):
                             return user_message
@@ -1200,9 +1223,10 @@ class TranscriptParser:
 
                 # Look for patterns indicating incomplete operations
                 # This is a simple heuristic - can be enhanced with more sophisticated analysis
-                if any(keyword in content for keyword in [
-                    "editing", "running test", "executing", "processing"
-                ]):
+                if any(
+                    keyword in content
+                    for keyword in ["editing", "running test", "executing", "processing"]
+                ):
                     # Try to extract target from context
                     target = "unknown"
                     if "file" in content:
@@ -1222,12 +1246,14 @@ class TranscriptParser:
                     elif "read" in content:
                         op_type = "read"
 
-                    pending_ops.append({
-                        "type": op_type,
-                        "target": target,
-                        "state": "in_progress",
-                        "details": {"context": content[:200]}  # Truncate for size
-                    })
+                    pending_ops.append(
+                        {
+                            "type": op_type,
+                            "target": target,
+                            "state": "in_progress",
+                            "details": {"context": content[:200]},  # Truncate for size
+                        }
+                    )
 
                     # Limit to prevent excessive pending operations
                     if len(pending_ops) >= 5:

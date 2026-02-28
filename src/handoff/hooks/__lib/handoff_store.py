@@ -29,8 +29,10 @@ try:
 except ImportError:
     # Fallback for testing
     from datetime import UTC, datetime
+
     def utcnow_iso() -> str:
         return datetime.now(UTC).isoformat()
+
 
 # Import bridge token utilities
 try:
@@ -42,7 +44,10 @@ except ImportError:
     # Fallback if bridge_tokens module not available
     def generate_bridge_token(topic: str, timestamp: str) -> str:
         """Fallback bridge token generator."""
-        return f"BRIDGE_{datetime.fromisoformat(timestamp).strftime('%Y%m%d-%H%M%S')}_{topic[:20].upper().replace(' ', '_')}"
+        timestamp_str = datetime.fromisoformat(timestamp).strftime('%Y%m%d-%H%M%S')
+        topic_str = topic[:20].upper().replace(' ', '_')
+        return f"BRIDGE_{timestamp_str}_{topic_str}"
+
     BRIDGE_TOKEN_PREFIX = "BRIDGE_"
 
 # Import utility functions
@@ -65,20 +70,18 @@ MAX_HANDOVER_PATTERNS = 10
 
 # Quality scoring weights (from /hod skill)
 QUALITY_WEIGHT_COMPLETION = 0.30  # Completion tracking
-QUALITY_WEIGHT_OUTCOMES = 0.25   # Action-outcome correlation
-QUALITY_WEIGHT_DECISIONS = 0.20   # Decision documentation
-QUALITY_WEIGHT_ISSUES = 0.15      # Issue resolution
-QUALITY_WEIGHT_KNOWLEDGE = 0.10   # Knowledge contribution
+QUALITY_WEIGHT_OUTCOMES = 0.25  # Action-outcome correlation
+QUALITY_WEIGHT_DECISIONS = 0.20  # Decision documentation
+QUALITY_WEIGHT_ISSUES = 0.15  # Issue resolution
+QUALITY_WEIGHT_KNOWLEDGE = 0.10  # Knowledge contribution
 
 # Quality score thresholds
 QUALITY_SCORE_EXCELLENT = 0.90  # 0.9-1.0: Excellent
-QUALITY_SCORE_GOOD = 0.70       # 0.7-0.8: Good
-QUALITY_SCORE_ACCEPTABLE = 0.50 # 0.5-0.6: Acceptable
+QUALITY_SCORE_GOOD = 0.70  # 0.7-0.8: Good
+QUALITY_SCORE_ACCEPTABLE = 0.50  # 0.5-0.6: Acceptable
 
 
-def atomic_write_with_retry(
-    temp_path: str, target_path: str | Path, max_retries: int = 5
-) -> None:
+def atomic_write_with_retry(temp_path: str, target_path: str | Path, max_retries: int = 5) -> None:
     """Perform atomic file write with retry logic for Windows file locking.
 
     On Windows, os.replace() can fail with PermissionError (WinError 5) when multiple
@@ -104,17 +107,21 @@ def atomic_write_with_retry(
             return
         except PermissionError:
             # Windows-specific file locking error
-            logger.warning(f"[HandoffStore] Atomic write PermissionError (attempt {attempt + 1}/{max_retries}): {target_path_str}")
+            logger.warning(
+                f"[HandoffStore] Atomic write PermissionError (attempt {attempt + 1}/{max_retries}): {target_path_str}"
+            )
             if attempt == max_retries - 1:
                 # Last attempt failed, clean up and raise
                 try:
                     os.unlink(temp_path)
                 except OSError:
                     pass
-                logger.error(f"[HandoffStore] Failed to write {target_path_str} after {max_retries} attempts")
+                logger.error(
+                    f"[HandoffStore] Failed to write {target_path_str} after {max_retries} attempts"
+                )
                 raise
             # Exponential backoff: 5ms, 10ms, 20ms, 40ms
-            delay = base_delay * (2 ** attempt)
+            delay = base_delay * (2**attempt)
             time.sleep(delay)
         except OSError as e:
             # Other OS errors - don't retry, clean up and raise
@@ -151,21 +158,23 @@ def atomic_write_with_validation(
     """
     # Calculate original size
     original_data = json.dumps(data, indent=2)
-    original_size = len(original_data.encode('utf-8'))
+    original_size = len(original_data.encode("utf-8"))
 
     # Validate and truncate if necessary
     validated_data = _validate_handoff_data_size(data.copy())
 
     # Calculate final size
     final_data = json.dumps(validated_data, indent=2)
-    final_size = len(final_data.encode('utf-8'))
+    final_size = len(final_data.encode("utf-8"))
 
     # Check if truncation occurred
     truncated = original_size != final_size
 
     # Log warning if data was truncated
     if truncated:
-        print(f"[HandoffStore] Warning: Handoff data truncated from {original_size} to {final_size} bytes")
+        print(
+            f"[HandoffStore] Warning: Handoff data truncated from {original_size} to {final_size} bytes"
+        )
 
     # Create temp file and write validated data
     target_path_str = str(target_path)
@@ -206,7 +215,7 @@ def _truncate_text_field(text: str, max_length: int) -> str:
         Truncated text with marker, or original if under limit
     """
     if len(text) > max_length:
-        return text[:max_length - 50] + "\n\n...[truncated]"
+        return text[: max_length - 50] + "\n\n...[truncated]"
     return text
 
 
@@ -253,10 +262,16 @@ def _truncate_handover_section(handover: dict[str, Any]) -> dict[str, Any]:
     """
     result = handover.copy()
 
-    if isinstance(result.get("decisions"), list) and len(result["decisions"]) > MAX_HANDOVER_DECISIONS:
+    if (
+        isinstance(result.get("decisions"), list)
+        and len(result["decisions"]) > MAX_HANDOVER_DECISIONS
+    ):
         result["decisions"] = result["decisions"][:MAX_HANDOVER_DECISIONS]
 
-    if isinstance(result.get("patterns_learned"), list) and len(result["patterns_learned"]) > MAX_HANDOVER_PATTERNS:
+    if (
+        isinstance(result.get("patterns_learned"), list)
+        and len(result["patterns_learned"]) > MAX_HANDOVER_PATTERNS
+    ):
         result["patterns_learned"] = result["patterns_learned"][:MAX_HANDOVER_PATTERNS]
 
     return result
@@ -326,9 +341,11 @@ def _validate_handoff_data_size(handoff_data: dict[str, Any]) -> dict[str, Any]:
         validated["handover"] = _truncate_handover_section(handover)
 
     # Compute final size and warn if still exceeds 500 KB
-    estimated_size = len(json.dumps(validated).encode('utf-8'))
+    estimated_size = len(json.dumps(validated).encode("utf-8"))
     if estimated_size > MAX_HANDOFF_SIZE_BYTES:
-        print(f"[HandoffStore] Warning: Handoff still exceeds {MAX_HANDOFF_SIZE_BYTES} bytes: {estimated_size} bytes")
+        print(
+            f"[HandoffStore] Warning: Handoff still exceeds {MAX_HANDOFF_SIZE_BYTES} bytes: {estimated_size} bytes"
+        )
         validated = _apply_last_resort_truncation(validated)
 
     return validated
@@ -369,7 +386,9 @@ def calculate_quality_score(handoff_data: dict[str, Any]) -> float:
     # 25% Outcomes: blocker presence indicates incomplete work
     blocker = handoff_data.get("blocker")
     if blocker:
-        scores["outcomes"] = 0.5 * QUALITY_WEIGHT_OUTCOMES  # Half credit for having blocker documented
+        scores["outcomes"] = (
+            0.5 * QUALITY_WEIGHT_OUTCOMES
+        )  # Half credit for having blocker documented
     else:
         scores["outcomes"] = 1.0 * QUALITY_WEIGHT_OUTCOMES  # Full credit for no blocker
 
@@ -640,7 +659,9 @@ class HandoffStore:
                 with open(task_file_path, encoding="utf-8") as f:
                     task_data = json.load(f)
             except (json.JSONDecodeError, OSError) as e:
-                logger.warning(f"[HandoffStore] Failed to load task file {task_file_path}, creating new: {e}")
+                logger.warning(
+                    f"[HandoffStore] Failed to load task file {task_file_path}, creating new: {e}"
+                )
                 task_data = _create_empty_task_data()
         else:
             task_data = _create_empty_task_data()
@@ -673,7 +694,9 @@ class HandoffStore:
             )
             print(f"[HandoffStore] continue_session task added to {task_file_path.name}")
         except OSError as write_error:
-            logger.error(f"[HandoffStore] Failed to write task file {task_file_path}: {write_error}")
+            logger.error(
+                f"[HandoffStore] Failed to write task file {task_file_path}: {write_error}"
+            )
             try:
                 os.unlink(temp_path)
             except OSError:

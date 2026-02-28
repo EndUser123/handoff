@@ -73,6 +73,7 @@ try:
         _get_session_id_from_env,
         get_session_files,
     )
+
     _SESSION_ACTIVITY_AVAILABLE = True
 except ImportError:
     logger.debug("[PreCompact] session_activity module not available")
@@ -82,11 +83,14 @@ try:
     from terminal_detection import detect_terminal_id
 except ImportError:
     logger.debug("[PreCompact] terminal_detection module not available")
+
     def detect_terminal_id() -> str:
         return f"term_{os.getpid()}"
 
+
 try:
     from tool_sequence_manager import load_tool_sequence
+
     _TOOL_SEQUENCE_AVAILABLE = True
 except ImportError:
     logger.debug("[PreCompact] tool_sequence module not available")
@@ -143,18 +147,28 @@ class PreCompactHandoffCapture:
                         # Sanity check: skip if obviously wrong (too large or subagent file)
                         if size_mb <= 50 and "subagent" not in candidate_path.lower():
                             self.transcript_path = candidate_path
-                            print(f"[PreCompact] Found terminal transcript: {session_id} ({size_mb:.1f}MB)")
+                            print(
+                                f"[PreCompact] Found terminal transcript: {session_id} ({size_mb:.1f}MB)"
+                            )
                         else:
-                            print(f"[PreCompact] Transcript exists but fails sanity check: {size_mb:.1f}MB")
+                            print(
+                                f"[PreCompact] Transcript exists but fails sanity check: {size_mb:.1f}MB"
+                            )
                     else:
                         print(f"[PreCompact] Session transcript not found: {session_id}.jsonl")
                 else:
-                    print("[PreCompact] No session_id available - cannot find terminal-specific transcript")
+                    print(
+                        "[PreCompact] No session_id available - cannot find terminal-specific transcript"
+                    )
             else:
-                print("[PreCompact] Project conversations directory not found or session activity unavailable")
+                print(
+                    "[PreCompact] Project conversations directory not found or session activity unavailable"
+                )
 
             if not self.transcript_path:
-                print("[PreCompact] No suitable session transcript found - skipping transcript parsing")
+                print(
+                    "[PreCompact] No suitable session transcript found - skipping transcript parsing"
+                )
         else:
             self.transcript_path = transcript_path_value
 
@@ -235,6 +249,7 @@ class PreCompactHandoffCapture:
             if not session_id:
                 # Read from current_session.json
                 from handoff.config import load_json_file
+
                 current_session_file = self.project_root / ".claude" / "current_session.json"
                 session_data = load_json_file(current_session_file)
                 if session_data:
@@ -254,12 +269,16 @@ class PreCompactHandoffCapture:
 
             # Build file path: .claude/state/active_commands/{safe_session}_{safe_terminal}_{safe_pid}.json
             active_cmd_file = (
-                self.project_root / ".claude" / "state" / "active_commands" /
-                f"{safe_session}_{safe_terminal}_{safe_pid}.json"
+                self.project_root
+                / ".claude"
+                / "state"
+                / "active_commands"
+                / f"{safe_session}_{safe_terminal}_{safe_pid}.json"
             )
 
             if active_cmd_file.exists():
                 from handoff.config import load_json_file
+
                 cmd_data = load_json_file(active_cmd_file)
                 if cmd_data:
                     command = cmd_data.get("command", "")
@@ -329,12 +348,10 @@ class PreCompactHandoffCapture:
             Dict with passed, failed counts and verification_found flag
         """
         test_pattern = re.compile(
-            r"(?P<result>passed|failed|PASSED|FAILED|✓|✗|❌|✅)\s*(?P<count>\d*)",
-            re.IGNORECASE
+            r"(?P<result>passed|failed|PASSED|FAILED|✓|✗|❌|✅)\s*(?P<count>\d*)", re.IGNORECASE
         )
         verification_pattern = re.compile(
-            r"(verified|verification|tests? run|assert|pytest)",
-            re.IGNORECASE
+            r"(verified|verification|tests? run|assert|pytest)", re.IGNORECASE
         )
 
         passed = 0
@@ -372,11 +389,7 @@ class PreCompactHandoffCapture:
                 logger.debug(f"[PreCompact] Skipping invalid checkpoint entry: {e}")
                 continue
 
-        return {
-            "passed": passed,
-            "failed": failed,
-            "verification_found": verification_found
-        }
+        return {"passed": passed, "failed": failed, "verification_found": verification_found}
 
     def _build_test_results_dict(self, passed: int, failed: int) -> dict[str, Any] | None:
         """Build test results dict with status based on passed/failed counts.
@@ -402,11 +415,7 @@ class PreCompactHandoffCapture:
         return None
 
     def _determine_completion_state(
-        self,
-        files_modified: list[str],
-        passed: int,
-        failed: int,
-        verification_found: bool
+        self, files_modified: list[str], passed: int, failed: int, verification_found: bool
     ) -> str:
         """Determine completion state based on test results and modifications.
 
@@ -471,10 +480,7 @@ class PreCompactHandoffCapture:
 
             # Determine completion state
             status["completion_state"] = self._determine_completion_state(
-                status["files_modified"],
-                passed,
-                failed,
-                verification_found
+                status["files_modified"], passed, failed, verification_found
             )
 
             if verification_found:
@@ -548,9 +554,7 @@ class PreCompactHandoffCapture:
         return tool_name_map
 
     def _extract_error_from_tool_result(
-        self,
-        block: dict[str, Any],
-        tool_name_map: dict[str, str]
+        self, block: dict[str, Any], tool_name_map: dict[str, str]
     ) -> dict[str, Any] | None:
         """Extract error from a tool_result block.
 
@@ -570,9 +574,7 @@ class PreCompactHandoffCapture:
 
         # Handle list content format
         if isinstance(raw, list):
-            raw = " ".join(
-                r.get("text", "") for r in raw if isinstance(r, dict)
-            )
+            raw = " ".join(r.get("text", "") for r in raw if isinstance(r, dict))
 
         return {
             "tool": tool_name,
@@ -657,7 +659,8 @@ class PreCompactHandoffCapture:
                     content = msg.get("content", "") if isinstance(msg, dict) else ""
                     if isinstance(content, list):
                         text = " ".join(
-                            c.get("text", "") for c in content
+                            c.get("text", "")
+                            for c in content
                             if isinstance(c, dict) and c.get("type") == "text"
                         )
                     else:
@@ -682,7 +685,7 @@ class PreCompactHandoffCapture:
                 logger.debug(f"[PreCompact] Skipping invalid checkpoint entry: {e}")
                 continue
         # Return only the last max_pairs*2 messages (pairs = user+assistant)
-        return messages[-(max_pairs * 2):]
+        return messages[-(max_pairs * 2) :]
 
     def _extract_recent_edits(self, max_edits: int = 10) -> list[dict]:
         """Extract recent Edit/Write tool calls from the transcript.
@@ -807,7 +810,9 @@ class PreCompactHandoffCapture:
             "transcript_offset": self.parser.get_transcript_offset(),
             "transcript_entry_count": self.parser.get_transcript_entry_count(),
             "handover": handoff_data.get("handover"),
-            "open_conversation_context": handoff_payload.get("open_conversation_context") if handoff_payload else None,
+            "open_conversation_context": handoff_payload.get("open_conversation_context")
+            if handoff_payload
+            else None,
             "visual_context": handoff_payload.get("visual_context") if handoff_payload else None,
             "resolved_issues": handoff_data.get("resolved_issues", []),
             "modifications": handoff_data.get("modifications", []),
@@ -944,13 +949,17 @@ class PreCompactHandoffCapture:
             print(f"[PreCompact] Completion state: {impl_status['completion_state']}")
         if impl_status.get("test_results"):
             test_res = impl_status["test_results"]
-            print(f"[PreCompact] Test results: {test_res.get('passed', 0)} passed, {test_res.get('failed', 0)} failed")
+            print(
+                f"[PreCompact] Test results: {test_res.get('passed', 0)} passed, {test_res.get('failed', 0)} failed"
+            )
 
         if blocker:
             print(f"[PreCompact] Blocker: {blocker.get('description', 'Unknown')}")
 
         if visual_context:
-            print(f"[PreCompact] Visual context: {visual_context.get('description', 'Unknown')[:80]}...")
+            print(
+                f"[PreCompact] Visual context: {visual_context.get('description', 'Unknown')[:80]}..."
+            )
 
         # Extract pending operations for fault tolerance
         pending_operations = self.parser.extract_pending_operations()
@@ -988,6 +997,7 @@ class PreCompactHandoffCapture:
             active_cmd_file = self.project_root / ".claude" / "active_command.json"
             if active_cmd_file.exists():
                 from handoff.config import load_json_file
+
                 cmd_data = load_json_file(active_cmd_file)
                 if cmd_data:
                     command_context_data = {
@@ -1019,7 +1029,10 @@ class PreCompactHandoffCapture:
             # Compute checksum over the payload itself (excluding checksum key)
             import hashlib as _hashlib
             import json as _json
-            _payload_bytes = _json.dumps(handoff_payload, sort_keys=True, default=str).encode("utf-8")
+
+            _payload_bytes = _json.dumps(handoff_payload, sort_keys=True, default=str).encode(
+                "utf-8"
+            )
             handoff_payload["checksum"] = f"sha256:{_hashlib.sha256(_payload_bytes).hexdigest()}"
 
             # Store handoff in task metadata
@@ -1040,22 +1053,30 @@ class PreCompactHandoffCapture:
                 # Option 1: Load from active_command file (PRIORITY 1 - most reliable)
                 last_user_message = self._load_active_command_file()
                 if last_user_message:
-                    print(f"[PreCompact] Using last_user_message from active_command file: {last_user_message[:50]}...")
+                    print(
+                        f"[PreCompact] Using last_user_message from active_command file: {last_user_message[:50]}..."
+                    )
 
                 # Option 2: Use blocker.description (contains "User's last question: ...")
                 if not last_user_message:
                     last_user_message = transcript.extract_user_message_from_blocker(blocker)
                     if last_user_message:
-                        print(f"[PreCompact] Using last_user_message from blocker: {last_user_message[:50]}...")
+                        print(
+                            f"[PreCompact] Using last_user_message from blocker: {last_user_message[:50]}..."
+                        )
 
                 # Option 3: Read from hook_input if available
                 if not last_user_message:
                     handoff_input_data = self.hook_input.get("handoff_data") or self.hook_input
                     if isinstance(handoff_input_data, dict):
-                        input_message = handoff_input_data.get("last_user_message", "") or handoff_input_data.get("prompt", "")
+                        input_message = handoff_input_data.get(
+                            "last_user_message", ""
+                        ) or handoff_input_data.get("prompt", "")
                         if input_message:
                             last_user_message = input_message
-                            print(f"[PreCompact] Using last_user_message from hook_input: {last_user_message[:50]}...")
+                            print(
+                                f"[PreCompact] Using last_user_message from hook_input: {last_user_message[:50]}..."
+                            )
 
                 # Option 4: Fallback to TranscriptParser (uses full transcript, not just 20 lines)
                 if not last_user_message and self.transcript_path:
@@ -1063,7 +1084,9 @@ class PreCompactHandoffCapture:
                     # the ENTIRE parsed transcript, not just last 20 raw lines
                     last_user_message = self.parser.extract_last_user_message()
                     if last_user_message:
-                        print(f"[PreCompact] Using last_user_message from TranscriptParser: {last_user_message[:50]}...")
+                        print(
+                            f"[PreCompact] Using last_user_message from TranscriptParser: {last_user_message[:50]}..."
+                        )
 
                 # Build full handoff metadata for task storage
                 handoff_metadata = self._build_handoff_metadata(
