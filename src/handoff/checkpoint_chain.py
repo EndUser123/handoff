@@ -85,6 +85,7 @@ class CheckpointChain:
         self.task_tracker_dir = task_tracker_dir
         self.terminal_id = terminal_id
         self._cache: dict[str, list[HandoffCheckpointRef]] = {}
+        self._cache_mtime: float = 0.0
         self._migration_cache: dict[str, dict[str, Any]] = {}
 
     def _get_task_file_path(self) -> Path:
