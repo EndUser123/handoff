@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for transcript.py extract_transcript_from_messages function.
+"""Tests for transcript.py filter_valid_messages function.
 
 Tests invalid message handling - ensures the function gracefully skips invalid
 messages and continues processing valid ones.
@@ -9,7 +9,7 @@ messages and continues processing valid ones.
 from handoff.hooks.__lib.transcript import filter_valid_messages
 
 
-class TestExtractTranscriptFromMessagesInvalidInput:
+class TestFilterValidMessagesInvalidInput:
     """Test extract_transcript_from_messages with invalid message formats."""
 
     def test_skips_non_dict_messages(self):
