@@ -907,6 +907,8 @@ class TranscriptParser:
             return None
 
         try:
+            # Import utility for DRY compliance
+            from handoff.config import utcnow_iso
             # Scan last 50 entries for visual context
             start_idx = max(0, len(entries) - 50)
             for abs_idx, entry in enumerate(entries[-50:], start=start_idx):
