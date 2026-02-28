@@ -95,6 +95,7 @@ def load_json_file(file_path: Path) -> dict[str, Any] | None:
             return None
         return json.loads(file_path.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError) as e:
+        logger.debug(f"[Config] Could not load JSON file {file_path}: {e}")
         # Log error but don't raise - caller decides if None is fatal
         import logging
         logging.getLogger(__name__).warning(f"Error loading {file_path}: {e}")
