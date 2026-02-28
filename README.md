@@ -137,7 +137,7 @@ handoff/
 │           ├── handover.py       # HandoverBuilder
 │           ├── task_identity_manager.py  # 6-source task identity recovery
 │           └── bridge_tokens.py  # Cross-session continuity tokens
-├── tests/                        # 21 tests, all passing
+├── tests/                        # 217 tests, all passing
 └── skill/SKILL.md               # /hod skill documentation
 ```
 
