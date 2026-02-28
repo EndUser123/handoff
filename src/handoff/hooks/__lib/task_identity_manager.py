@@ -354,8 +354,8 @@ class TaskIdentityManager:
             mapping[branch] = task_name
 
             # Save
-            self.mapping_file.parent.mkdir(parents=True, exist_ok=True)
-            self.mapping_file.write_text(json.dumps(mapping, indent=2))
+            from handoff.config import save_json_file
+            save_json_file(self.mapping_file, mapping)
 
             logger.info(f"[TaskID] Registered: {branch} -> {task_name}")
             return True
