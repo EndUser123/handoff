@@ -129,16 +129,19 @@ def load_handoff_json(json_path: Path) -> dict[str, Any] | None:
         - Verifies checksum if present
         - Returns None for invalid files
     """
+    from handoff.config import load_json_file
+    data = load_json_file(json_path)
+    if not data:
+        return None
+
+    # Validate required fields
+    if "task_name" not in data:
+        # Try alternative field names from different handoff versions
+        if "session_id" not in data and "id" not in data:
+            return None
+
+    # Verify checksum if present
     try:
-        data = json.loads(json_path.read_text(encoding='utf-8'))
-
-        # Validate required fields
-        if "task_name" not in data:
-            # Try alternative field names from different handoff versions
-            if "session_id" not in data and "id" not in data:
-                return None
-
-        # Verify checksum if present
         if "checksum" in data:
             stored = data["checksum"]
             # Remove checksum for recomputation
@@ -147,10 +150,10 @@ def load_handoff_json(json_path: Path) -> dict[str, Any] | None:
             if not stored.startswith(computed):
                 # Checksum mismatch - file may be corrupted
                 return None
-
-        return data
-    except (json.JSONDecodeError, OSError, ValueError):
+    except (ValueError, TypeError):
         return None
+
+    return data
 
 
 def handoff_to_task(handoff_data: dict[str, Any], terminal_id: str) -> dict[str, Any]:
