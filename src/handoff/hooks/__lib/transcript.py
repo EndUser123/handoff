@@ -1022,7 +1022,7 @@ class TranscriptParser:
                         if not user_message.startswith("<"):
                             return user_message
         except Exception as e:
-            print(f"[TranscriptParser] Warning: Could not extract last user message: {e}")
+            logger.error(f"[TranscriptParser] Could not extract last user message: {e}")
 
         return None
 
