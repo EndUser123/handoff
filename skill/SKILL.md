@@ -1,11 +1,11 @@
 ---
-name: hod
+name: handoff
 description: Research-backed handover documentation system using handoff package
 category: documentation
 triggers:
-  - /hod
+  - /handoff
 aliases:
-  - /hod
+  - /handoff
 
 suggest:
   - /restore
