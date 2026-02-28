@@ -34,8 +34,12 @@ if str(HANDOFF_PACKAGE) not in sys.path:
 
 from handoff.migrate import compute_metadata_checksum
 
-# Add hooks dir for terminal detection
-sys.path.insert(0, str(HOOKS_DIR))
+# Add hooks dir for terminal detection (use existing comprehensive implementation)
+# Path: P:/packages/handoff/src/handoff/hooks/SessionStart_handoff_restore.py
+# Need to reach: P:/.claude/hooks/terminal_detection.py
+claude_hooks_dir = Path("P:/.claude/hooks")
+if str(claude_hooks_dir) not in sys.path:
+    sys.path.insert(0, str(claude_hooks_dir))
 
 try:
     from terminal_detection import detect_terminal_id
