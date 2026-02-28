@@ -393,7 +393,6 @@ def validate_handoff_size(handoff_data: dict[str, Any]) -> dict[str, Any]:
         validated["modifications"] = modifications[-50:]
 
     # Compute final size and warn if exceeds 500 KB
-    import json
     estimated_size = len(json.dumps(validated).encode('utf-8'))
     if estimated_size > 500_000:  # 500 KB
         print(f"Warning: Handoff metadata exceeds 500 KB: {estimated_size} bytes")
