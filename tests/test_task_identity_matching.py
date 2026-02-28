@@ -235,17 +235,28 @@ class TestTaskIdentityMatching:
         """
         Test that terminal ID verification prevents task bleeding between terminals.
 
-        BUG: Currently FAILS because set_current_task() sets environment variable
-        TASK_NAME which is global (not terminal-scoped). This causes task bleeding.
+        BUG DISCOVERED: This test reveals TWO bugs:
+        1. Session files are written to global path (P:/.claude/state/task-identity/)
+           instead of project_root, causing cross-test pollution
+        2. Environment variable TASK_NAME is global (not terminal-scoped), causing
+           task bleeding between terminals
 
         Given: A session file from terminal_1 exists
         When: Task identity is retrieved from terminal_2
         Then: Task should NOT be extracted (terminal mismatch)
+
+        Current behavior: Returns task from global state or env var
+        Expected behavior: Should return None (no task for terminal_2)
         """
         with tempfile.TemporaryDirectory() as tmpdir:
             # Arrange
             project_root = Path(tmpdir)
             task_name = "SECURE_TASK"
+
+            # Clear environment variable to isolate session file behavior
+            import os
+            if "TASK_NAME" in os.environ:
+                del os.environ["TASK_NAME"]
 
             # Create session file for terminal_1
             manager_1 = TaskIdentityManager(
@@ -254,10 +265,10 @@ class TestTaskIdentityMatching:
             )
             manager_1.set_current_task(task_name)
 
-            # Clear environment variable to test session file isolation
-            import os
-            if "TASK_NAME" in os.environ:
-                del os.environ["TASK_NAME"]
+            # Verify session file was created in expected location
+            # BUG: Files go to P:/.claude/state/task-identity/ not tmpdir!
+            assert manager_1.session_file.parent == Path("P:/.claude/state/task-identity")
+            assert manager_1.session_file.name == "session-task-terminal_1.json"
 
             # Act: Try to retrieve from terminal_2
             manager_2 = TaskIdentityManager(
@@ -268,7 +279,8 @@ class TestTaskIdentityMatching:
 
             # Assert: Should not get task_1's task (terminal mismatch)
             # Since there's no task for terminal_2, should return None
-            assert task is None
+            # BUG TEST: This assertion will FAIL due to cross-pollution
+            assert task is None, f"Expected None but got '{task}'. Task bleeding detected!"
 
     def test_task_identity_grouping_by_id(self):
         """
