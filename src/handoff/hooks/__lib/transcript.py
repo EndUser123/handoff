@@ -1042,7 +1042,7 @@ class TranscriptParser:
         try:
             return Path(self.transcript_path).stat().st_size
         except OSError as e:
-            print(f"[TranscriptParser] Warning: Could not get transcript size: {e}")
+            logger.warning(f"[TranscriptParser] Could not get transcript size: {e}")
             return 0
 
     def get_transcript_entry_count(self) -> int:
