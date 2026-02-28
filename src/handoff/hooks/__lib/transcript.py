@@ -1036,7 +1036,11 @@ class TranscriptParser:
                         tool_result = entry.get("result", {})
 
                         # Extract image path/prompt if available
-                        image_source = tool_input.get("image_source") or tool_input.get("imageSource") or tool_input.get("file_path")
+                        image_source = (
+                            tool_input.get("image_source")
+                            or tool_input.get("imageSource")
+                            or tool_input.get("file_path")
+                        )
                         prompt = tool_input.get("prompt", "")
 
                         # Build description
