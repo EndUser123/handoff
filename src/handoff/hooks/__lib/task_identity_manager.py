@@ -387,7 +387,7 @@ class TaskIdentityManager:
             return False
 
         try:
-            from handoff.config import utcnow_iso, save_json_file
+            from handoff.config import save_json_file, utcnow_iso
 
             active_cmd_file = self.project_root / ".claude" / "active_command.json"
 
@@ -436,13 +436,14 @@ class TaskIdentityManager:
             Transient task ID or None
         """
         try:
+            from handoff.config import load_json_file
             active_cmd_file = self.project_root / ".claude" / "active_command.json"
-            if active_cmd_file.exists():
-                data = json.loads(active_cmd_file.read_text())
+            data = load_json_file(active_cmd_file)
+            if data:
                 command = data.get("command")
                 if command:
                     return f"adhoc_{command}"
-        except (json.JSONDecodeError, OSError):
+        except Exception:
             pass
 
         return None
