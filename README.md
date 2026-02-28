@@ -2,11 +2,7 @@
 
 > Session handoff management for AI coding environments - capture, restore, and manage conversation state across compaction events
 
-[![Python Version](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://github.com/csf-nip/handoff)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![CI](https://img.shields.io/badge/CI-passing-brightgreen.svg)](.github/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-217%20passing-brightgreen.svg)](tests/)
-[![Coverage](https://img.shields.io/badge/coverage-29.5%25-yellow.svg)](tests/)
+[![Build Status](https://img.shields.io/github/actions/status/EndUser123/handoff?branch=main)](https://github.com/EndUser123/handoff/actions) [![Version](https://img.shields.io/pypi/v/handoff)](https://pypi.org/project/handoff/) [![Python](https://img.shields.io/pypi/pyversions/handoff)](https://pypi.org/project/handoff/) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT) [![Coverage](https://img.shields.io/codecov/c/github/EndUser123/handoff?token=TODO)](https://codecov.io/gh/EndUser123/handoff)
 
 ## Quick Start
 
