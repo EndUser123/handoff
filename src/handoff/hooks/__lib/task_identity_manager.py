@@ -457,7 +457,7 @@ class TaskIdentityManager:
             Number of files deleted
         """
         deleted = 0
-        cutoff = datetime.now().timestamp() - (max_age_hours * 3600)
+        cutoff = datetime.now().timestamp() - (max_age_hours * SECONDS_PER_HOUR)
 
         try:
             state_base = Path("P:/.claude/state/task-identity")
