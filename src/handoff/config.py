@@ -6,8 +6,11 @@ Zero dependencies - uses pathlib.Path and environment variables only.
 
 from __future__ import annotations
 
+import json
 import os
+from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 # Project root (defaults to P:/ for CSF environment)
 PROJECT_ROOT = Path(os.getenv("HANDOFF_PROJECT_ROOT", "P:/")).resolve()
