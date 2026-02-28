@@ -20,6 +20,7 @@ import logging
 import os
 import re
 import sys
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -35,7 +36,7 @@ HANDOFF_PACKAGE = Path("P:/packages/handoff/src")
 if str(HANDOFF_PACKAGE) not in sys.path:
     sys.path.insert(0, str(HANDOFF_PACKAGE))
 
-from handoff.migrate import compute_metadata_checksum
+from handoff.migrate import compute_metadata_checksum  # noqa: E402
 
 # Add hooks dir for terminal detection (use existing comprehensive implementation)
 # Path: P:/packages/handoff/src/handoff/hooks/SessionStart_handoff_restore.py
@@ -57,7 +58,6 @@ try:
     from __lib.hook_base import hook_main
 except ImportError:
     logger.debug("[SessionStart] hook_base module not available, using no-op decorator")
-    from typing import Any, Callable
 
     def hook_main(func: Callable[..., Any]) -> Callable[..., Any]:
         """No-op decorator if hook_base not available."""
@@ -558,70 +558,6 @@ def _build_restoration_prompt(handoff_data: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def _fallback_find_by_session() -> dict[str, Any] | None:
-    """Fallback: Find most recent task file with matching session_id.
-
-    Safety net for edge cases where terminal_id doesn't match
-    (test mode, environment variables, missing module).
-
-    Validates session_id to prevent cross-terminal contamination.
-
-    Returns:
-        Task dict with handoff in metadata, or None if not found
-    """
-    try:
-        session_id = os.environ.get("CLAUDE_SESSION_ID")
-        if not session_id:
-            return None  # Can't validate without session_id
-
-        task_tracker_dir = Path("P:/.claude/state/task_tracker")
-        if not task_tracker_dir.exists():
-            return None
-
-        # Find all task files, sort by modification time (most recent first)
-        task_files = list(task_tracker_dir.glob("*_tasks.json"))
-        if not task_files:
-            return None
-
-        task_files.sort(key=lambda p: p.stat().st_mtime, reverse=True)
-
-        # Check 5 most recent files for matching session_id
-        for task_file in task_files[:5]:
-            try:
-                with open(task_file, encoding="utf-8") as f:
-                    task_data = json.load(f)
-
-                # Try active_session first
-                active_session = task_data.get("tasks", {}).get("active_session")
-                if active_session:
-                    handoff = active_session.get("metadata", {}).get("handoff", {})
-                    if handoff.get("session_id") == session_id:
-                        # Validate checksum before accepting
-                        is_valid, _ = _verify_handoff_checksum(handoff)
-                        if is_valid:
-                            return active_session
-                        # Checksum failed - corrupted data, skip
-
-                # Try continue_session as fallback
-                continue_session = task_data.get("tasks", {}).get("continue_session")
-                if continue_session:
-                    handoff = continue_session.get("metadata", {}).get("handoff", {})
-                    if handoff.get("session_id") == session_id:
-                        is_valid, _ = _verify_handoff_checksum(handoff)
-                        if is_valid:
-                            return continue_session
-
-            except (json.JSONDecodeError, OSError, KeyError) as e:
-                logger.debug(f"[SessionStart] Skipping corrupted handoff file: {e}")
-                continue  # Skip corrupted files
-
-    except Exception as e:
-        logger.debug(f"[SessionStart] Fallback handler failed: {e}")
-        pass  # Fallback failure - not critical
-
-    return None
-
-
 def _load_active_session_task(terminal_id: str) -> dict[str, Any] | None:
     """Load active_session task from task tracker.
 
@@ -629,42 +565,37 @@ def _load_active_session_task(terminal_id: str) -> dict[str, Any] | None:
     The global current_session.json is NOT used because it causes terminals
     to load each other's handoff data.
 
-    Priority:
-        1. Exact terminal_id match (fastest, most reliable)
-        2. Most recent file with matching session_id (fallback)
-
     Args:
         terminal_id: Terminal identifier for isolation
 
     Returns:
         Task dict with handoff in metadata, or None if not found
     """
-    # Priority 1: Try exact terminal_id match
+    # Exact terminal_id match required
     task_tracker_dir = Path("P:/.claude/state/task_tracker")
     task_file_path = task_tracker_dir / f"{terminal_id}_tasks.json"
 
-    if task_file_path.exists():
-        try:
-            with open(task_file_path, encoding="utf-8") as f:
-                task_data = json.load(f)
+    if not task_file_path.exists():
+        return None
 
-            # Look for active_session task
-            active_session = task_data.get("tasks", {}).get("active_session")
-            if active_session:
-                return active_session
+    try:
+        with open(task_file_path, encoding="utf-8") as f:
+            task_data = json.load(f)
 
-            # Fallback to continue_session task
-            continue_session = task_data.get("tasks", {}).get("continue_session")
-            if continue_session:
-                return continue_session
+        # Look for active_session task (restoration after compaction)
+        active_session = task_data.get("tasks", {}).get("active_session")
+        if active_session:
+            return active_session
 
-        except (json.JSONDecodeError, OSError) as e:
-            logger.debug(f"[SessionStart] Could not load handoff from task file: {e}")
-            pass  # Fall through to session-based fallback
+        # Fallback to continue_session task (also for restoration)
+        continue_session = task_data.get("tasks", {}).get("continue_session")
+        if continue_session:
+            return continue_session
 
-    # Priority 2: Fallback to session-based search
-    # This handles edge cases (test mode, env variables) while preserving isolation
-    return _fallback_find_by_session()
+    except (json.JSONDecodeError, OSError) as e:
+        logger.debug(f"[SessionStart] Could not load handoff from task file: {e}")
+
+    return None
 
 
 def _cleanup_active_session_task(terminal_id: str) -> None:
@@ -723,43 +654,6 @@ def _safe_id(value: str) -> str:
     return re.sub(r"[^a-zA-Z0-9_.-]+", "_", str(value))
 
 
-def _cleanup_active_command_file(terminal_id: str) -> None:
-    """Remove active_command file after successful restoration.
-
-    Args:
-        terminal_id: Terminal identifier (unused, filename has embedded IDs)
-    """
-    try:
-        from handoff.config import load_json_file
-
-        current_session_file = Path("P:/.claude/current_session.json")
-        session_data = load_json_file(current_session_file)
-        if not session_data:
-            return
-
-        session_id = session_data.get("session_id")
-        if not session_id:
-            return
-
-        safe_session = _safe_id(session_id)
-        pid = os.getpid()
-        pattern = f"{safe_session}_*_{pid}.json"
-
-        active_commands_dir = Path("P:/.claude/state/active_commands")
-        if not active_commands_dir.exists():
-            return
-
-        matching_files = list(active_commands_dir.glob(pattern))
-        for file_path in matching_files:
-            try:
-                file_path.unlink()
-            except OSError as e:
-                logger.debug(f"[SessionStart] Could not update handoff reference: {e}")
-
-    except (OSError, json.JSONDecodeError) as e:
-        logger.debug(f"[SessionStart] Could not load handoff metadata: {e}")
-
-
 @hook_main
 def main() -> int:
     """Execute SessionStart handoff restoration.
@@ -767,17 +661,13 @@ def main() -> int:
     Returns:
         0 for success (always allow session start)
     """
-    terminal_id = detect_terminal_id()
+    terminal_id = detect_terminal_id()  # Used in _load_active_session_task() and _cleanup_active_session_task()
 
-    # NOTE: Removed diagnostic print() - any non-JSON output breaks router parsing
-    # print(f"[SessionStart] Checking for handoff restoration (terminal: {terminal_id})...")
-
-    # Load active_session task
+    # Load active_session task (these are restoration tasks by definition)
     active_task = _load_active_session_task(terminal_id)
 
     if not active_task:
         # NOTE: Silently return - no active handoff is normal, not an error
-        # print("[SessionStart] No active handoff found.")
         return 0
 
     # Extract handoff from metadata
@@ -786,47 +676,23 @@ def main() -> int:
 
     if not handoff_data:
         # NOTE: No handoff data is normal, not an error
-        # print("[SessionStart] Active task found but no handoff data.")
         return 0
 
     # Validate schema
     is_valid, error = _validate_handoff_schema(handoff_data)
     if not is_valid:
         # NOTE: Schema validation failures are silent - don't spam on every session
-        # print(f"[SessionStart] Warning: Invalid handoff schema: {error}")
         return 0
 
     # Verify checksum
     is_valid, error = _verify_handoff_checksum(handoff_data)
     if not is_valid:
         # NOTE: Checksum failures are silent - don't spam on every session
-        # print(f"[SessionStart] Warning: Checksum verification failed: {error}")
         return 0
 
-    # SESSION-BINDING: Only restore handoff if it's from the current session
-    # This makes the system: multi-terminal friendly, no TTL, immune to stale data
-
-    # Extract session ID from handoff's transcript_path
-    handoff_transcript = handoff_data.get("transcript_path", "")
-    handoff_session = Path(handoff_transcript).stem if handoff_transcript else ""
-
-    # Extract session ID from CURRENT session (not from stale active_task metadata)
-    # CRITICAL: Must use current_session.json to get ACTUAL current session, not old task data
-    current_session_file = Path("P:/.claude/current_session.json")
-    if current_session_file.exists():
-        try:
-            with open(current_session_file, encoding="utf-8") as f:
-                current_session_data = json.load(f)
-            current_session = current_session_data.get("session_id", "")
-        except (json.JSONDecodeError, OSError):
-            current_session = ""
-    else:
-        current_session = ""
-
-    # Only restore if handoff belongs to CURRENT session
-    if current_session and handoff_session != current_session:
-        # Silent skip - handoff is from a different session, don't restore it
-        return 0
+    # NOTE: Session-binding check REMOVED for restoration tasks
+    # active_session/continue_session tasks are explicitly for post-compaction restoration
+    # Session IDs won't match after compaction - that's expected and correct
 
     # Build restoration prompt
     restoration_prompt = _build_restoration_prompt(handoff_data)
