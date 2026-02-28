@@ -495,7 +495,6 @@ class HandoffStore:
             - Adds active_session and continue_session tasks with handoff in metadata
             - Prints status messages to stdout
         """
-        from handoff.config import utcnow_iso
 
         # CRITICAL: Always use terminal_id for task file naming to prevent cross-terminal contamination
         # Session ID is global across terminals and would cause context leakage between concurrent sessions
@@ -519,7 +518,7 @@ class HandoffStore:
             "id": "active_session",
             "subject": "Session Restore",
             "status": "pending",
-            "created_at": datetime.now(UTC).isoformat(),
+            "created_at": utcnow_iso(),
             "terminal": self.terminal_id,
             "metadata": {
                 "handoff": validated_metadata,
@@ -535,7 +534,7 @@ class HandoffStore:
             "id": CONTINUE_SESSION_TASK_ID,
             "subject": subject,
             "status": CONTINUE_SESSION_STATUS_PENDING,
-            "created_at": datetime.now(UTC).isoformat(),
+            "created_at": utcnow_iso(),
             "terminal": self.terminal_id,
             "metadata": {
                 "handoff": validated_metadata,
