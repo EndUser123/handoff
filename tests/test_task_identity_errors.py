@@ -112,15 +112,14 @@ class TestTaskIdentityManagerMalformedIDs:
 
         Given: Task name is an empty string
         When: set_current_task is called with ""
-        Then: Should handle gracefully (may reject or accept)
+        Then: Should raise ValueError or return False (reject invalid input)
         """
         # Arrange: Empty task name
         # Act: Try to set empty task
         result = manager.set_current_task("")
 
-        # Assert: Should handle without crashing
-        # Current implementation may accept or reject - just verify no crash
-        assert isinstance(result, bool), "Should return boolean without crashing"
+        # Assert: Should reject empty string (current implementation accepts it - this test FAILS)
+        assert result is False, "Should reject empty string task name"
 
     def test_set_current_task_with_whitespace_only(self, manager):
         """Test set_current_task with whitespace-only task name.
