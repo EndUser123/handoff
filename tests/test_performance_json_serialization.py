@@ -163,14 +163,14 @@ class TestJSONSerializationPerformance:
         )
 
     def test_validation_serialize_for_size_check(self, large_handoff_data):
-        """Characterization: _validate_handoff_data_size serializes JSON for size check.
+        """Characterization: _validate_handoff_data_size skips serialization with cached_json=None.
 
         Given: Large handoff data
-        When: Calling _validate_handoff_data_size()
-        Then: JSON is serialized once to estimate size (line 346)
+        When: Calling _validate_handoff_data_size() with default cached_json=None
+        Then: JSON is NOT serialized internally (PERF-002 fix)
 
-        This is necessary for size validation but wasteful if followed by
-        another serialization for the actual write.
+        After the fix, validation skips the internal size check serialization
+        to avoid duplicate work when the caller will serialize anyway.
         """
         # Track json.dumps calls
         json_dumps_calls = []
@@ -185,7 +185,8 @@ class TestJSONSerializationPerformance:
             return original_json_dumps(*args, **kwargs)
 
         with patch("handoff.hooks.__lib.handoff_store.json.dumps", side_effect=tracking_json_dumps):
-            # Validate handoff data (this triggers serialization at line 346)
+            # Validate handoff data with cached_json=None (default)
+            # PERF-002: This should NOT trigger internal serialization
             validated = _validate_handoff_data_size(large_handoff_data)
 
         # Verify data was truncated
@@ -194,16 +195,12 @@ class TestJSONSerializationPerformance:
         # Count serialization calls
         print("\n=== Validation Serialization Calls ===")
         print(f"Total serializations: {len(json_dumps_calls)}")
-        for i, call in enumerate(json_dumps_calls, 1):
-            print(f"  Call {i}: mod_count={call['mod_count']}")
 
-        # The serialization happens AFTER truncation, so we see 50 mods, not 1000
-        truncated_data_calls = [c for c in json_dumps_calls if c["mod_count"] == 50]
-
-        # CURRENT BEHAVIOR: 1 serialization for size check (line 346) - AFTER truncation
-        assert len(truncated_data_calls) >= 1, (
-            f"Validation should serialize at least once for size check after truncation, "
-            f"got {len(truncated_data_calls)} calls with 50 modifications"
+        # AFTER FIX: No serialization should happen internally
+        # The caller (atomic_write_with_validation) handles serialization
+        assert len(json_dumps_calls) == 0, (
+            f"PERF-002: Validation should NOT serialize internally when cached_json=None, "
+            f"got {len(json_dumps_calls)} calls. Caller handles serialization."
         )
 
     def test_write_serialize_for_actual_write(self, large_handoff_data, temp_dir):
