@@ -709,6 +709,57 @@ class PreCompactHandoffCapture:
 
         return errors[-max_errors:]
 
+    @staticmethod
+    def _extract_user_text(entry: dict[str, Any]) -> str | None:
+        """Extract text content from a user entry.
+
+        Args:
+            entry: Transcript entry dict
+
+        Returns:
+            Extracted text or None if no suitable text found
+        """
+        msg = entry.get("message", {})
+        content = msg.get("content", "") if isinstance(msg, dict) else ""
+
+        if isinstance(content, list):
+            # Extract text blocks from list content
+            text = " ".join(
+                c.get("text", "")
+                for c in content
+                if isinstance(c, dict) and c.get("type") == "text"
+            )
+        else:
+            text = str(content)
+
+        text = text.strip()
+        return text if text and len(text) > 5 else None
+
+    @staticmethod
+    def _extract_assistant_text(entry: dict[str, Any]) -> str | None:
+        """Extract text content from an assistant entry.
+
+        Args:
+            entry: Transcript entry dict
+
+        Returns:
+            Extracted text or None if no suitable text found
+        """
+        msg = entry.get("message", {})
+        content = msg.get("content", []) if isinstance(msg, dict) else []
+        text_parts = []
+
+        if isinstance(content, list):
+            # Extract text blocks from list content
+            for block in content:
+                if isinstance(block, dict) and block.get("type") == "text":
+                    text_parts.append(block.get("text", ""))
+        elif isinstance(content, str):
+            text_parts = [content]
+
+        text = " ".join(text_parts).strip()
+        return text if text and len(text) > 5 else None
+
     def _extract_recent_exchanges(self, max_pairs: int = 6) -> list[dict[str, Any]]:
         """Extract the last N user↔assistant conversation pairs from the transcript.
 
