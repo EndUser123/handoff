@@ -59,7 +59,7 @@ class HandoffStorage(Protocol):
         path = storage.save_handoff("task", "term", {"data": "value"})
     """
 
-    def save_handoff(self, task_name: str, terminal_id: str, data: dict) -> Path:
+    def save_handoff(self, task_name: str, terminal_id: str, data: dict[str, Any]) -> Path:
         """
         Save handoff data to storage.
 
