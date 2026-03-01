@@ -78,14 +78,17 @@ def _validate_handoff_schema(handoff_data: dict[str, Any]) -> tuple[bool, str | 
 
     for field in required_fields:
         if field not in handoff_data:
-            return False, f"Missing required field: {field}"
+            error_msg = f"Missing required field: {field}"
+            logger.warning(f"[SessionStart] Schema validation failed: {error_msg}")
+            return False, error_msg
 
     # Validate timestamp
     try:
         datetime.fromisoformat(handoff_data["saved_at"])
     except (ValueError, TypeError) as e:
-        logger.warning(f"[SessionStart] Invalid saved_at timestamp: {e}")
-        return False, f"Invalid saved_at timestamp: {handoff_data.get('saved_at')}"
+        error_msg = f"Invalid saved_at timestamp: {handoff_data.get('saved_at')}"
+        logger.warning(f"[SessionStart] Schema validation failed: {error_msg}")
+        return False, error_msg
 
     return True, None
 
