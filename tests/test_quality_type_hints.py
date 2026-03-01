@@ -64,8 +64,8 @@ def test_extract_topic_from_content_return_type_is_specific():
     # Get the function
     func = transcript.extract_topic_from_content
 
-    # Get type hints
-    type_hints = get_type_hints(func)
+    # Get type hints with extras to preserve Annotated metadata
+    type_hints = get_type_hints(func, include_extras=True)
 
     # Check return type exists
     assert "return" in type_hints, "extract_topic_from_content should have return type hint"
