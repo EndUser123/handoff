@@ -18,17 +18,17 @@ import re
 
 # Platform-specific imports for file locking
 import sys
+if sys.platform == 'win32':
+    import msvcrt
+else:
+    import fcntl
+
 import tempfile
 import time
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
-
-if sys.platform == 'win32':
-    pass
-else:
-    pass
 
 logger = logging.getLogger(__name__)
 
