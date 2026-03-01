@@ -119,21 +119,21 @@ class PreCompactHandoffCapture:
     - TaskIdentityManager: For task identity tracking
     """
 
-    @staticmethod
-    def _find_terminal_transcript() -> str | None:
-        """Find terminal-specific transcript using session_id.
+    def _find_terminal_transcript(self) -> str | None:
+        """Find terminal-specific transcript using session_id from hook input.
 
         Returns:
             Path to transcript file or None if not found
         """
         project_conversations_dir = os.path.expanduser("~/.claude/projects/P--/")
-        if not (os.path.exists(project_conversations_dir) and _SESSION_ACTIVITY_AVAILABLE):
+        if not os.path.exists(project_conversations_dir):
             logger.info(
-                "[PreCompact] Project conversations directory not found or session activity unavailable"
+                "[PreCompact] Project conversations directory not found"
             )
             return None
 
-        session_id = _get_session_id_from_env()
+        # Extract session_id from hook input (same logic as pre_tool_use_logic.resolve_session_id)
+        session_id = self._resolve_session_id_from_input()
         if not session_id:
             logger.info(
                 "[PreCompact] No session_id available - cannot find terminal-specific transcript"
@@ -158,6 +158,43 @@ class PreCompactHandoffCapture:
                 f"[PreCompact] Transcript exists but fails sanity check: {size_mb:.1f}MB"
             )
             return None
+
+    def _resolve_session_id_from_input(self) -> str | None:
+        """Resolve session_id from hook input using same priority as pre_tool_use_logic.
+
+        Priority order:
+        1. session.id (nested object)
+        2. session.session_id (nested object)
+        3. session.sessionId (nested object)
+        4. Top-level session_id
+        5. Top-level sessionId
+        6. CLAUDE_SESSION_ID env var
+
+        Returns:
+            Session ID string or None if not found
+        """
+        payload = self.hook_input or {}
+
+        # Check nested session object first
+        session_obj = payload.get("session")
+        if isinstance(session_obj, dict):
+            for key in ("id", "session_id", "sessionId"):
+                value = session_obj.get(key)
+                if isinstance(value, str) and value.strip():
+                    return value.strip()
+
+        # Check top-level keys
+        for key in ("session_id", "sessionId"):
+            value = payload.get(key)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+
+        # Fallback to environment variable
+        env_session = os.environ.get("CLAUDE_SESSION_ID", "").strip()
+        if env_session:
+            return env_session
+
+        return None
 
     @staticmethod
     def _check_transcript_availability(transcript_path: str | None) -> bool:
