@@ -134,7 +134,7 @@ class CheckpointChain:
         checkpoints.sort(key=lambda c: c.created_at)
         return checkpoints
 
-    def _get_or_migrate_handoff(self, task_id: str, handoff: dict) -> dict:
+    def _get_or_migrate_handoff(self, task_id: str, handoff: dict[str, Any]) -> dict[str, Any]:
         """Get or migrate handoff data for a task.
 
         Args:
