@@ -1,13 +1,10 @@
-[project.dependencies]
-pytest>=7.0.0
-
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "handoff"
-version = "0.2.0"
+version = "0.5.0"
 description = "Session handoff management for AI coding environments - capture, restore, and manage conversation state"
 readme = "README.md"
 license = {text = "MIT"}
@@ -17,7 +14,7 @@ authors = [
 ]
 keywords = ["handoff", "session", "state", "restore", "ai", "coding"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
@@ -28,7 +25,9 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-dependencies = []
+dependencies = [
+    "pytest>=7.0.0",
+]
 
 [project.optional-dependencies]
 dev = [
