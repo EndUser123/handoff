@@ -88,8 +88,8 @@ class TaskIdentityManager:
         self.terminal_id = terminal_id if terminal_id else detect_terminal_id()
 
         # Terminal-scoped file paths to prevent task bleeding between terminals
-        # Use absolute path to P:/.claude to ensure consistency across package locations
-        state_base = Path("P:/.claude/state/task-identity")
+        # Use absolute path to claude_root/.claude to ensure consistency across package locations
+        state_base = claude_root / ".claude" / "state" / "task-identity"
         self.session_file = state_base / f"session-task-{self.terminal_id}.json"
         self.metadata_file = state_base / f"last-compact-metadata-{self.terminal_id}.json"
         self.mapping_file = state_base / "task-worktree-mapping.json"  # Global, not terminal-scoped
