@@ -24,7 +24,9 @@ import sys
 from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, TypeVar
+
+F = TypeVar("F", bound=Callable[..., int])
 
 logger = logging.getLogger(__name__)
 
