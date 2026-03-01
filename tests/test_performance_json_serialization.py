@@ -343,10 +343,13 @@ class TestSerializationPerformanceImpact:
 
             print(f"  Mod ratio: {mod_ratio:.2f}x, Time ratio: {time_ratio:.2f}x")
 
-            # Time should scale reasonably with modifications (within 0.5x to 3x)
-            assert 0.5 <= time_ratio / mod_ratio <= 3.0, (
-                f"Serialization time should scale roughly linearly: "
-                f"mods={mod_ratio:.2f}x but time={time_ratio:.2f}x"
+            # Time should scale reasonably with modifications
+            # Allow time_ratio to be up to 2x mod_ratio (efficiency degradation)
+            # time_ratio < mod_ratio is excellent (super-linear optimization)
+            assert (time_ratio / mod_ratio) <= 2.0, (
+                f"Serialization time should scale reasonably with data size: "
+                f"mods={mod_ratio:.2f}x but time={time_ratio:.2f}x "
+                f"(ratio={time_ratio / mod_ratio:.2f}, limit=2.0)"
             )
 
     def test_duplicate_serialization_doubles_cost(self, large_handoff_data, temp_dir):
