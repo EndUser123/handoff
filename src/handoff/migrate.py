@@ -238,42 +238,7 @@ def handoff_to_task(handoff_data: dict[str, Any], terminal_id: str) -> dict[str,
         ),
         "terminal": terminal_id,
         "metadata": {
-            "handoff": {
-                # Checkpoint chain fields (from migration if not present)
-                "checkpoint_id": migrated_handoff.get("checkpoint_id"),
-                "parent_checkpoint_id": migrated_handoff.get("parent_checkpoint_id"),
-                "chain_id": migrated_handoff.get("chain_id"),
-                # Existing fields
-                "task_name": (
-                    migrated_handoff.get("task_name")
-                    or migrated_handoff.get("session_id", "unknown")
-                ),
-                "task_type": migrated_handoff.get("task_type", "informal"),
-                "progress_percent": (
-                    migrated_handoff.get("progress_percent")
-                    or migrated_handoff.get("progress_pct", 0)
-                ),
-                "blocker": migrated_handoff.get("blocker"),
-                "next_steps": migrated_handoff.get("next_steps", ""),
-                "git_branch": migrated_handoff.get("git_branch"),
-                "active_files": (
-                    migrated_handoff.get("active_files")
-                    or migrated_handoff.get("files_modified", [])
-                ),
-                "recent_tools": migrated_handoff.get("recent_tools", []),
-                "transcript_path": str(migrated_handoff.get("transcript_path", "")),
-                "transcript_offset": migrated_handoff.get("transcript_offset", 0),
-                "transcript_entry_count": migrated_handoff.get("transcript_entry_count", 0),
-                "handover": migrated_handoff.get("handover"),
-                "open_conversation_context": migrated_handoff.get("open_conversation_context"),
-                "resolved_issues": migrated_handoff.get("resolved_issues", []),
-                "modifications": migrated_handoff.get("modifications", []),
-                "saved_at": (migrated_handoff.get("saved_at") or migrated_handoff.get("timestamp")),
-                "checksum": migrated_handoff.get("checksum"),
-                "version": migrated_handoff.get("version", 1),
-                "migrated_at": utcnow_iso(),
-                "migrated_from": "handoff_json",
-            },
+            "handoff": _build_handoff_metadata(migrated_handoff),
             "pid": migrated_handoff.get("pid"),
             "restore_pending": False,  # Migrated handoffs don't need restoration
         },
