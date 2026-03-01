@@ -1149,7 +1149,7 @@ class PreCompactHandoffCapture:
                 if not last_user_message:
                     blocker_msg = blocker if isinstance(blocker, dict) else None
                     last_user_message = transcript.extract_user_message_from_blocker(
-                        blocker_msg
+                        blocker_msg  # type: ignore[arg-type]
                     )
                     if last_user_message:
                         logger.info(
