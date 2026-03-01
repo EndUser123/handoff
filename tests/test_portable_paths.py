@@ -17,6 +17,7 @@ Then: No hardcoded P:/ paths should exist
 
 import re
 from pathlib import Path
+
 import pytest
 
 
@@ -38,12 +39,14 @@ def test_no_hardcoded_p_drive_paths():
     python_files = list(src_dir.rglob("*.py"))
 
     # Pattern to match hardcoded P:/ paths (with variations)
-    # Matches: "P:/", 'P:/', "P:\\", 'P:\\', r"P:/", r"P:\"
+    # Matches: "P:/...", 'P:/...', "P:\\...", 'P:\\...', r"P:/...", r"P:\\..."
+    # The pattern matches opening quote, optional raw prefix, P:/ or P:\, then any path chars, then closing quote
     hardcoded_p_pattern = re.compile(
-        r'["\']'  # Opening quote
-        r'[rR]?'   # Optional raw string prefix
-        r'P:[/\\]' # P:/ or P:\
-        r'["\']'   # Closing quote
+        r'["\']'        # Opening quote
+        r'[rR]?'         # Optional raw string prefix
+        r'P:[/\\]'       # P:/ or P:\
+        r'[^"\']*'       # Any characters except quotes (the path content)
+        r'["\']'         # Closing quote
     )
 
     violations = []
