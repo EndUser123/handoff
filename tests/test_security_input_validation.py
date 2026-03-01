@@ -417,9 +417,6 @@ class TestHandoffStoreTerminalIdValidation:
             with pytest.raises(ValueError, match="path traversal"):
                 HandoffStore(project_root, malicious_terminal_id)
 
-            # If we reach here, the test fails - no file operations should be possible
-            pytest.fail("HandoffStore should reject path traversal at initialization")
-
 
 class TestSafeIdAdditionalEdgeCases:
     """Additional edge case tests for _safe_id()."""
