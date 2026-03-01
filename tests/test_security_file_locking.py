@@ -221,6 +221,14 @@ class TestFileLockingRaceCondition:
                     f"JSON error: {e}"
                 )
 
+            # Additional check: Read the file content to verify both writes occurred
+            with open(task_file_path, "r", encoding="utf-8") as f:
+                file_content = f.read()
+                print(f"\nFile content preview (first 500 chars):")
+                print(file_content[:500])
+                if len(file_content) > 500:
+                    print(f"... (total {len(file_content)} chars)")
+
             # ASSERTION: In a correctly locked system, only ONE process should succeed
             # If both succeed, the lock is not working (TOCTOU vulnerability)
             # Note: After fix, this assertion should pass
