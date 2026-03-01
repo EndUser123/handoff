@@ -7,14 +7,13 @@ to /code task templates for the iterative fix-all workflow.
 Run with: pytest tests/test_findings_to_tasks.py -v
 """
 
-import pytest
 import json
-import tempfile
-from pathlib import Path
-from typing import Dict, List
 
 # Import the module to test
 import sys
+import tempfile
+from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent / ".claude" / "skills" / "code" / "lib"))
 
 from findings_to_tasks import convert_findings_to_tasks
