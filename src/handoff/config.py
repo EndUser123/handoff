@@ -18,8 +18,9 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-# Project root (defaults to P:/ for CSF environment)
-PROJECT_ROOT = Path(os.getenv("HANDOFF_PROJECT_ROOT", "P:/")).resolve()
+# Project root (defaults to current working directory for portability)
+# HANDOFF_PROJECT_ROOT env var can override for testing
+PROJECT_ROOT = Path(os.getenv("HANDOFF_PROJECT_ROOT", str(Path.cwd()))).resolve()
 
 # Handoff storage directories
 HANDOFF_DIR = PROJECT_ROOT / ".claude" / "handoffs"
