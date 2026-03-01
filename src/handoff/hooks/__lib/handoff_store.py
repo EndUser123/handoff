@@ -357,12 +357,24 @@ def atomic_write_with_validation(
     original_data = json.dumps(data, indent=2)
     original_size = len(original_data.encode("utf-8"))
 
-    # Validate and truncate if necessary
-    validated_data = _validate_handoff_data_size(data.copy())
+    # Validate and truncate if necessary (without internal size check)
+    # PERF-002: Pass cached_json=None to skip internal serialization
+    validated_data = _validate_handoff_data_size(data.copy(), cached_json=None)
 
-    # Calculate final size
+    # Calculate final size and cache JSON string (PERF-002)
     final_data = json.dumps(validated_data, indent=2)
     final_size = len(final_data.encode("utf-8"))
+
+    # PERF-002: Perform size check here using cached JSON instead of re-serializing
+    if final_size > MAX_HANDOFF_SIZE_BYTES:
+        print(
+            f"[HandoffStore] Warning: Handoff still exceeds "
+            f"{MAX_HANDOFF_SIZE_BYTES} bytes: {final_size} bytes"
+        )
+        validated_data = _apply_last_resort_truncation(validated_data)
+        # Re-serialize after last-resort truncation
+        final_data = json.dumps(validated_data, indent=2)
+        final_size = len(final_data.encode("utf-8"))
 
     # Check if truncation occurred
     truncated = original_size != final_size
