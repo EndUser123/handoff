@@ -16,7 +16,6 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
-from unittest.mock import patch
 
 from handoff.config import CLEANUP_DAYS
 
@@ -163,8 +162,9 @@ class TestDataRetentionAutomaticCleanup:
 
         # Act: Simulate manual cleanup with --cleanup-force flag
         # This uses existing cleanup logic
-        from handoff.config import CLEANUP_DAYS
         from datetime import UTC, datetime
+
+        from handoff.config import CLEANUP_DAYS
 
         cutoff_time = datetime.now(UTC).timestamp() - (CLEANUP_DAYS * 86400)
         to_delete = []
@@ -206,6 +206,7 @@ class TestDataRetentionAutomaticCleanup:
 
         # Reload config to pick up environment variable
         import importlib
+
         from handoff import config
         importlib.reload(config)
 
