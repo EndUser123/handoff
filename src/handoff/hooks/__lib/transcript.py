@@ -351,6 +351,12 @@ class TranscriptLines(Sequence[str]):
         """
         return self._ensure_length()
 
+    @overload
+    def __getitem__(self, key: int) -> str: ...
+
+    @overload
+    def __getitem__(self, key: slice) -> list[str]: ...
+
     def __getitem__(self, key: int | slice) -> str | list[str]:
         """Get line(s) by index/slice with lazy loading.
 
