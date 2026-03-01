@@ -13,72 +13,14 @@ Usage:
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
-from typing import Any, Literal
+from typing import Any
 
-
-@dataclass
-class PendingOperation:
-    """An operation that was in progress at checkpoint time.
-
-    This represents a tool call, file operation, or other action that was
-    interrupted or in progress when the checkpoint was captured.
-
-    Attributes:
-        type: The type of operation (edit, test, read, command, skill)
-        target: The target of the operation (file path, test name, etc.)
-        state: The current state (pending, in_progress, failed)
-        details: Additional details about the operation
-        started_at: ISO timestamp when operation started (optional)
-    """
-
-    type: Literal["edit", "test", "read", "command", "skill"]
-    target: str
-    state: Literal["pending", "in_progress", "failed"]
-    details: dict[str, Any] = field(default_factory=dict)
-    started_at: str | None = None
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to dict for JSON serialization.
-
-        Returns:
-            Dictionary representation suitable for JSON encoding
-        """
-        return asdict(self)
-
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> PendingOperation:
-        """Load from dict with validation.
-
-        Args:
-            data: Dictionary containing pending operation data
-
-        Returns:
-            PendingOperation instance
-
-        Raises:
-            ValueError: If required fields are missing or invalid
-        """
-        # Validate required fields
-        if "type" not in data or "target" not in data or "state" not in data:
-            raise ValueError("Missing required fields: type, target, state")
-
-        # Validate type field
-        valid_types = {"edit", "test", "read", "command", "skill"}
-        if data["type"] not in valid_types:
-            raise ValueError(f"Invalid type: {data['type']}. Must be one of {valid_types}")
-
-        # Validate state field
-        valid_states = {"pending", "in_progress", "failed"}
-        if data["state"] not in valid_states:
-            raise ValueError(f"Invalid state: {data['state']}. Must be one of {valid_states}")
-
-        return cls(
-            type=data["type"],
-            target=data["target"],
-            state=data["state"],
-            details=data.get("details", {}),
-            started_at=data.get("started_at"),
-        )
+# Import PendingOperation from checkpoint_ops module
+# PendingOperation is defined there with complete functionality:
+# - 4 states (pending, in_progress, completed, failed)
+# - Target validation (empty check, null byte check, length limit)
+# - State transition validation
+from handoff.checkpoint_ops import PendingOperation
 
 
 @dataclass
