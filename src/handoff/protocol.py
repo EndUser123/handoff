@@ -77,7 +77,7 @@ class HandoffStorage(Protocol):
         """
         ...
 
-    def load_handoff(self, task_name: str, terminal_id: str, strict: bool = True) -> dict | None:
+    def load_handoff(self, task_name: str, terminal_id: str, strict: bool = True) -> dict[str, Any] | None:
         """
         Load handoff data from storage.
 
