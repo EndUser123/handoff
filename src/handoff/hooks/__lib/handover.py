@@ -8,12 +8,21 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypedDict
 
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from ..PreCompact_handoff_capture import TranscriptParser
+
+
+class HandoverData(TypedDict):
+    """Type-safe handover data structure."""
+
+    decisions: list[dict[str, Any]]
+    patterns_learned: list[str]
+    controversial_decisions: list[dict[str, Any]]
+    session_objectives: list[str]
 
 from handoff.hooks.__lib.transcript import (
     detect_structure_type,
