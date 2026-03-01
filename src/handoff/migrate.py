@@ -352,7 +352,7 @@ def _handle_dry_run_migration(json_path: Path, results: dict[str, Any]) -> None:
         json_path: Path to handoff JSON file
         results: Results dict to update
     """
-    print(f"[DRY RUN] Would migrate: {json_path.name}")
+    logger.info(f"[DRY RUN] Would migrate: {json_path.name}")
     results["migrated"] += 1
 
 
@@ -393,7 +393,7 @@ def _migrate_handoff_to_task_file(
     # Write task file with atomic write
     try:
         _write_task_file_atomic(task_file_path, task_data)
-        print(f"Migrated: {json_path.name} -> {task_id}")
+        logger.info(f"Migrated: {json_path.name} -> {task_id}")
         results["migrated"] += 1
     except OSError as e:
         logger.warning(f"[Migrate] Failed to migrate {json_path.name}: {e}")
@@ -481,7 +481,7 @@ def migrate_handoffs(
         results["errors"].append(f"Handoff directory not found: {handoff_dir}")
         return results
 
-    print(f"Found {len(handoff_files)} handoff files")
+    logger.info(f"Found {len(handoff_files)} handoff files")
 
     # Process each handoff file
     for json_path in handoff_files:
@@ -570,7 +570,7 @@ def _warn_if_oversized(handoff_data: dict[str, Any], max_bytes: int = 500_000) -
     """
     estimated_size = len(json.dumps(handoff_data).encode("utf-8"))
     if estimated_size > max_bytes:
-        print(f"Warning: Handoff metadata exceeds {max_bytes // 1000} KB: {estimated_size} bytes")
+        logger.warning(f"Handoff metadata exceeds {max_bytes // 1000} KB: {estimated_size} bytes")
 
 
 def validate_handoff_size(handoff_data: dict[str, Any]) -> dict[str, Any]:

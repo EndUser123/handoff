@@ -143,7 +143,7 @@ class PreCompactHandoffCapture:
         # Build transcript path directly from session_id (terminal-isolated)
         candidate_path = os.path.join(project_conversations_dir, f"{session_id}.jsonl")
         if not os.path.exists(candidate_path):
-            print(f"[PreCompact] Session transcript not found: {session_id}.jsonl")
+            logger.info(f"[PreCompact] Session transcript not found: {session_id}.jsonl")
             return None
 
         size_mb = os.path.getsize(candidate_path) / (1024 * 1024)
@@ -225,7 +225,7 @@ class PreCompactHandoffCapture:
         try:
             session_id = _get_session_id_from_env()
             if not session_id:
-                print("[PreCompact] Warning: No session ID available")
+                logger.info("[PreCompact] Warning: No session ID available")
                 return []
 
             files = get_session_files(
@@ -900,7 +900,7 @@ class PreCompactHandoffCapture:
         deleted_count = cleanup_old_handoffs(self.project_root)
 
         if deleted_count > 0:
-            print(f"[PreCompact] Auto-cleanup: Deleted {deleted_count} old handoff file(s)")
+            logger.info(f"[PreCompact] Auto-cleanup: Deleted {deleted_count} old handoff file(s)")
 
     def run(self) -> bool:
         """Execute full PreCompact handoff process.
@@ -911,7 +911,7 @@ class PreCompactHandoffCapture:
         # Import utility for DRY compliance
         from handoff.config import utcnow_iso
 
-        print("[PreCompact] Starting handoff capture...")
+        logger.info("[PreCompact] Starting handoff capture...")
 
         # Step 1: Get task identity
         task_name = self.task_manager.get_current_task()
@@ -919,10 +919,10 @@ class PreCompactHandoffCapture:
             # Generate checkpoint name using timestamp
             task_name = f"session_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}"
             task_id = f"task_{task_name}"
-            print(f"[PreCompact] Generated handoff task name: {task_name}")
+            logger.info(f"[PreCompact] Generated handoff task name: {task_name}")
         else:
             task_id = f"task_{task_name.lower()}"
-            print(f"[PreCompact] Using task name: {task_name}")
+            logger.info(f"[PreCompact] Using task name: {task_name}")
 
         # Validate session ownership before creating handoff
         # This prevents wasted I/O creating handoffs that will be rejected
@@ -943,18 +943,18 @@ class PreCompactHandoffCapture:
 
         # Edge case: No current session (allow handoff creation)
         if not current_session:
-            print("[PreCompact] ⚠️  No current session - creating handoff without validation")
+            logger.info("[PreCompact] ⚠️  No current session - creating handoff without validation")
         else:
             # Validate session ownership
             if handoff_session != current_session:
-                print(f"[PreCompact] ⊘ Skipping handoff: '{task_name}' from stale session")
+                logger.info(f"[PreCompact] ⊘ Skipping handoff: '{task_name}' from stale session")
                 print(f"  Handoff session: {handoff_session}")
                 print(f"  Current session: {current_session}")
                 print("  Action: Preventing wasted I/O on cross-session handoff")
                 # Skip handoff creation - return early with success
                 return True
 
-            print(f"[PreCompact] ✓ Session validated: '{task_name}' belongs to current session")
+            logger.info(f"[PreCompact] ✓ Session validated: '{task_name}' belongs to current session")
 
         # Step 2: Extract handoff data using focused components
         progress_pct = self.extract_progress_percentage(task_name)
@@ -966,12 +966,12 @@ class PreCompactHandoffCapture:
         open_conversation_context = self.parser.extract_open_conversation_context()
         visual_context = self.parser.extract_visual_context()
 
-        print(f"[PreCompact] Progress: {progress_pct}%")
+        logger.info(f"[PreCompact] Progress: {progress_pct}%")
 
         # Extract and log implementation status
         impl_status = self._extract_implementation_status()
         if impl_status.get("completion_state") != "unknown":
-            print(f"[PreCompact] Completion state: {impl_status['completion_state']}")
+            logger.info(f"[PreCompact] Completion state: {impl_status['completion_state']}")
         if impl_status.get("test_results"):
             test_res = impl_status["test_results"]
             print(
@@ -980,7 +980,7 @@ class PreCompactHandoffCapture:
             )
 
         if blocker:
-            print(f"[PreCompact] Blocker: {blocker.get('description', 'Unknown')}")
+            logger.info(f"[PreCompact] Blocker: {blocker.get('description', 'Unknown')}")
 
         if visual_context:
             print(
@@ -990,7 +990,7 @@ class PreCompactHandoffCapture:
         # Extract pending operations for fault tolerance
         pending_operations = self.parser.extract_pending_operations()
         if pending_operations:
-            print(f"[PreCompact] Pending operations: {len(pending_operations)} found")
+            logger.info(f"[PreCompact] Pending operations: {len(pending_operations)} found")
 
         # Step 3: Build handoff data
         handoff_data = self.handoff_store.build_handoff_data(
@@ -1063,10 +1063,10 @@ class PreCompactHandoffCapture:
 
             # Store handoff in task metadata
             handoff_saved = True
-            print(f"[PreCompact] Handoff stored (terminal: {self.terminal_id})")
+            logger.info(f"[PreCompact] Handoff stored (terminal: {self.terminal_id})")
 
         except Exception as e:
-            print(f"[PreCompact] Warning: Handoff storage failed: {e}")
+            logger.info(f"[PreCompact] Warning: Handoff storage failed: {e}")
             handoff_saved = False
 
         # Step 5: Create continue_session task with full handoff in metadata
@@ -1092,30 +1092,30 @@ class PreCompactHandoffCapture:
                         # Check if transcript is missing or empty (Issue #2, #3)
                         transcript_path = Path(self.transcript_path)
                         if not transcript_path.exists():
-                            print("[PreCompact] WARNING: Transcript file missing - cannot capture authentic context")
+                            logger.warning("[PreCompact] WARNING: Transcript file missing - cannot capture authentic context")
                             transcript_unavailable = True
                         else:
                             # File exists but no user messages found (empty transcript or system-only)
                             try:
                                 file_size = transcript_path.stat().st_size
                                 if file_size == 0:
-                                    print("[PreCompact] WARNING: Transcript file is empty - skipping handoff capture")
+                                    logger.warning("[PreCompact] WARNING: Transcript file is empty - skipping handoff capture")
                                     transcript_unavailable = True
                                 else:
                                     # File has content but no user messages - system-only transcript
-                                    print("[PreCompact] WARNING: Transcript has no user messages - skipping handoff capture to avoid stale data")
+                                    logger.warning("[PreCompact] WARNING: Transcript has no user messages - skipping handoff capture to avoid stale data")
                                     transcript_unavailable = True
                             except OSError:
-                                print("[PreCompact] WARNING: Could not read transcript - skipping handoff capture")
+                                logger.warning("[PreCompact] WARNING: Could not read transcript - skipping handoff capture")
                                 transcript_unavailable = True
                 else:
-                    print("[PreCompact] WARNING: No transcript path available - skipping handoff capture")
+                    logger.warning("[PreCompact] WARNING: No transcript path available - skipping handoff capture")
                     transcript_unavailable = True
 
                 # Issue #2 & #3: If transcript is unavailable, skip handoff capture
                 # Don't fall back to potentially stale hook_input/active_command/blocker
                 if transcript_unavailable:
-                    print("[PreCompact] Handoff capture skipped - transcript required for authentic context")
+                    logger.info("[PreCompact] Handoff capture skipped - transcript required for authentic context")
                     return True  # Continue with compaction, but don't create handoff
 
                 # Option 2: Read from hook_input if available (fallback, less reliable)
@@ -1158,9 +1158,9 @@ class PreCompactHandoffCapture:
                     task_name, task_id, handoff_metadata
                 )
             except Exception as e:
-                print(f"[PreCompact] Warning: Failed to create continue_session task: {e}")
+                logger.info(f"[PreCompact] Warning: Failed to create continue_session task: {e}")
 
-        print("[PreCompact] Handoff complete. Ready for compaction.")
+        logger.info("[PreCompact] Handoff complete. Ready for compaction.")
 
         # Step 6: Automatic cleanup of old handoffs (COMP-001)
         # This runs on every compaction, not just with --cleanup flag
@@ -1191,7 +1191,7 @@ def main() -> int:
         success = handoff_process.run()
         return 0 if success else 1
     except Exception as e:
-        print(f"[PreCompact] ERROR: {e}")
+        logger.info(f"[PreCompact] ERROR: {e}")
         traceback.print_exc()
         return 1
 

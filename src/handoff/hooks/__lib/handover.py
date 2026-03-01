@@ -76,19 +76,19 @@ class HandoverBuilder:
             session_decisions = self.parser.extract_session_decisions(task_name)
             if session_decisions:
                 handover["decisions"] = session_decisions
-                print(f"[HandoverBuilder] Found {len(session_decisions)} session decisions")
+                logger.info(f"[HandoverBuilder] Found {len(session_decisions)} session decisions")
 
             # PRIORITY 2: Extract SESSION-SPECIFIC patterns (from transcript)
             session_patterns = self.parser.extract_session_patterns()
             if session_patterns:
                 handover["patterns_learned"] = session_patterns
-                print(f"[HandoverBuilder] Found {len(session_patterns)} session patterns")
+                logger.info(f"[HandoverBuilder] Found {len(session_patterns)} session patterns")
 
             # PRIORITY 3: Extract CONTROVERSIAL decisions (verbatim quotes)
             controversial_decisions = self.parser.extract_controversial_decisions()
             if controversial_decisions:
                 handover["controversial_decisions"] = controversial_decisions
-                print(
+                logger.info(
                     f"[HandoverBuilder] Found {len(controversial_decisions)} controversial decisions"
                 )
 
