@@ -372,7 +372,7 @@ class TestHandleEmptyFindings:
 class TestHandleMissingFile:
     """Tests for handling missing files."""
 
-    def test_handle_missing_file(self):
+    def test_handle_missing_file(self) -> None:
         """
         Test that missing file returns empty list and logs error.
 
