@@ -176,7 +176,7 @@ class TestChecksumTimingVulnerability:
         has_vulnerable_code = vulnerable_pattern in source_code
         has_secure_fix = secure_pattern in source_code
 
-        print(f"\n[SECURITY CHECK]")
+        print("\n[SECURITY CHECK]")
         print(f"Contains vulnerable startswith(): {has_vulnerable_code}")
         print(f"Contains secure hmac.compare_digest(): {has_secure_fix}")
 

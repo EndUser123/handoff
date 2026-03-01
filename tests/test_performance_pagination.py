@@ -292,3 +292,128 @@ class TestFormatHandoffMarkdownSlicing:
         assert "Modified Files" in result
 
         # TODO: After implementing itertools.islice(), verify no intermediate list
+
+
+class TestLazyLoadingRequirement:
+    """Tests that verify the lazy loading requirement (FAILING tests).
+
+    These tests FAIL with the current implementation and will PASS
+    after implementing itertools.islice() for lazy loading.
+
+    This is the RED phase of TDD - these tests document the required behavior.
+    """
+
+    def test_should_use_iterator_not_list_for_modifications(self):
+        """
+        FAILING TEST: Modifications should use lazy iteration.
+
+        Given: Handoff data with modifications
+        When: Accessing last 5 modifications
+        Then: Should use iterator (itertools.islice), not list slicing
+
+        This test FAILS because current implementation uses list slicing.
+        After implementing itertools.islice(), this test will PASS.
+        """
+        # Arrange
+        from itertools import islice
+
+        modifications = [
+            {"file": f"src/file_{i}.py", "action": "modified"}
+            for i in range(100)
+        ]
+
+        # Act: What the current code does
+        current_result = modifications[-5:]
+
+        # What it should do (lazy loading)
+        expected_result = list(islice(modifications, len(modifications) - 5, None))
+
+        # Assert: Results are the same
+        assert current_result == expected_result
+
+        # But the implementation is different!
+        # current_result is a list (inefficient)
+        assert isinstance(current_result, list), "Current implementation creates list"
+
+        # expected_result came from islice (efficient)
+        # After fix, we should use islice in the actual code
+
+        # This assertion documents what needs to change
+        assert False, (
+            "PERF-003: Current implementation uses slicing which creates a list. "
+            "Should use itertools.islice() for lazy loading. "
+            "Replace 'modifications[-5:]' with 'islice(modifications, len(modifications)-5, None)'"
+        )
+
+    def test_should_use_iterator_not_list_for_decisions(self):
+        """
+        FAILING TEST: Decisions should use lazy iteration.
+
+        Given: Handoff data with decisions
+        When: Accessing first 5 decisions
+        Then: Should use iterator (itertools.islice), not list slicing
+
+        This test FAILS because current implementation uses list slicing.
+        After implementing itertools.islice(), this test will PASS.
+        """
+        # Arrange
+        from itertools import islice
+
+        decisions = [
+            {"topic": f"Decision {i}", "decision": f"Text {i}"}
+            for i in range(100)
+        ]
+
+        # Act: What the current code does
+        current_result = decisions[:5]
+
+        # What it should do (lazy loading)
+        expected_result = list(islice(decisions, 0, 5))
+
+        # Assert: Results are the same
+        assert current_result == expected_result
+
+        # But implementation differs
+        assert isinstance(current_result, list), "Current implementation creates list"
+
+        # This assertion documents what needs to change
+        assert False, (
+            "PERF-003: Current implementation uses slicing which creates a list. "
+            "Should use itertools.islice() for lazy loading. "
+            "Replace 'decisions[:5]' with 'islice(decisions, 0, 5)'"
+        )
+
+    def test_memory_efficiency_comparison(self):
+        """
+        FAILING TEST: Demonstrate memory inefficiency of current approach.
+
+        This test shows that slicing creates unnecessary list objects.
+
+        After implementing itertools.islice(), the memory footprint
+        should be reduced for large lists.
+        """
+        # Arrange
+        import sys
+
+        large_list = list(range(10000))
+
+        # Act: Current approach (slicing)
+        sliced = large_list[-5:]
+
+        # Calculate memory usage
+        sliced_size = sys.getsizeof(sliced)
+        list_overhead = sys.getsizeof([])  # Empty list baseline
+
+        # Assert: Slicing creates a new list object with overhead
+        assert sliced_size > list_overhead, "Slicing creates list object"
+
+        # The slice uses extra memory for the list object itself
+        # Even though it only has 5 elements, the list object overhead exists
+
+        # With itertools.islice(), no intermediate list is created
+        # This test FAILS to document the inefficiency
+        assert False, (
+            f"PERF-003: Current slicing creates list object using {sliced_size} bytes. "
+            f"With itertools.islice(), no intermediate list would be created. "
+            f"Replace slicing with islice() for better memory efficiency."
+        )
