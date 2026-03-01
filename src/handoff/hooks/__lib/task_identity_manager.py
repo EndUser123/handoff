@@ -193,7 +193,7 @@ class TaskIdentityManager:
 
         data = load_json_file(self.metadata_file)
         if data:
-            task = data.get("task_name")
+            task: str | None = data.get("task_name")
             if task:
                 # Verify metadata is recent (within 5 minutes)
                 timestamp_str = data.get("timestamp", "")
