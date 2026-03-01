@@ -366,23 +366,19 @@ class TestHandoffStoreTerminalIdValidation:
         Test that HandoffStore rejects null bytes in terminal_id.
 
         Given: A terminal_id with null bytes
-        When: HandoffStore uses the terminal_id in file paths
-        Then: It should sanitize null bytes
+        When: HandoffStore is initialized with this terminal_id
+        Then: It should raise ValueError for null bytes
 
-        Current behavior (BUG): Null bytes may pass through to file paths
-        Expected behavior: Should strip null bytes from terminal_id
+        SECURITY FIX: Null bytes are rejected at initialization time,
+        preventing null byte injection attacks on filesystem operations.
         """
         with tempfile.TemporaryDirectory() as tmpdir:
             project_root = Path(tmpdir)
             malicious_terminal_id = "term\x01\x00inal"
 
-            store = HandoffStore(project_root, malicious_terminal_id)
-
-            # Terminal ID should not contain null bytes
-            assert '\x00' not in store.terminal_id, f"Null byte not removed from terminal_id: {repr(store.terminal_id)}"
-
-            # File operations should work without errors
-            assert store.terminal_id is not None
+            # Should raise ValueError for null bytes
+            with pytest.raises(ValueError, match="null byte"):
+                HandoffStore(project_root, malicious_terminal_id)
 
     def test_reject_absolute_path_in_terminal_id(self):
         """
