@@ -455,7 +455,7 @@ def _build_visual_context_section(handoff_data: dict[str, Any]) -> list[str]:
     Returns:
         List of formatted lines
     """
-    lines = []
+    lines: list[str] = []
     visual_context = handoff_data.get("visual_context")
 
     if not (visual_context and isinstance(visual_context, dict)):
