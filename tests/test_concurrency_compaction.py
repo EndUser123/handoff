@@ -395,7 +395,7 @@ class TestConcurrencyCompaction:
             # These fields should never be missing or empty
             required_handoff_fields = [
                 "task_name",
-                "progress_pct",
+                "progress_percent",  # Note: handoff_metadata uses progress_percent
                 "blocker",
                 "next_steps",
                 "handover",

@@ -12,7 +12,6 @@ Run with: pytest tests/test_performance_pagination.py -v
 """
 
 import gc
-import sys
 
 
 class TestModificationsSlicingInefficiency:
