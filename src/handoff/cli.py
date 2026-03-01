@@ -10,6 +10,7 @@ This module provides the /hod skill functionality as a package CLI entry point.
 
 from __future__ import annotations
 
+import itertools
 import json
 import os
 import sys
