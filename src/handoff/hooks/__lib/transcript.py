@@ -1434,7 +1434,7 @@ def filter_valid_messages(messages: list[MessageDict]) -> list[MessageDict]:
     return valid_messages
 
 
-def extract_transcript_from_messages(messages: list[dict[str, Any]]) -> str:
+def extract_transcript_from_messages(messages: list[MessageDict]) -> str:
     """Extract transcript text from a list of messages.
 
     This function extracts and concatenates the 'content' field from valid messages,
