@@ -10,6 +10,7 @@ This module provides the /hod skill functionality as a package CLI entry point.
 
 from __future__ import annotations
 
+import itertools
 import json
 import os
 import sys
@@ -158,7 +159,7 @@ def format_llm_prompt(handoff_data: dict[str, Any], expand_tokens: bool = True) 
     # Last work
     if modifications := handoff_data.get('modifications'):
         lines.append("## Recent Work")
-        for mod in modifications[-5:]:
+        for mod in itertools.islice(modifications, len(modifications) - 5, None):
             if file_path := mod.get('file'):
                 lines.append(f"- Modified: `{file_path}`")
         lines.append("")
@@ -166,7 +167,7 @@ def format_llm_prompt(handoff_data: dict[str, Any], expand_tokens: bool = True) 
     # Next steps
     if next_steps := handoff_data.get('next_steps'):
         lines.append("## Next Steps")
-        for i, step in enumerate(next_steps[:5], 1):
+        for i, step in enumerate(itertools.islice(next_steps, 0, 5), 1):
             lines.append(f"{i}. {step}")
         lines.append("")
 
@@ -174,7 +175,7 @@ def format_llm_prompt(handoff_data: dict[str, Any], expand_tokens: bool = True) 
     if handover := handoff_data.get('handover', {}):
         if decisions := handover.get('decisions', []):
             lines.append("## Key Decisions")
-            for decision in decisions[:5]:
+            for decision in itertools.islice(decisions, 0, 5):
                 topic = decision.get('topic', 'Unknown')
 
                 # Use expanded context if available, otherwise use truncated decision
@@ -452,7 +453,7 @@ def format_handoff_markdown(handoff_data: dict[str, Any], mode: str = "detailed"
     # Final Actions (modifications)
     lines.append("## Final Actions Taken")
     if modifications:
-        for mod in modifications[-5:]:  # Last 5
+        for mod in itertools.islice(modifications, len(modifications) - 5, None):  # Last 5
             file_path = mod.get("file", "unknown")
             lines.append(f"✅ Modified: `{file_path}`")
     else:
@@ -507,7 +508,7 @@ def format_handoff_markdown(handoff_data: dict[str, Any], mode: str = "detailed"
     lines.append("## Current Tasks")
     if files_modified:
         lines.append(f"📋 **Modified Files** ({len(files_modified)}):")
-        for f in files_modified[:10]:
+        for f in itertools.islice(files_modified, 0, 10):
             lines.append(f"   - `{f}`")
     else:
         lines.append("No files modified in this session")
