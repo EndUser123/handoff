@@ -1123,24 +1123,12 @@ class PreCompactHandoffCapture:
                         )
                     else:
                         # Check if transcript is missing or empty (Issue #2, #3)
-                        transcript_path = Path(self.transcript_path)
-                        if not transcript_path.exists():
-                            logger.warning("[PreCompact] WARNING: Transcript file missing - cannot capture authentic context")
+                        if not self._check_transcript_availability(self.transcript_path):
                             transcript_unavailable = True
                         else:
-                            # File exists but no user messages found (empty transcript or system-only)
-                            try:
-                                file_size = transcript_path.stat().st_size
-                                if file_size == 0:
-                                    logger.warning("[PreCompact] WARNING: Transcript file is empty - skipping handoff capture")
-                                    transcript_unavailable = True
-                                else:
-                                    # File has content but no user messages - system-only transcript
-                                    logger.warning("[PreCompact] WARNING: Transcript has no user messages - skipping handoff capture to avoid stale data")
-                                    transcript_unavailable = True
-                            except OSError:
-                                logger.warning("[PreCompact] WARNING: Could not read transcript - skipping handoff capture")
-                                transcript_unavailable = True
+                            # File has content but no user messages - system-only transcript
+                            logger.warning("[PreCompact] WARNING: Transcript has no user messages - skipping handoff capture to avoid stale data")
+                            transcript_unavailable = True
                 else:
                     logger.warning("[PreCompact] WARNING: No transcript path available - skipping handoff capture")
                     transcript_unavailable = True
