@@ -52,15 +52,15 @@ try:
         utcnow_iso,
     )
 except ImportError:
-    # Fallback for testing
+    # Fallback for testing - constants must match config.py values
     from datetime import UTC, datetime
 
-    LOCK_TIMEOUT_SECONDS = 5.0
-    MAX_RETRIES = 5
-    RETRY_BASE_DELAY_SECONDS = 0.005
-    LOCK_CHECK_INTERVAL_SECONDS = 0.1
-    LOCK_CHECKS_PER_SECOND = 10
-    STALE_LOCK_AGE_SECONDS = 10.0
+    LOCK_TIMEOUT_SECONDS = 5  # File lock acquisition timeout (seconds)
+    MAX_RETRIES = 5  # Maximum retry attempts for atomic write operations
+    RETRY_BASE_DELAY_SECONDS = 0.005  # Base delay for exponential backoff (5ms in seconds)
+    LOCK_CHECK_INTERVAL_SECONDS = 0.1  # Interval between lock acquisition attempts (100ms in seconds)
+    LOCK_CHECKS_PER_SECOND = 10  # Number of lock checks per second
+    STALE_LOCK_AGE_SECONDS = 10  # Age after which a lock is considered stale (10 seconds)
 
     def utcnow_iso() -> str:
         return datetime.now(UTC).isoformat()
