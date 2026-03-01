@@ -231,7 +231,7 @@ class PreCompactHandoffCapture:
             files = get_session_files(
                 session_id=session_id, operation_filter=["read", "edit", "write"]
             )
-            return files[:10]  # Limit to 10
+            return files[:10]  # type: ignore[no-any-return]  # Limit to 10
         except Exception as e:
             logger.warning(f"[PreCompact] Could not get session files: {e}")
             return []
