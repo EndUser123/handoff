@@ -69,7 +69,7 @@ TaskIdentityManager = task_identity_manager.TaskIdentityManager
 TranscriptParser = transcript.TranscriptParser
 
 try:
-    from modules.session_management.session_activity_tracker import (
+    from modules.session_management.session_activity_tracker import (  # type: ignore[import-untyped]
         _get_session_id_from_env,
         get_session_files,
     )
