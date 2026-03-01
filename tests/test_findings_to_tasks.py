@@ -420,7 +420,7 @@ class TestHandleInvalidJson:
 class TestTaskStructure:
     """Tests for task structure validation."""
 
-    def test_task_structure(self):
+    def test_task_structure(self) -> None:
         """
         Test that tasks have required fields.
 
@@ -447,13 +447,10 @@ class TestTaskStructure:
             "testing": []
         }
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            json.dump(findings_data, f)
-            findings_file = f.name
-
+        findings_file = _create_temp_findings_file(findings_data)
         try:
             # Act
-            tasks = convert_findings_to_tasks(findings_file, min_severity="MEDIUM")
+            tasks = convert_findings_to_tasks(str(findings_file), min_severity="MEDIUM")
 
             # Assert
             assert len(tasks) == 1
@@ -485,9 +482,9 @@ class TestTaskStructure:
             assert task["metadata"]["file"] == "src/config.py"
             assert task["metadata"]["line"] == 42
         finally:
-            Path(findings_file).unlink()
+            findings_file.unlink()
 
-    def test_task_structure_missing_optional_fields(self):
+    def test_task_structure_missing_optional_fields(self) -> None:
         """
         Test that tasks are created even when optional fields are missing.
 
@@ -510,13 +507,10 @@ class TestTaskStructure:
             "testing": []
         }
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            json.dump(findings_data, f)
-            findings_file = f.name
-
+        findings_file = _create_temp_findings_file(findings_data)
         try:
             # Act
-            tasks = convert_findings_to_tasks(findings_file, min_severity="MEDIUM")
+            tasks = convert_findings_to_tasks(str(findings_file), min_severity="MEDIUM")
 
             # Assert
             assert len(tasks) == 1
@@ -524,7 +518,7 @@ class TestTaskStructure:
             assert task["metadata"].get("file") is None
             assert task["metadata"].get("line") is None
         finally:
-            Path(findings_file).unlink()
+            findings_file.unlink()
 
 
 class TestSeverityOrdering:
