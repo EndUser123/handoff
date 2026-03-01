@@ -201,20 +201,7 @@ def format_llm_prompt(handoff_data: dict[str, Any], expand_tokens: bool = True) 
         if decisions := handover.get('decisions', []):
             lines.append("## Key Decisions")
             for decision in itertools.islice(decisions, 0, 5):
-                topic = decision.get('topic', 'Unknown')
-
-                # Use expanded context if available, otherwise use truncated decision
-                if expand_tokens and (expanded := decision.get('expanded_context')):
-                    lines.append(f"### {topic}")
-                    lines.append(expanded)
-                else:
-                    bridge_token = decision.get('bridge_token', '')
-                    decision_text = decision.get('decision', '')[:150]
-                    lines.append(f"### {topic}")
-                    if bridge_token:
-                        lines.append(f"**Bridge Token**: `{bridge_token}`")
-                    lines.append(f"{decision_text}...")
-                lines.append("")
+                lines.extend(_format_decision(decision, expand_tokens))
 
     # Full JSON data
     lines.append("---")
