@@ -53,12 +53,14 @@ def expand_bridge_token(decision: dict[str, Any]) -> str:
     """
     token = decision.get("bridge_token", "")
     if not token:
-        return decision.get("decision", "")
+        result = decision.get("decision", "")
+        return str(result) if result is not None else ""
 
     # Parse token: BRIDGE_YYYYMMDD-HHMMSS_TOPIC
     parts = token.split("_")
     if len(parts) < 3:
-        return decision.get("decision", "")
+        result = decision.get("decision", "")
+        return str(result) if result is not None else ""
 
     try:
         # Extract timestamp from token
@@ -74,7 +76,8 @@ def expand_bridge_token(decision: dict[str, Any]) -> str:
 
         return f"Decision made on {formatted_time} ({topic}):\n\n{decision_text}\n\n[Reference: {token}]"
     except (ValueError, IndexError):
-        return decision.get("decision", "")
+        result = decision.get("decision", "")
+        return str(result) if result is not None else ""
 
 
 def expand_all_bridge_tokens(handoff_data: dict[str, Any]) -> dict[str, Any]:
