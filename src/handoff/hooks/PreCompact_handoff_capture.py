@@ -489,8 +489,11 @@ class PreCompactHandoffCapture:
             status["test_results"] = test_results_dict  # type: ignore[assignment]
 
             # Determine completion state
+            files_modified = status["files_modified"]
+            if not isinstance(files_modified, list):
+                files_modified = []
             status["completion_state"] = self._determine_completion_state(
-                status["files_modified"], passed, failed, verification_found
+                files_modified, passed, failed, verification_found
             )
 
             if verification_found:
