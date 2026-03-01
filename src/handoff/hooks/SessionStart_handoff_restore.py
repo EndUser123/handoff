@@ -417,7 +417,7 @@ def _build_handoff_data_section(handoff_data: dict[str, Any]) -> list[str]:
     Returns:
         List of formatted lines
     """
-    lines = []
+    lines: list[str] = []
     handover = handoff_data.get("handover")
 
     if not (handover and isinstance(handover, dict)):
