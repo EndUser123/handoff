@@ -1158,8 +1158,10 @@ class PreCompactHandoffCapture:
                         )
 
                 # Build full handoff metadata for task storage
+                # Ensure last_user_message is a string
+                final_user_message = last_user_message if last_user_message else ""
                 handoff_metadata = self._build_handoff_metadata(
-                    task_name, task_id, handoff_data, handoff_payload, last_user_message
+                    task_name, task_id, handoff_data, handoff_payload, final_user_message
                 )
                 self.handoff_store.create_continue_session_task(
                     task_name, task_id, handoff_metadata
