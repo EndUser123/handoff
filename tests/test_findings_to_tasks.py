@@ -342,7 +342,7 @@ class TestGroupByFile:
 class TestHandleEmptyFindings:
     """Tests for handling empty findings."""
 
-    def test_handle_empty_findings(self):
+    def test_handle_empty_findings(self) -> None:
         """
         Test that empty findings return empty list.
 
@@ -358,18 +358,15 @@ class TestHandleEmptyFindings:
             "testing": []
         }
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            json.dump(findings_data, f)
-            findings_file = f.name
-
+        findings_file = _create_temp_findings_file(findings_data)
         try:
             # Act
-            tasks = convert_findings_to_tasks(findings_file, min_severity="MEDIUM")
+            tasks = convert_findings_to_tasks(str(findings_file), min_severity="MEDIUM")
 
             # Assert
             assert tasks == []
         finally:
-            Path(findings_file).unlink()
+            findings_file.unlink()
 
 
 class TestHandleMissingFile:
