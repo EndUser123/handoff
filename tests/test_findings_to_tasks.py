@@ -96,9 +96,9 @@ class TestConvertCriticalFindings:
                     "file": "src/validate_templates.py",
                     "line": 1,
                     "description": "Missing test coverage",
-                    "recommended_action": "Add unit tests"
+                    "recommended_action": "Add unit tests",
                 }
-            ]
+            ],
         }
 
         findings_file = _create_temp_findings_file(findings_data)
@@ -139,11 +139,11 @@ class TestConvertHighFindings:
                     "file": "src/config.py",
                     "line": 42,
                     "description": "File read in loop",
-                    "recommended_action": "Cache file content"
+                    "recommended_action": "Cache file content",
                 }
             ],
             "quality": [],
-            "testing": []
+            "testing": [],
         }
 
         findings_file = _create_temp_findings_file(findings_data)
@@ -184,11 +184,11 @@ class TestConvertMediumFindings:
                     "file": "src/duplicates.py",
                     "line": 15,
                     "description": "Quadratic algorithm",
-                    "recommended_action": "Use hash-based detection"
+                    "recommended_action": "Use hash-based detection",
                 }
             ],
             "quality": [],
-            "testing": []
+            "testing": [],
         }
 
         findings_file = _create_temp_findings_file(findings_data)
@@ -229,11 +229,11 @@ class TestFilterLowFindings:
                     "file": "src/validate.py",
                     "line": 10,
                     "description": "Repeated validation",
-                    "recommended_action": "Add caching"
+                    "recommended_action": "Add caching",
                 }
             ],
             "quality": [],
-            "testing": []
+            "testing": [],
         }
 
         findings_file = _create_temp_findings_file(findings_data)
@@ -266,11 +266,11 @@ class TestFilterLowFindings:
                     "file": "src/validate.py",
                     "line": 10,
                     "description": "Repeated validation",
-                    "recommended_action": "Add caching"
+                    "recommended_action": "Add caching",
                 }
             ],
             "quality": [],
-            "testing": []
+            "testing": [],
         }
 
         findings_file = _create_temp_findings_file(findings_data)
@@ -309,7 +309,7 @@ class TestGroupByFile:
                     "file": "src/file_a.py",
                     "line": 10,
                     "description": "First issue",
-                    "recommended_action": "Fix it"
+                    "recommended_action": "Fix it",
                 },
                 {
                     "id": "PERF-002",
@@ -319,11 +319,11 @@ class TestGroupByFile:
                     "file": "src/file_b.py",
                     "line": 20,
                     "description": "Second issue",
-                    "recommended_action": "Fix it"
-                }
+                    "recommended_action": "Fix it",
+                },
             ],
             "quality": [],
-            "testing": []
+            "testing": [],
         }
 
         findings_file = _create_temp_findings_file(findings_data)
@@ -351,12 +351,7 @@ class TestHandleEmptyFindings:
         Then: Empty list is returned
         """
         # Arrange
-        findings_data = {
-            "security": [],
-            "performance": [],
-            "quality": [],
-            "testing": []
-        }
+        findings_data = {"security": [], "performance": [], "quality": [], "testing": []}
 
         findings_file = _create_temp_findings_file(findings_data)
         try:
@@ -440,11 +435,11 @@ class TestTaskStructure:
                     "file": "src/config.py",
                     "line": 42,
                     "description": "File read in loop",
-                    "recommended_action": "Cache file content"
+                    "recommended_action": "Cache file content",
                 }
             ],
             "quality": [],
-            "testing": []
+            "testing": [],
         }
 
         findings_file = _create_temp_findings_file(findings_data)
@@ -500,11 +495,11 @@ class TestTaskStructure:
                     "id": "PERF-001",
                     "severity": "HIGH",
                     "title": "General performance issue",
-                    "confidence": 95
+                    "confidence": 95,
                 }
             ],
             "quality": [],
-            "testing": []
+            "testing": [],
         }
 
         findings_file = _create_temp_findings_file(findings_data)
@@ -542,7 +537,7 @@ class TestSeverityOrdering:
                     "title": "Medium issue",
                     "confidence": 85,
                     "file": "src/file.py",
-                    "line": 1
+                    "line": 1,
                 },
                 {
                     "id": "PERF-002",
@@ -550,7 +545,7 @@ class TestSeverityOrdering:
                     "title": "Critical issue",
                     "confidence": 100,
                     "file": "src/file.py",
-                    "line": 2
+                    "line": 2,
                 },
                 {
                     "id": "PERF-003",
@@ -558,11 +553,11 @@ class TestSeverityOrdering:
                     "title": "High issue",
                     "confidence": 95,
                     "file": "src/file.py",
-                    "line": 3
-                }
+                    "line": 3,
+                },
             ],
             "quality": [],
-            "testing": []
+            "testing": [],
         }
 
         findings_file = _create_temp_findings_file(findings_data)
@@ -599,7 +594,7 @@ class TestMultipleCategories:
                     "title": "SQL injection risk",
                     "confidence": 90,
                     "file": "src/db.py",
-                    "line": 10
+                    "line": 10,
                 }
             ],
             "performance": [
@@ -609,7 +604,7 @@ class TestMultipleCategories:
                     "title": "Slow query",
                     "confidence": 85,
                     "file": "src/db.py",
-                    "line": 20
+                    "line": 20,
                 }
             ],
             "quality": [
@@ -619,7 +614,7 @@ class TestMultipleCategories:
                     "title": "Code duplication",
                     "confidence": 80,
                     "file": "src/utils.py",
-                    "line": 5
+                    "line": 5,
                 }
             ],
             "testing": [
@@ -629,9 +624,9 @@ class TestMultipleCategories:
                     "title": "No test coverage",
                     "confidence": 100,
                     "file": "src/api.py",
-                    "line": 1
+                    "line": 1,
                 }
-            ]
+            ],
         }
 
         findings_file = _create_temp_findings_file(findings_data)

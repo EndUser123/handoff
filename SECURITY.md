@@ -2,41 +2,47 @@
 
 ## Supported Versions
 
-Currently, only the latest version of handoff is supported.
+Currently supported versions:
+- Version 0.x.x (current development)
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability, please **do not open a public issue**. Instead, send an email to: security@username.github
+If you discover a security vulnerability, please report it privately.
 
-Please include:
+**DO NOT** file a public issue.
+
+### How to Report
+
+Send an email to: brsth@example.com
+
+Include:
 - Description of the vulnerability
-- Steps to reproduce
-- Affected versions
-- Potential impact
+- Steps to reproduce (if applicable)
+- Potential impact assessment
+- Suggested fix (if known)
 
-We will respond within 48 hours and provide regular updates.
+### What to Expect
+
+1. **Confirmation**: You'll receive a response within 48 hours acknowledging receipt
+2. **Investigation**: We'll investigate the issue and determine severity
+3. **Resolution**: We'll work on a fix and aim to release within 7-14 days depending on severity
+4. **Disclosure**: We'll coordinate public disclosure with you after fix is released
+
+### Severity Levels
+
+- **Critical**: Immediate risk (data exposure, code execution) - Fix within 48 hours
+- **High**: Significant risk (authentication bypass) - Fix within 7 days
+- **Medium**: Moderate risk (information disclosure) - Fix within 14 days
+- **Low**: Minor impact (cosmetic issues) - Fix in next release
 
 ## Security Best Practices
 
-### For Users
+This project follows security best practices:
+- Code review for all changes
+- Automated dependency scanning
+- Regular security audits
+- Principle of least privilege
 
-- **Dependencies**: Keep dependencies updated
-- **Environment**: Use virtual environments
-- **API Keys**: Never commit API keys to repositories
+## Dependencies
 
-### Known Security Considerations
-
-1. **Dependencies**: All dependencies are from PyPI
-2. **File Access**: Tool only reads files from specified paths
-3. **Network**: Network operations are documented and transparent
-
-## Security Updates
-
-Security updates will be:
-- Announced in release notes
-- Published as patch versions
-- Available via `pip install --upgrade handoff`
-
----
-
-Copyright (c) 2026 handoff contributors
+We regularly update dependencies to address security vulnerabilities. See [CHANGELOG.md](CHANGELOG.md) for details.
