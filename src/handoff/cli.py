@@ -272,6 +272,23 @@ def find_transcript_path(project_root: Path) -> str | None:
     return None
 
 
+def _is_stale_task_file(task_file: Path, cutoff_time: float) -> bool:
+    """Check if a task file is stale and should be cleaned up.
+
+    Args:
+        task_file: Path to the task file
+        cutoff_time: Unix timestamp threshold for staleness
+
+    Returns:
+        True if file is stale (older than cutoff), False otherwise
+    """
+    try:
+        mtime = task_file.stat().st_mtime
+        return mtime < cutoff_time
+    except OSError:
+        return False
+
+
 def generate_handoff(
     project_root: Path,
     mode: str = "detailed",
