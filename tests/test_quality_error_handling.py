@@ -15,11 +15,10 @@ Run with: pytest P:/packages/handoff/tests/test_quality_error_handling.py -v
 """
 
 import json
-import os
 import sys
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import MagicMock, patch
 
 # Add hooks to path
 hooks_dir = Path("P:/packages/handoff/src/handoff/hooks").resolve()
