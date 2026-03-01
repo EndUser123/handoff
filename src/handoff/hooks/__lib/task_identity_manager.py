@@ -50,7 +50,7 @@ if str(hooks_dir) not in sys.path:
 TaskMetadataDict: TypeAlias = dict[str, str]
 
 # Import terminal detection for multi-terminal isolation
-from terminal_detection import detect_terminal_id
+from terminal_detection import detect_terminal_id  # type: ignore[import-untyped]
 
 # Import utility functions
 
