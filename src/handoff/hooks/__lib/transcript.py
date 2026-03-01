@@ -1342,7 +1342,7 @@ if __name__ == "__main__":
         controversial = parser.extract_controversial_decisions()
         logger.info(f"Controversial decisions: {len(controversial)} found")
     else:
-        logger.info(Usage: python transcript.py <path_to_transcript.json>Usage: python transcript.py <path_to_transcript.json>)
+        logger.info("Usage: python transcript.py <path_to_transcript.json>")
 
 
 def extract_user_message_from_blocker(blocker: BlockerDef | str | None) -> str | None:
