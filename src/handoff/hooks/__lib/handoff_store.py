@@ -964,7 +964,9 @@ class HandoffStore:
                     logger.info(
                         f"[HandoffStore] active_session task added to {task_file_path.name} (PID {os.getpid()})"
                     )
-                    logger.info([HandoffStore] continue_session task added to {task_file_path.name}f[HandoffStore] continue_session task added to {task_file_path.name})
+                    logger.info(
+                        f"[HandoffStore] continue_session task added to {task_file_path.name}"
+                    )
 
                     # Write manifest file atomically
                     fd_manifest, temp_manifest_path = tempfile.mkstemp(
