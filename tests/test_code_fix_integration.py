@@ -13,7 +13,6 @@ import json
 import sys
 import tempfile
 from pathlib import Path
-from unittest.mock import patch, MagicMock
 
 # Add paths
 lib_path = Path(__file__).parent.parent.parent / ".claude" / "skills" / "p" / "lib"
@@ -65,7 +64,8 @@ class TestFullPipelineWithMockFindings:
 
         try:
             # Act - Import and use the converter
-            sys.path.insert(0, str(Path(__file__).parent.parent.parent / ".claude" / "skills" / "code" / "lib"))
+            code_lib_path = Path(__file__).parent.parent.parent / ".claude" / "skills" / "code" / "lib"
+            sys.path.insert(0, str(code_lib_path))
             from findings_to_tasks import convert_findings_to_tasks
 
             tasks = convert_findings_to_tasks(findings_file, min_severity="MEDIUM")
@@ -100,7 +100,7 @@ class TestFullPipelineWithMockFindings:
 
         try:
             # Act
-            with open(state_file, 'r') as f:
+            with open(state_file) as f:
                 loaded_state = json.load(f)
 
             # Assert
