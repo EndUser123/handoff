@@ -13,7 +13,6 @@ Expected: All tests FAIL (vulnerabilities exist before fixes)
 After fix: All tests PASS (vulnerabilities mitigated)
 """
 
-import os
 import tempfile
 from pathlib import Path
 
@@ -401,23 +400,25 @@ class TestHandoffStoreTerminalIdValidation:
 
     def test_create_continue_session_with_safe_terminal_id(self):
         """
-        Test that create_continue_session_task sanitizes terminal_id in file paths.
+        Test that HandoffStore rejects path traversal in terminal_id upfront.
 
-        Given: A handoff store with malicious terminal_id
-        When: create_continue_session_task is called
-        Then: Task files should be created within project_root
+        Given: A malicious terminal_id with path traversal
+        When: HandoffStore is initialized with this terminal_id
+        Then: It should raise ValueError, preventing any file operations
 
-        Current behavior (BUG): May create files outside project_root
-        Expected behavior: Should sanitize terminal_id before file operations
+        SECURITY FIX: Path traversal is rejected at initialization, so
+        create_continue_session_task can never be called with malicious IDs.
         """
         with tempfile.TemporaryDirectory() as tmpdir:
             project_root = Path(tmpdir)
             malicious_terminal_id = "../../../malicious"
 
-            store = HandoffStore(project_root, malicious_terminal_id)
+            # Should raise ValueError for path traversal before any file operations
+            with pytest.raises(ValueError, match="path traversal"):
+                HandoffStore(project_root, malicious_terminal_id)
 
-            # Mock handoff metadata
-            handoff_metadata = {
+            # If we reach here, the test fails - no file operations should be possible
+            pytest.fail("HandoffStore should reject path traversal at initialization")
                 "task_name": "test_task",
                 "progress_pct": 50,
                 "blocker": None,
