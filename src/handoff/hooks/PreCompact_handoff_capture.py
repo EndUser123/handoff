@@ -1147,11 +1147,11 @@ class PreCompactHandoffCapture:
 
                 # Option 4: Use blocker.description (can be from earlier, fallback only)
                 if not last_user_message:
-                    blocker_input = blocker.get("input", {}) if isinstance(blocker, dict) else {}
+                    blocker_msg = blocker if isinstance(blocker, dict) else None
                     last_user_message = transcript.extract_user_message_from_blocker(
-                        blocker_input if isinstance(blocker, dict) else blocker
+                        blocker_msg
                     )
-                    if last_user_message:  # type: ignore[assignment]
+                    if last_user_message:
                         logger.info(
                             f"[PreCompact] Using last_user_message from blocker: "
                             f"{last_user_message[:50]}..."
