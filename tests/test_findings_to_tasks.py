@@ -393,7 +393,7 @@ class TestHandleMissingFile:
 class TestHandleInvalidJson:
     """Tests for handling invalid JSON."""
 
-    def test_handle_invalid_json(self):
+    def test_handle_invalid_json(self) -> None:
         """
         Test that invalid JSON returns empty list and logs error.
 
@@ -402,18 +402,19 @@ class TestHandleInvalidJson:
         Then: Empty list is returned (error logged)
         """
         # Arrange
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            f.write("{ invalid json }")
-            findings_file = f.name
+        f = tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False)
+        f.write("{ invalid json }")
+        f.close()
+        findings_file = Path(f.name)
 
         try:
             # Act
-            tasks = convert_findings_to_tasks(findings_file, min_severity="MEDIUM")
+            tasks = convert_findings_to_tasks(str(findings_file), min_severity="MEDIUM")
 
             # Assert
             assert tasks == []
         finally:
-            Path(findings_file).unlink()
+            findings_file.unlink()
 
 
 class TestTaskStructure:
