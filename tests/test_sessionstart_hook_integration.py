@@ -79,14 +79,10 @@ class TestSessionStartHookIntegration:
             with open(task_file, 'w') as f:
                 json.dump(task_data, f)
 
-            # Import and test
-            import sys
-            hooks_dir = Path("P:/packages/handoff/src/handoff/hooks").resolve()
-            sys.path.insert(0, str(hooks_dir))
-
+            # Import the function to test (sys.path already set up above)
             from SessionStart_handoff_restore import _load_active_session_task
 
-            # Act - Call the actual function (it will read from the hard-coded path)
+            # Act - Call the actual function
             loaded_task, source_terminal = _load_active_session_task(terminal_id)
 
             # Assert
