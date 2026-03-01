@@ -80,7 +80,7 @@ except ImportError:
     _SESSION_ACTIVITY_AVAILABLE = False
 
 try:
-    from terminal_detection import detect_terminal_id
+    from terminal_detection import detect_terminal_id  # type: ignore[import-untyped]
 except ImportError:
     logger.debug("[PreCompact] terminal_detection module not available")
 
