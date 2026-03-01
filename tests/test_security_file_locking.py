@@ -125,7 +125,7 @@ class TestFileLockingRaceCondition:
             task_tracker_dir.mkdir(parents=True, exist_ok=True)
 
             # Use the same terminal ID for both processes (simulates concurrent compaction)
-            terminal_id = "test_terminal_shared"
+            terminal_id = "term_shared"
             task_file_path = task_tracker_dir / f"{terminal_id}_tasks.json"
 
             # Create initial task file
