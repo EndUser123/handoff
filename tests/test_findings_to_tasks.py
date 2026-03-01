@@ -8,13 +8,13 @@ Run with: pytest tests/test_findings_to_tasks.py -v
 """
 
 import json
-
-# Import the module to test
 import sys
 import tempfile
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent / ".claude" / "skills" / "code" / "lib"))
+# Add the lib directory to Python path
+lib_path = Path(__file__).parent.parent.parent / ".claude" / "skills" / "code" / "lib"
+sys.path.insert(0, str(lib_path))
 
 from findings_to_tasks import convert_findings_to_tasks
 
