@@ -564,6 +564,49 @@ def _build_restoration_prompt(handoff_data: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _load_session_from_task_file(
+    task_file_path: Path, terminal_id: str, source_context: str = ""
+) -> tuple[dict[str, Any] | None, str | None]:
+    """Load active_session or continue_session from a specific task file.
+
+    Args:
+        task_file_path: Path to the task file to load
+        terminal_id: Terminal identifier for logging
+        source_context: Optional context string for log messages
+
+    Returns:
+        Tuple of (task dict with handoff in metadata, or None; terminal_id)
+    """
+    try:
+        with open(task_file_path, encoding="utf-8") as f:
+            task_data = json.load(f)
+
+        # Look for active_session task (restoration after compaction)
+        active_session = task_data.get("tasks", {}).get("active_session")
+        if active_session:
+            logger.debug(f"[SessionStart] Found active_session{source_context} in {terminal_id}_tasks.json")
+            return active_session, terminal_id
+
+        # Fallback to continue_session task (also for restoration)
+        continue_session = task_data.get("tasks", {}).get("continue_session")
+        if continue_session:
+            logger.debug(f"[SessionStart] Found continue_session{source_context} in {terminal_id}_tasks.json")
+            return continue_session, terminal_id
+
+        return None, None
+
+    except (json.JSONDecodeError, OSError) as e:
+        # Issue #4: Log corrupted task files at ERROR level (not DEBUG)
+        logger.error(f"[SessionStart] CORRUPTED task file {task_file_path}: {e}")
+        # Delete corrupted file to prevent future failures
+        try:
+            task_file_path.unlink(missing_ok=True)
+            logger.info(f"[SessionStart] Deleted corrupted task file: {task_file_path}")
+        except OSError:
+            pass
+        return None, None
+
+
 def _load_active_session_task(terminal_id: str) -> tuple[dict[str, Any] | None, str | None]:
     """Load active_session or continue_session task from task tracker.
 
