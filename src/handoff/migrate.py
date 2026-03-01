@@ -175,6 +175,8 @@ def _build_handoff_metadata(migrated_handoff: dict[str, Any]) -> dict[str, Any]:
     Returns:
         Handoff metadata dictionary with all fields properly mapped
     """
+    from handoff.config import utcnow_iso
+
     return {
         "checkpoint_id": migrated_handoff.get("checkpoint_id"),
         "parent_checkpoint_id": migrated_handoff.get("parent_checkpoint_id"),
@@ -205,6 +207,9 @@ def _build_handoff_metadata(migrated_handoff: dict[str, Any]) -> dict[str, Any]:
         "modifications": migrated_handoff.get("modifications", []),
         "saved_at": (migrated_handoff.get("saved_at") or migrated_handoff.get("timestamp")),
         "checksum": migrated_handoff.get("checksum"),
+        "version": migrated_handoff.get("version", 1),
+        "migrated_at": utcnow_iso(),
+        "migrated_from": "handoff_json",
     }
 
 
