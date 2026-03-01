@@ -1012,7 +1012,9 @@ class HandoffStore:
                 logger.info(
                     f"[HandoffStore] active_session task added to {task_file_path.name} (PID {os.getpid()}) [no lock]"
                 )
-                logger.info([HandoffStore] continue_session task added to {task_file_path.name} [no lock]f[HandoffStore] continue_session task added to {task_file_path.name} [no lock])
+                logger.info(
+                    f"[HandoffStore] continue_session task added to {task_file_path.name} [no lock]"
+                )
 
                 # Write manifest file atomically (even without lock)
                 fd_manifest, temp_manifest_path = tempfile.mkstemp(
