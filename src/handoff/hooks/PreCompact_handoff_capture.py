@@ -646,7 +646,7 @@ class PreCompactHandoffCapture:
 
         return errors[-max_errors:]
 
-    def _extract_recent_exchanges(self, max_pairs: int = 6) -> list[dict]:
+    def _extract_recent_exchanges(self, max_pairs: int = 6) -> list[dict[str, Any]]:
         """Extract the last N user↔assistant conversation pairs from the transcript.
 
         Provides inline context so the LLM doesn't need to read the full
