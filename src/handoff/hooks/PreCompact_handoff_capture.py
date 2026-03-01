@@ -119,6 +119,46 @@ class PreCompactHandoffCapture:
     - TaskIdentityManager: For task identity tracking
     """
 
+    @staticmethod
+    def _find_terminal_transcript() -> str | None:
+        """Find terminal-specific transcript using session_id.
+
+        Returns:
+            Path to transcript file or None if not found
+        """
+        project_conversations_dir = os.path.expanduser("~/.claude/projects/P--/")
+        if not (os.path.exists(project_conversations_dir) and _SESSION_ACTIVITY_AVAILABLE):
+            print(
+                "[PreCompact] Project conversations directory not found or session activity unavailable"
+            )
+            return None
+
+        session_id = _get_session_id_from_env()
+        if not session_id:
+            print(
+                "[PreCompact] No session_id available - cannot find terminal-specific transcript"
+            )
+            return None
+
+        # Build transcript path directly from session_id (terminal-isolated)
+        candidate_path = os.path.join(project_conversations_dir, f"{session_id}.jsonl")
+        if not os.path.exists(candidate_path):
+            print(f"[PreCompact] Session transcript not found: {session_id}.jsonl")
+            return None
+
+        size_mb = os.path.getsize(candidate_path) / (1024 * 1024)
+        # Sanity check: skip if obviously wrong (too large or subagent file)
+        if size_mb <= 50 and "subagent" not in candidate_path.lower():
+            print(
+                f"[PreCompact] Found terminal transcript: {session_id} ({size_mb:.1f}MB)"
+            )
+            return candidate_path
+        else:
+            print(
+                f"[PreCompact] Transcript exists but fails sanity check: {size_mb:.1f}MB"
+            )
+            return None
+
     def __init__(self, hook_input: dict[str, Any] | None = None):
         """Initialize PreCompact handoff orchestrator.
 
