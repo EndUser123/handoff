@@ -32,24 +32,27 @@ from handoff.hooks.__lib.handoff_store import atomic_write_with_validation
 class TestAtomicWritePermissionError:
     """Test QUAL-001: PermissionError handling in atomic_write_with_validation."""
 
-    def test_permission_error_on_file_write(self):
+    def test_permission_error_on_tempfile_creation(self):
         """
-        Test that PermissionError during file write is caught and handled.
+        Test that PermissionError during tempfile.mkstemp is caught.
+
+        QUAL-001 Issue: tempfile.mkstemp can raise PermissionError if
+        the target directory is not writable, but this error is NOT
+        caught by the current implementation.
 
         Scenario:
-        1. Call atomic_write_with_validation with valid data
-        2. Mock os.fdopen to raise PermissionError on write
-        3. Verify PermissionError is caught (not propagated)
+        1. Call atomic_write_with_validation with a target in read-only directory
+        2. tempfile.mkstemp raises PermissionError
+        3. Verify PermissionError escapes (not caught by OSError handler)
+
+        Current behavior (BUG):
+        - PermissionError from mkstemp escapes uncaught
+        - No cleanup occurs
+        - Function crashes
 
         Expected behavior (after fix):
-        - PermissionError is caught by exception handler
-        - Temp file is cleaned up
-        - Error is logged
-
-        Actual behavior (before fix):
-        - PermissionError escapes the try/except block
-        - Temp file may not be cleaned up
-        - Test will FAIL because PermissionError is raised
+        - PermissionError should be caught and logged
+        - Function should handle gracefully
         """
         # Arrange
         test_data = {
@@ -63,34 +66,41 @@ class TestAtomicWritePermissionError:
             "modifications": [],
         }
 
-        # Create temp directory for test
+        # Create a read-only directory to trigger PermissionError
         with tempfile.TemporaryDirectory() as temp_dir:
-            target_path = Path(temp_dir) / "test_handoff.json"
+            readonly_dir = Path(temp_dir) / "readonly"
+            readonly_dir.mkdir()
 
-            # Act & Assert
-            # Mock os.fdopen to raise PermissionError
-            # This simulates a permission denied error during file write
-            with patch("os.fdopen") as mock_fdopen:
-                # Set up the mock to raise PermissionError
-                mock_file = MagicMock()
-                mock_file.write.side_effect = PermissionError(
-                    "[WinError 5] Access is denied"
-                )
-                mock_fdopen.return_value.__enter__.return_value = mock_file
+            # Make directory read-only (Windows)
+            try:
+                import stat
+                os.chmod(readonly_dir, stat.S_IREAD)
 
-                # The current implementation only catches OSError explicitly
-                # PermissionError IS a subclass of OSError, so it SHOULD be caught
-                # However, the test will verify this behavior actually works
+                target_path = readonly_dir / "test_handoff.json"
+
+                # Act & Assert
+                # This SHOULD raise PermissionError because mkstemp can't create file in read-only dir
+                # The current implementation does NOT catch this error
                 with pytest.raises(PermissionError):
                     result = atomic_write_with_validation(test_data, target_path)
-                    # If we reach here, PermissionError was NOT caught (FAIL)
-                    # After fix, this should NOT raise
+            finally:
+                # Restore permissions for cleanup
+                try:
+                    import stat
+                    os.chmod(readonly_dir, stat.S_IWRITE | stat.S_IREAD)
+                except:
+                    pass
 
-    def test_oserror_is_caught(self):
+    def test_permission_error_on_os_replace(self):
         """
-        Test that OSError during file write is caught and handled.
+        Test that PermissionError from os.replace is handled by retry logic.
 
-        This test verifies the CURRENT behavior: OSError is caught.
+        This test verifies that the atomic_write_with_retry function properly
+        catches and retries PermissionError from os.replace.
+
+        Current behavior (CORRECT):
+        - PermissionError IS caught and retried
+        - After max retries, error is re-raised
         """
         # Arrange
         test_data = {
@@ -107,17 +117,18 @@ class TestAtomicWritePermissionError:
         with tempfile.TemporaryDirectory() as temp_dir:
             target_path = Path(temp_dir) / "test_handoff.json"
 
-            # Mock os.fdopen to raise OSError
-            with patch("os.fdopen") as mock_fdopen:
-                mock_file = MagicMock()
-                mock_file.write.side_effect = OSError(
-                    "Input/output error"
+            # Mock os.replace to raise PermissionError
+            with patch("handoff.hooks.__lib.handoff_store.os.replace") as mock_replace:
+                mock_replace.side_effect = PermissionError(
+                    "[WinError 5] Access is denied"
                 )
-                mock_fdopen.return_value.__enter__.return_value = mock_file
 
-                # OSError SHOULD be caught and re-raised
-                with pytest.raises(OSError):
+                # This SHOULD be caught by retry logic and re-raised after max retries
+                with pytest.raises(PermissionError):
                     result = atomic_write_with_validation(test_data, target_path)
+
+                # Verify retry attempts were made
+                assert mock_replace.call_count == 5  # max_retries default
 
     def test_permission_error_inheritance(self):
         """
