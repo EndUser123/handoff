@@ -524,7 +524,7 @@ class TestTaskStructure:
 class TestSeverityOrdering:
     """Tests for severity ordering and prioritization."""
 
-    def test_severity_ordering_mixed(self):
+    def test_severity_ordering_mixed(self) -> None:
         """
         Test that findings maintain severity-based ordering.
 
@@ -565,13 +565,10 @@ class TestSeverityOrdering:
             "testing": []
         }
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            json.dump(findings_data, f)
-            findings_file = f.name
-
+        findings_file = _create_temp_findings_file(findings_data)
         try:
             # Act
-            tasks = convert_findings_to_tasks(findings_file, min_severity="MEDIUM")
+            tasks = convert_findings_to_tasks(str(findings_file), min_severity="MEDIUM")
 
             # Assert
             assert len(tasks) == 3
@@ -579,7 +576,7 @@ class TestSeverityOrdering:
             # Should be ordered: CRITICAL, HIGH, MEDIUM
             assert severities == ["CRITICAL", "HIGH", "MEDIUM"]
         finally:
-            Path(findings_file).unlink()
+            findings_file.unlink()
 
 
 class TestMultipleCategories:
