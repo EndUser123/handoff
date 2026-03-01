@@ -13,14 +13,15 @@ from pathlib import Path
 from typing import get_type_hints
 
 
-def get_public_functions(module_path: Path) -> list[tuple[str, inspect.FunctionSignature]]:
-    """Extract all public functions from a module.
+def get_public_functions(module_path: Path) -> list[tuple[str, list, str | None]]:
+    """Extract all public functions from a module (excluding class methods).
 
     Args:
         module_path: Path to the Python module file
 
     Returns:
-        List of (function_name, signature) tuples for non-private functions
+        List of (function_name, args, return_annotation) tuples for non-private functions
+        Only includes top-level module functions, not class methods.
     """
     # Read the module source
     source = module_path.read_text()
@@ -30,8 +31,8 @@ def get_public_functions(module_path: Path) -> list[tuple[str, inspect.FunctionS
 
     public_functions = []
 
-    # Find all top-level function definitions
-    for node in ast.walk(tree):
+    # Find all top-level function definitions (not inside classes)
+    for node in ast.iter_child_nodes(tree):
         if isinstance(node, ast.FunctionDef) and not node.name.startswith("_"):
             # Get the signature
             args = []
