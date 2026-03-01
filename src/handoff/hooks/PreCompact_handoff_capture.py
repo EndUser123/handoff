@@ -1176,7 +1176,7 @@ class PreCompactHandoffCapture:
         return True
 
 
-@hook_main
+@hook_main  # type: ignore[misc]
 def main() -> int:
     """Execute PreCompact handoff capture."""
     try:
