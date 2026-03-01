@@ -58,7 +58,7 @@ except ImportError:
 
 
 try:
-    from __lib.hook_base import hook_main  # type: ignore[misc]
+    from __lib.hook_base import hook_main
 except ImportError:
     logger.debug("[SessionStart] hook_base module not available, using no-op decorator")
 
