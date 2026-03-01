@@ -28,9 +28,9 @@ import logging
 import os
 import subprocess
 
-# For package-based hooks, add P:/.claude/hooks to path for terminal_detection import
-# Path: P:/packages/handoff/src/handoff/hooks/__lib/task_identity_manager.py
-# Need to reach: P:/.claude/hooks/terminal_detection.py
+# For package-based hooks, add {project_root}/.claude/hooks to path for terminal_detection import
+# Path: {hooks_dir}/__lib/task_identity_manager.py
+# Need to reach: {project_root}/.claude/hooks/terminal_detection.py
 import sys
 from contextlib import suppress
 from dataclasses import dataclass
