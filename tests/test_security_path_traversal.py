@@ -12,7 +12,6 @@ the intended directory.
 Run with: pytest tests/test_security_path_traversal.py -v
 """
 
-import pytest
 from handoff.hooks.SessionStart_handoff_restore import _safe_id
 
 
