@@ -457,7 +457,7 @@ class PreCompactHandoffCapture:
         Returns:
             Dict with implementation status details
         """
-        status = {
+        status: dict[str, Any] = {
             "test_results": None,
             "files_modified": [],
             "completion_state": "unknown",  # implemented, verified, in_progress, unknown
