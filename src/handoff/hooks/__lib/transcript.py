@@ -536,7 +536,7 @@ class TranscriptParser:
             Iterator over transcript lines.
         """
         if not self.transcript_path or not Path(self.transcript_path).exists():
-            return iter([])
+            return
 
         try:
             with open(self.transcript_path, encoding="utf-8") as f:
@@ -544,7 +544,7 @@ class TranscriptParser:
                     yield line
         except (OSError, UnicodeDecodeError) as e:
             logger.warning(f"[TranscriptParser] Could not iterate transcript: {e}")
-            return iter([])
+            return
 
     def _get_parsed_entries(self) -> list[dict[str, Any]]:
         """Get parsed transcript entries (parse once, use many times).
