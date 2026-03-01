@@ -12,8 +12,6 @@ import inspect
 from pathlib import Path
 from typing import get_type_hints
 
-import pytest
-
 
 def get_public_functions(module_path: Path) -> list[tuple[str, inspect.FunctionSignature]]:
     """Extract all public functions from a module.
