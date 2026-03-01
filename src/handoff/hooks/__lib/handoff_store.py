@@ -15,6 +15,9 @@ import json
 import logging
 import os
 import re
+
+# Platform-specific imports for file locking
+import sys
 import tempfile
 import time
 from datetime import UTC, datetime
@@ -22,12 +25,10 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-# Platform-specific imports for file locking
-import sys
 if sys.platform == 'win32':
-    import msvcrt
+    pass
 else:
-    import fcntl
+    pass
 
 logger = logging.getLogger(__name__)
 

@@ -106,7 +106,7 @@ def _verify_handoff_checksum(handoff_data: dict[str, Any]) -> tuple[bool, str | 
     data_for_hash = {k: v for k, v in handoff_data.items() if k != "checksum"}
     computed = compute_metadata_checksum(data_for_hash)
 
-    if not stored_checksum.startswith(computed):
+    if not hmac.compare_digest(stored_checksum, computed):
         return False, (
             f"Checksum mismatch: stored={stored_checksum[:16]}... computed={computed[:16]}..."
         )
