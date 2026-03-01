@@ -139,8 +139,8 @@ def test_extract_user_message_from_blocker_parameter_specificity():
     # Get the function
     func = transcript.extract_user_message_from_blocker
 
-    # Get type hints
-    type_hints = get_type_hints(func)
+    # Get type hints with extras to preserve Annotated metadata
+    type_hints = get_type_hints(func, include_extras=True)
 
     # Check blocker parameter
     assert "blocker" in type_hints, "blocker parameter should have type hint"
