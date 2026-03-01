@@ -610,7 +610,7 @@ def main():
             print("Warning: CLEANUP_DAYS not found in config, using default 90", file=sys.stderr)
             CLEANUP_DAYS = 90
 
-        task_tracker_dir = Path("P:/.claude/state/task_tracker")
+        task_tracker_dir = project_root / ".claude" / "state" / "task_tracker"
         if not task_tracker_dir.exists():
             print("No task tracker directory found")
             return 0
