@@ -1387,7 +1387,7 @@ def extract_user_message_from_blocker(blocker: BlockerDict | str | None) -> str 
     return description if description else None
 
 
-def filter_valid_messages(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def filter_valid_messages(messages: list[MessageDict]) -> list[MessageDict]:
     """Filter valid messages from a list, removing invalid entries.
 
     This function validates and filters messages, handling:
