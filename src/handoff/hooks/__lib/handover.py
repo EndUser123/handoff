@@ -124,12 +124,7 @@ class HandoverBuilder:
 
             # Extract session objectives if available
             objectives_file = self.project_root / ".claude" / "objectives.txt"
-            if objectives_file.exists():
-                for line in objectives_file.read_text().split("\n")[:5]:
-                    line = line.strip()
-                    if line and not line.startswith("#"):
-                        # Store as string for consistency with other fields
-                        handover["session_objectives"].append(line[:100])
+            handover["session_objectives"] = self._extract_session_objectives(objectives_file)
 
         except Exception as e:
             logger.error(f"[HandoverBuilder] Handover generation failed: {e}")
