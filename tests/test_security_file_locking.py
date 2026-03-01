@@ -34,7 +34,7 @@ from pathlib import Path
 from handoff.hooks.__lib.handoff_store import HandoffStore
 
 
-def write_handoff_process(worker_id: int, task_file_path: Path, result_queue: Queue):
+def write_handoff_process(worker_id: int, task_file_path: Path, result_queue: Queue, shared_terminal_id: str):
     """
     Worker process that attempts to write handoff data.
 
@@ -45,12 +45,13 @@ def write_handoff_process(worker_id: int, task_file_path: Path, result_queue: Qu
         worker_id: Unique identifier for this worker process
         task_file_path: Path to the task file to write to
         result_queue: Queue to report success/failure status
+        shared_terminal_id: Shared terminal ID so both processes write to same file
     """
     try:
         # Create a HandoffStore instance for this process
+        # Use shared terminal ID to ensure both processes write to the SAME file
         project_root = task_file_path.parent.parent.parent.parent  # Navigate back to project root
-        terminal_id = f"test_terminal_{worker_id}"
-        store = HandoffStore(project_root, terminal_id)
+        store = HandoffStore(project_root, shared_terminal_id)
 
         # Create handoff data
         # Note: next_steps should be a list for build_handoff_data, but
