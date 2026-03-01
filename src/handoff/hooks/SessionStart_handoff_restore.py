@@ -41,7 +41,7 @@ from handoff.migrate import compute_metadata_checksum  # noqa: E402
 # Add hooks dir for terminal detection (use existing comprehensive implementation)
 # Path: P:/packages/handoff/src/handoff/hooks/SessionStart_handoff_restore.py
 # Need to reach: P:/.claude/hooks/terminal_detection.py
-claude_hooks_dir = Path("P:/.claude/hooks")
+claude_hooks_dir = PROJECT_ROOT / ".claude" / "hooks"
 if str(claude_hooks_dir) not in sys.path:
     sys.path.insert(0, str(claude_hooks_dir))
 
