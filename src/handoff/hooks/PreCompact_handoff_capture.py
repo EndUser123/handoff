@@ -699,7 +699,7 @@ class PreCompactHandoffCapture:
         # Return only the last max_pairs*2 messages (pairs = user+assistant)
         return messages[-(max_pairs * 2) :]
 
-    def _extract_recent_edits(self, max_edits: int = 10) -> list[dict]:
+    def _extract_recent_edits(self, max_edits: int = 10) -> list[dict[str, Any]]:
         """Extract recent Edit/Write tool calls from the transcript.
 
         Captures file path and a brief snippet of what changed, providing
