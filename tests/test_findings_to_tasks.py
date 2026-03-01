@@ -209,7 +209,7 @@ class TestConvertMediumFindings:
 class TestFilterLowFindings:
     """Tests for LOW severity findings filtering."""
 
-    def test_filter_low_findings(self):
+    def test_filter_low_findings(self) -> None:
         """
         Test that LOW severity findings are filtered out by default.
 
@@ -236,20 +236,17 @@ class TestFilterLowFindings:
             "testing": []
         }
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            json.dump(findings_data, f)
-            findings_file = f.name
-
+        findings_file = _create_temp_findings_file(findings_data)
         try:
             # Act
-            tasks = convert_findings_to_tasks(findings_file, min_severity="MEDIUM")
+            tasks = convert_findings_to_tasks(str(findings_file), min_severity="MEDIUM")
 
             # Assert
             assert len(tasks) == 0
         finally:
-            Path(findings_file).unlink()
+            findings_file.unlink()
 
-    def test_include_low_with_filter(self):
+    def test_include_low_with_filter(self) -> None:
         """
         Test that LOW severity findings are included when min_severity="LOW".
 
@@ -276,20 +273,17 @@ class TestFilterLowFindings:
             "testing": []
         }
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            json.dump(findings_data, f)
-            findings_file = f.name
-
+        findings_file = _create_temp_findings_file(findings_data)
         try:
             # Act
-            tasks = convert_findings_to_tasks(findings_file, min_severity="LOW")
+            tasks = convert_findings_to_tasks(str(findings_file), min_severity="LOW")
 
             # Assert
             assert len(tasks) == 1
             assert tasks[0]["metadata"]["severity"] == "LOW"
             assert tasks[0]["metadata"]["id"] == "PERF-004"
         finally:
-            Path(findings_file).unlink()
+            findings_file.unlink()
 
 
 class TestGroupByFile:
