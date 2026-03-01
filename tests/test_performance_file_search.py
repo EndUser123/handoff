@@ -113,8 +113,9 @@ class TestActiveSessionFileSearchPerformance:
                 has_active_session=False
             )
 
-        # Act: Time the search operation
-        from handoff.hooks.SessionStart_handoff_restore import _load_active_session_task
+        # Act: Time the search operation (import after mock is set up)
+        from handoff.hooks import SessionStart_handoff_restore
+        _load_active_session_task = SessionStart_handoff_restore._load_active_session_task
 
         start = time.perf_counter()
         task, terminal = _load_active_session_task("term_unknown")
