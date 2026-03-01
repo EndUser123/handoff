@@ -17,7 +17,7 @@ Usage:
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from typing import Any, ClassVar, Literal
 
 
@@ -54,7 +54,7 @@ class PendingOperation:
     type: Literal["edit", "test", "read", "command", "skill"]
     target: str
     state: Literal["pending", "in_progress", "completed", "failed"]
-    details: dict[str, Any] = ()
+    details: dict[str, Any] = field(default_factory=dict)
     started_at: str | None = None
 
     def __post_init__(self) -> None:
