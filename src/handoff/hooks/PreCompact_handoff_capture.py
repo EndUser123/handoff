@@ -417,9 +417,9 @@ class PreCompactHandoffCapture:
                 "total": passed + failed,
             }
             if failed == 0 and passed > 0:
-                result["status"] = "all_passed"
+                result["status"] = 1  # all_passed
             elif failed > 0:
-                result["status"] = "has_failures"
+                result["status"] = -1  # has_failures
             return result
         return None
 
