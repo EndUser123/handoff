@@ -85,7 +85,7 @@ def _validate_handoff_schema(handoff_data: dict[str, Any]) -> tuple[bool, str | 
     # Validate timestamp
     try:
         datetime.fromisoformat(handoff_data["saved_at"])
-    except (ValueError, TypeError) as e:
+    except (ValueError, TypeError):
         error_msg = f"Invalid saved_at timestamp: {handoff_data.get('saved_at')}"
         logger.warning(f"[SessionStart] Schema validation failed: {error_msg}")
         return False, error_msg

@@ -277,7 +277,7 @@ class FileLock:
         self.release()
 
 
-def atomic_write_with_retry(temp_path: str, target_path: str | Path, max_retries: int = 5) -> None:
+def atomic_write_with_retry(temp_path: str, target_path: str | Path, max_retries: int = MAX_RETRIES) -> None:
     """Perform atomic file write with retry logic for Windows file locking.
 
     On Windows, os.replace() can fail with PermissionError (WinError 5) when multiple
@@ -287,14 +287,14 @@ def atomic_write_with_retry(temp_path: str, target_path: str | Path, max_retries
     Args:
         temp_path: Path to temporary file to write from
         target_path: Path to target file to write to
-        max_retries: Maximum number of retry attempts (default: 5)
+        max_retries: Maximum number of retry attempts (from config.MAX_RETRIES)
 
     Raises:
         PermissionError: If all retry attempts fail
         OSError: For other OS errors during file operations
     """
     target_path_str = str(target_path)
-    base_delay = 0.005  # 5ms
+    base_delay = RETRY_BASE_DELAY_SECONDS
 
     for attempt in range(max_retries):
         try:
