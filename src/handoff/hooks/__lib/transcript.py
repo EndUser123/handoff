@@ -57,7 +57,7 @@ class MessageDict(TypedDict):
 
 
 # Module-level helper functions (extracted from HandoverBuilder static methods)
-def extract_topic_from_content(content: str, task_name: str = "") -> str:
+def extract_topic_from_content(content: str, task_name: str = "") -> Annotated[str, "max_length=80"]:
     """Extract topic from content using keyword analysis.
 
     Args:
