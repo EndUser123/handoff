@@ -1,0 +1,23 @@
+Finding ID,Severity,Category,Title,File,Line,Impact,Remediation,Effort,Priority
+SEC-001,HIGH,Security,Path Traversal Vulnerability in SessionStart_handoff_restore.py,src/handoff/hooks/SessionStart_handoff_restore.py,710,"Attacker could overwrite arbitrary files","Use pathlib.Path.resolve() with strict=True to validate paths",Medium,P0
+SEC-002,MEDIUM,Security,Insufficient Input Validation in HandoffStore,src/handoff/hooks/__lib/handoff_store.py,484,"File system operations could target unintended directories","Validate terminal_id format (regex: ^term_[a-zA-Z0-9_-]+$)",Low,P1
+SEC-003,MEDIUM,Security,Race Condition in File Locking,src/handoff/hooks/__lib/handoff_store.py,685,"Concurrent compaction could corrupt task tracker files","Use platform-specific file locking (fcntl.flock on Unix, msvcrt.locking on Windows)",High,P1
+SEC-004,LOW,Security,Checksum Comparison Timing Attack,src/handoff/hooks/SessionStart_handoff_restore.py,109,"Remote attacker could forge valid checksums","Use hmac.compare_digest() for constant-time comparison",Low,P2
+PERF-001,MEDIUM,Performance,Inefficient File Search in SessionStart,src/handoff/hooks/SessionStart_handoff_restore.py,602,"Session startup could take several seconds","Maintain manifest file indexing active_session tasks",Medium,P2
+PERF-002,MEDIUM,Performance,Repeated JSON Serialization in Quality Scoring,src/handoff/hooks/__lib/handoff_store.py,346,"Unnecessary CPU overhead during compaction","Cache serialized JSON or calculate size incrementally",Low,P2
+PERF-003,LOW,Performance,No Pagination for Large Lists,src/handoff/cli.py,161,"High memory usage for thousands of modifications","Use itertools.islice() for lazy loading",Low,P3
+QUAL-001,MEDIUM,Quality,Inconsistent Error Handling,src/handoff/hooks/__lib/handoff_store.py,142,"Unhandled exceptions could crash compaction","Catch Exception broadly and log specific types",Low,P2
+QUAL-002,MEDIUM,Quality,Magic Numbers Without Constants,src/handoff/hooks/__lib/handoff_store.py,62,"Difficult to maintain consistent behavior","Define all config values in central config module",Low,P2
+QUAL-003,LOW,Quality,Missing Type Hints in Public APIs,src/handoff/hooks/__lib/transcript.py,25,"Reduced IDE support and type safety","Add comprehensive type hints to all public APIs",Low,P3
+TEST-001,HIGH,Testing,Missing Security Tests for Path Traversal,tests/,N/A,"Security vulnerabilities could go undetected","Add test suite for input validation covering path traversal",Low,P0
+TEST-002,MEDIUM,Testing,No Concurrency Tests,tests/,N/A,"Race conditions could corrupt data in production","Add integration tests using multiprocessing",High,P1
+TEST-003,MEDIUM,Testing,Missing Edge Case Tests for Checksum Validation,tests/,N/A,"Invalid checksums could be accepted","Add comprehensive checksum validation test cases",Low,P2
+COMP-001,MEDIUM,Compliance,No Data Retention Policy Enforcement,src/handoff/cli.py,618,"Old handoff data accumulates indefinitely","Implement automatic cleanup on compaction",Medium,P2
+COMP-002,LOW,Compliance,No Audit Trail for Handoff Access,src/handoff/hooks/,N/A,"Unable to investigate data breaches","Add structured logging for all handoff operations",Medium,P3
+COMP-003,LOW,Compliance,Missing Privacy Controls,src/handoff/hooks/__lib/handoff_store.py,500,"Sensitive data could be exposed in logs","Implement sensitive data detection and redaction",High,P3
+QA-001,MEDIUM,QA,Silent Failures in Schema Validation,src/handoff/hooks/SessionStart_handoff_restore.py,751,"Users don't know when handoff restoration fails","Log failures at WARNING level and output user-visible message",Low,P2
+QA-002,MEDIUM,QA,Inadequate Error Messages,src/handoff/models.py,110,"Users struggle to debug validation failures","Include field name, current value, valid range in error messages",Low,P2
+QA-003,LOW,QA,No Validation of Handoff Data Completeness,src/handoff/hooks/__lib/handoff_store.py,500,"Handoffs with missing critical data get saved","Add validation rules for data quality",Low,P3
+RCA-001,MEDIUM,RCA,Root Cause: File Locking Implementation Flaw,src/handoff/hooks/__lib/handoff_store.py,685,"Data corruption under concurrent compaction","Use platform-specific mandatory locking or SQLite",High,P1
+RCA-002,MEDIUM,RCA,Root Cause: Checksum Algorithm Choice,src/handoff/migrate.py,117,"Compaction takes longer than necessary","Use xxhash or similar fast non-cryptographic hash",Low,P2
+RCA-003,LOW,RCA,Root Cause: Transcript Parsing Performance,src/handoff/hooks/__lib/transcript.py,N/A,"High memory usage for large transcripts","Use ijson streaming JSON parser",Medium,P3
