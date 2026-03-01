@@ -12,8 +12,8 @@ Actual behavior (before fix): startswith() returns early on mismatch, leaking ti
 Run with: pytest tests/test_security_checksum_timing.py -v
 """
 
-import time
 import statistics
+import time
 from typing import Callable
 
 import pytest
