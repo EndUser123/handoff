@@ -242,8 +242,8 @@ class TestChecksumCaseSensitivity:
 
         Current behavior: Hex validation is case-insensitive
         """
-        # Valid: mixed case hex
-        valid_checksum = "sha256:" + "AaBbCc123" + "0" * 56
+        # Valid: mixed case hex (9 chars + 55 zeros = 64 chars)
+        valid_checksum = "sha256:" + "AaBbCc123" + "0" * 55
         # Should not raise
         HandoffCheckpoint._validate_checksum(valid_checksum)
 
