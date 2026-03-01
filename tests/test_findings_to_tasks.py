@@ -582,7 +582,7 @@ class TestSeverityOrdering:
 class TestMultipleCategories:
     """Tests for handling findings from multiple categories."""
 
-    def test_multiple_categories(self):
+    def test_multiple_categories(self) -> None:
         """
         Test that findings from all categories are converted.
 
@@ -634,17 +634,14 @@ class TestMultipleCategories:
             ]
         }
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            json.dump(findings_data, f)
-            findings_file = f.name
-
+        findings_file = _create_temp_findings_file(findings_data)
         try:
             # Act
-            tasks = convert_findings_to_tasks(findings_file, min_severity="MEDIUM")
+            tasks = convert_findings_to_tasks(str(findings_file), min_severity="MEDIUM")
 
             # Assert
             assert len(tasks) == 4
             task_ids = {task["metadata"]["id"] for task in tasks}
             assert task_ids == {"SEC-001", "PERF-001", "QUAL-001", "TEST-001"}
         finally:
-            Path(findings_file).unlink()
+            findings_file.unlink()
