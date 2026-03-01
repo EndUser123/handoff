@@ -37,8 +37,8 @@ SESSION_MODULE_PATH = PROJECT_ROOT / "__csf" / "src"
 sys.path.insert(0, str(SESSION_MODULE_PATH))
 
 # Add hooks dir for terminal detection (use existing comprehensive implementation)
-# Path: P:/packages/handoff/src/handoff/hooks/PreCompact_handoff_capture.py
-# Need to reach: P:/.claude/hooks/terminal_detection.py
+# Path: {hooks_dir}/PreCompact_handoff_capture.py
+# Need to reach: {project_root}/.claude/hooks/terminal_detection.py
 claude_hooks_dir = PROJECT_ROOT / ".claude" / "hooks"
 if str(claude_hooks_dir) not in sys.path:
     sys.path.insert(0, str(claude_hooks_dir))
