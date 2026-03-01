@@ -22,8 +22,6 @@ import logging
 from pathlib import Path
 from unittest.mock import patch
 
-import pytest
-
 
 class TestQASchemaValidationErrors:
     """Tests for QA-001: Schema validation error reporting."""
@@ -108,7 +106,6 @@ class TestQASchemaValidationErrors:
         if str(hooks_dir) not in sys.path:
             sys.path.insert(0, str(hooks_dir))
 
-        from SessionStart_handoff_restore import PROJECT_ROOT
 
         # Create task tracker directory in temp location
         task_tracker_base = tmp_path / ".claude" / "state" / "task_tracker"
