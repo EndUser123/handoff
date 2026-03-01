@@ -177,34 +177,8 @@ class FileLock:
 
         while time.time() - start_time < self.timeout:
             try:
-                # Open lock file (create if doesn't exist)
-                flags = os.O_RDWR | os.O_CREAT
-                self.lock_fd = os.open(self.lock_file_path, flags)
-
-                # Try to acquire lock atomically
-                if sys.platform == 'win32':
-                    # Windows: msvcrt.locking() with LK_NBLCK (non-blocking)
-                    # Lock mode: write lock (LK_LOCK) with non-blocking (LK_NBLCK)
-                    try:
-                        msvcrt.locking(self.lock_fd, msvcrt.LK_NBLCK, 1)
-                        self._acquired = True
-                        return True
-                    except OSError:
-                        # Lock is held by another process
-                        os.close(self.lock_fd)
-                        self.lock_fd = None
-                else:
-                    # Unix: fcntl.flock() with LOCK_EX | LOCK_NB
-                    # LOCK_EX: Exclusive lock
-                    # LOCK_NB: Non-blocking (don't wait)
-                    try:
-                        fcntl.flock(self.lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                        self._acquired = True
-                        return True
-                    except OSError:
-                        # Lock is held by another process
-                        os.close(self.lock_fd)
-                        self.lock_fd = None
+                if self._try_acquire_lock_once():
+                    return True
 
                 # Lock acquisition failed, check for stale lock
                 self._check_and_remove_stale_lock()
