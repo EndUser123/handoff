@@ -47,8 +47,9 @@ class TestActiveSessionFileSearchPerformance:
     def temp_task_tracker_dir(self):
         """Create temporary task_tracker directory with test files."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            task_tracker_dir = Path(tmpdir) / "task_tracker"
-            task_tracker_dir.mkdir()
+            project_root = Path(tmpdir)
+            task_tracker_dir = project_root / ".claude" / "state" / "task_tracker"
+            task_tracker_dir.mkdir(parents=True)
             yield task_tracker_dir
 
     @pytest.fixture
@@ -58,7 +59,9 @@ class TestActiveSessionFileSearchPerformance:
         from handoff.hooks import SessionStart_handoff_restore
 
         original_root = SessionStart_handoff_restore.PROJECT_ROOT
-        SessionStart_handoff_restore.PROJECT_ROOT = temp_task_tracker_dir.parent
+        # Project root is the parent of .claude directory
+        project_root = temp_task_tracker_dir.parent.parent
+        SessionStart_handoff_restore.PROJECT_ROOT = project_root
 
         yield temp_task_tracker_dir
 
