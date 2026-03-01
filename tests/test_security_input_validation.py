@@ -385,21 +385,19 @@ class TestHandoffStoreTerminalIdValidation:
         Test that HandoffStore rejects absolute paths in terminal_id.
 
         Given: A terminal_id with absolute path
-        When: HandoffStore uses the terminal_id in file paths
-        Then: It should sanitize absolute path components
+        When: HandoffStore is initialized with this terminal_id
+        Then: It should raise ValueError for absolute paths
 
-        Current behavior (BUG): May use terminal_id directly
-        Expected behavior: Should strip path separators from terminal_id
+        SECURITY FIX: Absolute paths are rejected at initialization time,
+        preventing file operations outside the intended directory structure.
         """
         with tempfile.TemporaryDirectory() as tmpdir:
             project_root = Path(tmpdir)
             malicious_terminal_id = "/etc/passwd"
 
-            store = HandoffStore(project_root, malicious_terminal_id)
-
-            # Terminal ID should not contain path separators
-            assert '/' not in store.terminal_id or store.terminal_id == "term_" + str(os.getpid()), \
-                f"Path separator not removed from terminal_id: {store.terminal_id}"
+            # Should raise ValueError for absolute paths
+            with pytest.raises(ValueError, match="absolute path"):
+                HandoffStore(project_root, malicious_terminal_id)
 
     def test_create_continue_session_with_safe_terminal_id(self):
         """
