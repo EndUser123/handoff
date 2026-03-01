@@ -421,7 +421,7 @@ def _truncate_text_field(text: str, max_length: int) -> str:
     return text
 
 
-def _truncate_list_with_marker(items: list, max_items: int) -> list:
+def _truncate_list_with_marker(items: list[Any], max_items: int) -> list[Any]:
     """Truncate list with "and N more" marker.
 
     Args:
