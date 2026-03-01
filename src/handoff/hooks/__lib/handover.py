@@ -113,5 +113,4 @@ class HandoverBuilder:
         except Exception as e:
             logger.error(f"[HandoverBuilder] Handover generation failed: {e}")
 
-        # Cast to dict[str, Any] for compatibility with existing APIs
-        return cast("dict[str, Any]", handover)
+        return handover  # type: ignore[return-value]
