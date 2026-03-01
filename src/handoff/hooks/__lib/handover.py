@@ -58,6 +58,27 @@ class HandoverBuilder:
         self.project_root = project_root
         self.parser = transcript_parser
 
+    @staticmethod
+    def _extract_session_objectives(objectives_file: Path, max_objectives: int = 5) -> list[str]:
+        """Extract session objectives from objectives file.
+
+        Args:
+            objectives_file: Path to objectives.txt file
+            max_objectives: Maximum number of objectives to extract (default: 5)
+
+        Returns:
+            List of objective strings (non-empty, non-comment lines)
+        """
+        if not objectives_file.exists():
+            return []
+
+        objectives = []
+        for line in objectives_file.read_text().split("\n")[:max_objectives]:
+            line = line.strip()
+            if line and not line.startswith("#"):
+                objectives.append(line[:100])  # Truncate to 100 chars
+        return objectives
+
     def build(self, task_name: str) -> dict[str, Any]:
         """Generate handover data from session and CKS context.
 
