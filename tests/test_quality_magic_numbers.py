@@ -181,15 +181,14 @@ class TestMagicNumbersInHandoffStore:
             30,       # MAX_RECENT_TOOLS
             10,       # MAX_HANDOVER_DECISIONS/PATTERNS
             # Quality weights (documented in comments)
-            30,       # QUALITY_WEIGHT_COMPLETION (0.30)
+            # QUALITY_WEIGHT_COMPLETION (0.30)
             25,       # QUALITY_WEIGHT_OUTCOMES (0.25)
             20,       # QUALITY_WEIGHT_DECISIONS (0.20)
             15,       # QUALITY_WEIGHT_ISSUES (0.15)
-            10,       # QUALITY_WEIGHT_KNOWLEDGE (0.10)
+            # QUALITY_WEIGHT_KNOWLEDGE (0.10)
             # Quality score thresholds (documented in comments)
             90,       # QUALITY_SCORE_EXCELLENT (0.90)
-            70,       # QUALITY_SCORE_GOOD (0.70)
-            50,       # QUALITY_SCORE_ACCEPTABLE (0.50)
+            70,       # QUALITY_SCORE_ACCEPTABLE (0.50)
         }
 
         # Check if any suspicious numbers remain

@@ -20,6 +20,8 @@ import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 # Add hooks to path
 hooks_dir = Path("P:/packages/handoff/src/handoff/hooks").resolve()
 sys.path.insert(0, str(hooks_dir))
