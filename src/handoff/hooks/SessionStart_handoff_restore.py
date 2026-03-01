@@ -62,12 +62,9 @@ try:
 except ImportError:
     logger.debug("[SessionStart] hook_base module not available, using no-op decorator")
 
-    def hook_main(func: Callable[..., Any]) -> Callable[..., Any]:
+    def hook_main(func: F) -> F:
         """No-op decorator if hook_base not available."""
         return func
-
-    # Re-export for type checking
-    hook_main: Callable[[Callable[..., int]], Callable[..., int]]  # type: ignore[no-redef]
 
 
 def _validate_handoff_schema(handoff_data: dict[str, Any]) -> tuple[bool, str | None]:
