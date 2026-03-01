@@ -319,7 +319,7 @@ class PreCompactHandoffCapture:
             ][:5]
         return []
 
-    def _load_tool_sequence(self) -> list[dict]:
+    def _load_tool_sequence(self) -> list[dict[str, Any]]:
         """Load current tool sequence for evidence carry-forward across compaction.
 
         Returns full tool sequence (up to 30 entries) so that
