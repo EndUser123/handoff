@@ -953,6 +953,14 @@ class HandoffStore:
         task_data["tasks"][CONTINUE_SESSION_TASK_ID] = continue_task
         task_data["last_update"] = utcnow_iso()
 
+        # PERF-001: Create manifest file for O(1) lookup
+        manifest_path = task_tracker_dir / "active_session_manifest.json"
+        manifest_data = {
+            "terminal_id": self.terminal_id,
+            "timestamp": utcnow_iso(),
+            "handoff_path": validated_metadata.get("transcript_path", ""),
+        }
+
         # SEC-003: Use atomic file locking to prevent concurrent compaction race condition
         # Platform-specific locking (Windows: msvcrt.locking, Unix: fcntl.flock)
         # This replaces the vulnerable os.open(O_CREAT|O_EXCL) approach which had TOCTOU vulnerability
