@@ -795,7 +795,7 @@ class HandoffStore:
 
         session_id = f"session_{int(datetime.now(UTC).timestamp())}_{task_name.lower()}"
 
-        handoff_data = {
+        handoff_data: dict[str, Any] = {
             # Checkpoint chain fields (NEW)
             "checkpoint_id": checkpoint_id,
             "parent_checkpoint_id": parent_checkpoint_id,
