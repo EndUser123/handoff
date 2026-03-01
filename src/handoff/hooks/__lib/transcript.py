@@ -248,7 +248,7 @@ def _determine_structure_type(
     has_assessment: bool,
     has_comparison: bool,
     search_keys: list[str],
-) -> dict[str, Any] | None:
+) -> StructureInfo | None:
     """Determine structure type from detection results.
 
     Args:
@@ -258,19 +258,19 @@ def _determine_structure_type(
         search_keys: Extracted search keys
 
     Returns:
-        Dict with "type" and "search_keys", or None if unstructured
+        StructureInfo with "type" and "search_keys", or None if unstructured
     """
     if has_table:
-        return {"type": "analysis_table", "search_keys": search_keys}
+        return StructureInfo(type="analysis_table", search_keys=search_keys)
     elif has_assessment:
-        return {"type": "priority_matrix", "search_keys": search_keys}
+        return StructureInfo(type="priority_matrix", search_keys=search_keys)
     elif has_comparison:
-        return {"type": "comparison", "search_keys": search_keys}
+        return StructureInfo(type="comparison", search_keys=search_keys)
 
     return None
 
 
-def detect_structure_type(content: str) -> dict[str, Any] | None:
+def detect_structure_type(content: str) -> StructureInfo | None:
     """Detect structured content format (tables, comparisons, assessments).
 
     Args:
