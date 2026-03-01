@@ -16,9 +16,44 @@ import logging
 import re
 from collections.abc import Iterator, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any, TypedDict
 
 logger = logging.getLogger(__name__)
+
+
+# TypedDict definitions for public API type safety (QUAL-003)
+class StructureInfo(TypedDict):
+    """TypedDict for detect_structure_type return value.
+
+    Attributes:
+        type: The structure type detected (e.g., "analysis_table", "priority_matrix", "comparison")
+        search_keys: List of search keys extracted from the content
+    """
+
+    type: str
+    search_keys: list[str]
+
+
+class BlockerDict(TypedDict):
+    """TypedDict for blocker parameter in extract_user_message_from_blocker.
+
+    Attributes:
+        description: Description of the blocker, may contain "User's last question:" prefix
+    """
+
+    description: str
+
+
+class MessageDict(TypedDict):
+    """TypedDict for message items in filter_valid_messages and extract_transcript_from_messages.
+
+    Attributes:
+        role: Message role (e.g., "user", "assistant", "system")
+        content: Message content (string or list of content items)
+    """
+
+    role: str
+    content: str | list[Any]
 
 
 # Module-level helper functions (extracted from HandoverBuilder static methods)
