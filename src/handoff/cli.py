@@ -567,7 +567,7 @@ def format_handoff_markdown(handoff_data: dict[str, Any], mode: str = "detailed"
     return "\n".join(lines)
 
 
-def main():
+def main() -> int:
     """Main entry point for handoff CLI."""
     import argparse
 
