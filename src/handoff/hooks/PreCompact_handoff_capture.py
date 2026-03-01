@@ -886,43 +886,12 @@ class PreCompactHandoffCapture:
         Deletes task files older than CLEANUP_DAYS (default 90 days).
         This runs on EVERY compaction, not just when --cleanup flag is used.
         """
-        from handoff.config import CLEANUP_DAYS
+        from handoff.config import cleanup_old_handoffs
 
-        task_tracker_dir = self.project_root / ".claude" / "state" / "task_tracker"
-        if not task_tracker_dir.exists():
-            return
-
-        # Calculate cutoff time
-        cutoff_time = datetime.now(UTC).timestamp() - (CLEANUP_DAYS * 86400)
-
-        # Find old files
-        to_delete = []
-        for task_file in task_tracker_dir.glob("*_tasks.json"):
-            try:
-                mtime = task_file.stat().st_mtime
-                if mtime < cutoff_time:
-                    to_delete.append(task_file)
-            except OSError:
-                continue
-
-        # Delete old files
-        deleted_count = 0
-        for task_file in to_delete:
-            try:
-                task_file.unlink()
-                deleted_count += 1
-                logger.debug(
-                    f"[PreCompact] Auto-deleted old handoff: {task_file.name} "
-                    f"(age: {(datetime.now(UTC).timestamp() - task_file.stat().st_mtime) // 86400} days)"
-                )
-            except OSError as e:
-                logger.warning(f"[PreCompact] Failed to delete old handoff {task_file.name}: {e}")
+        deleted_count = cleanup_old_handoffs(self.project_root)
 
         if deleted_count > 0:
-            print(
-                f"[PreCompact] Auto-cleanup: Deleted {deleted_count} old handoff file(s) "
-                f"(retention: {CLEANUP_DAYS} days)"
-            )
+            print(f"[PreCompact] Auto-cleanup: Deleted {deleted_count} old handoff file(s)")
 
     def run(self) -> bool:
         """Execute full PreCompact handoff process.
