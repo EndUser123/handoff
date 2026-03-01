@@ -58,7 +58,7 @@ class HandoverBuilder:
         self.project_root = project_root
         self.parser = transcript_parser
 
-    def build(self, task_name: str) -> HandoverData:
+    def build(self, task_name: str) -> dict[str, Any]:
         """Generate handover data from session and CKS context.
 
         Extracts:
