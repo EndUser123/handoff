@@ -11,7 +11,6 @@ Expected behavior: Lazy loading with itertools.islice() or similar
 Run with: pytest tests/test_performance_pagination.py -v
 """
 
-import pytest
 
 
 class CountingList:
@@ -135,7 +134,7 @@ class TestModificationsLazyLoading:
         After fix with itertools.islice(), should return an iterator instead.
         """
         # Arrange
-        from unittest.mock import patch, MagicMock
+        from unittest.mock import patch
 
         large_modification_list = [
             {"file": f"src/file_{i}.py", "action": "modified"}

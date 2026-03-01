@@ -12,6 +12,7 @@ Actual behavior (before fix): startswith() returns early on mismatch, leaking ti
 Run with: pytest tests/test_security_checksum_timing.py -v
 """
 
+import hmac
 import statistics
 import time
 from typing import Callable
@@ -64,6 +65,37 @@ def measure_timing_distribution(
         "max": max(timings),
         "stdev": statistics.stdev(timings) if len(timings) > 1 else 0.0,
     }
+
+
+def current_vulnerable_comparison(stored_checksum: str, computed: str) -> bool:
+    """Current vulnerable implementation using startswith().
+
+    This is the VULNERABLE implementation from line 109:
+        if not stored_checksum.startswith(computed):
+
+    Args:
+        stored_checksum: The stored checksum from handoff data
+        computed: The computed checksum
+
+    Returns:
+        True if stored_checksum starts with computed (vulnerable to timing)
+    """
+    return stored_checksum.startswith(computed)
+
+
+def secure_comparison_hmac(stored_checksum: str, computed: str) -> bool:
+    """Secure implementation using hmac.compare_digest().
+
+    This is the SECURE implementation that should replace startswith().
+
+    Args:
+        stored_checksum: The stored checksum from handoff data
+        computed: The computed checksum
+
+    Returns:
+        True if checksums match (constant-time comparison)
+    """
+    return hmac.compare_digest(stored_checksum, computed)
 
 
 def current_vulnerable_comparison(stored_checksum: str, computed: str) -> bool:
