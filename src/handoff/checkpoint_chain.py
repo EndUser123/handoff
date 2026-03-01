@@ -134,21 +134,7 @@ class CheckpointChain:
 
                 # Migrate old format handoffs that don't have checkpoint_id
                 if "checkpoint_id" not in handoff:
-                    # Check migration cache first for consistency
-                    if task_id in self._migration_cache:
-                        migrated_handoff = self._migration_cache[task_id]
-                    else:
-                        # Apply migration with lock to prevent race conditions
-                        with self._migration_lock:
-                            # Double-check after acquiring lock
-                            if task_id not in self._migration_cache:
-                                migrated_handoff = migrate_checkpoint_chain_fields(handoff)
-                                # Cache the migrated handoff for this session
-                                self._migration_cache[task_id] = migrated_handoff
-                            else:
-                                migrated_handoff = self._migration_cache[task_id]
-
-                    # Update metadata with migrated handoff for from_task_metadata
+                    migrated_handoff = self._get_or_migrate_handoff(task_id, handoff)
                     metadata = {**metadata, "handoff": migrated_handoff}
 
                 # Get the (possibly migrated) handoff from metadata
