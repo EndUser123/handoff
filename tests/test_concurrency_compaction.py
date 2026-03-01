@@ -90,12 +90,27 @@ def worker_compact_terminal(worker_id: int, temp_dir_str: str, terminal_id: str)
             calculate_quality=False,
         )
 
+        # Create handoff_metadata from handoff_data
+        # create_continue_session_task expects a specific metadata structure
+        handoff_metadata = {
+            "task_name": f"concurrent_task_worker_{worker_id}",
+            "progress_percent": handoff_data["progress_pct"],
+            "blocker": handoff_data["blocker"],
+            "next_steps": "\n".join(handoff_data["next_steps"]),
+            "saved_at": handoff_data.get("saved_at", "2024-01-01T00:00:00.000000"),
+            "checkpoint_id": handoff_data.get("checkpoint_id", ""),
+            "chain_id": handoff_data.get("chain_id", ""),
+            "handover": handoff_data["handover"],
+            "modifications": handoff_data["modifications"],
+            "files_modified": handoff_data.get("files_modified", []),
+        }
+
         # Attempt to create continue_session task
         # This is where concurrent writes would cause corruption
         store.create_continue_session_task(
             task_name=f"concurrent_task_worker_{worker_id}",
             task_id=f"task_worker_{worker_id}",
-            handoff_metadata=handoff_data,
+            handoff_metadata=handoff_metadata,
         )
 
         # Report success
