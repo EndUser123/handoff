@@ -107,8 +107,8 @@ def test_detect_structure_type_return_type_specificity():
     # Get the function
     func = transcript.detect_structure_type
 
-    # Get type hints
-    type_hints = get_type_hints(func)
+    # Get type hints with extras to preserve Annotated metadata
+    type_hints = get_type_hints(func, include_extras=True)
 
     # Check return type
     assert "return" in type_hints, "detect_structure_type should have return type hint"
