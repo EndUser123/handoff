@@ -649,15 +649,7 @@ def main() -> int:
             return 0
 
         cutoff_time = datetime.now(UTC).timestamp() - (CLEANUP_DAYS * 86400)
-        to_delete = []
-
-        for task_file in task_tracker_dir.glob("*_tasks.json"):
-            try:
-                mtime = task_file.stat().st_mtime
-                if mtime < cutoff_time:
-                    to_delete.append(task_file)
-            except OSError:
-                continue
+        to_delete = [f for f in task_tracker_dir.glob("*_tasks.json") if _is_stale_task_file(f, cutoff_time)]
 
         if args.cleanup:
             print(f"Handoff cleanup (dry-run, retention={CLEANUP_DAYS} days):")
