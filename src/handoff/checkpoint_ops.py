@@ -177,7 +177,8 @@ class PendingOperation:
                 f"Invalid state transition: cannot transition from {self.state} to {new_state}"
             )
 
-        self.state = new_state
+        # Type narrowing: validated above, safe to cast
+        self.state = new_state  # type: ignore[assignment]
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> PendingOperation:
