@@ -943,7 +943,7 @@ class HandoffStore:
         try:
             # Acquire lock with timeout and stale lock handling
             # FileLock context manager ensures lock is released even on error
-            with FileLock(lock_file_path, timeout=5.0, stale_age=10.0):
+            with FileLock(lock_file_path, timeout=LOCK_TIMEOUT_SECONDS, stale_age=STALE_LOCK_AGE_SECONDS):
                 # Atomic write: temp file + rename
                 fd, temp_path = tempfile.mkstemp(
                     suffix=".tmp", dir=str(task_tracker_dir), prefix=f"{self.terminal_id}_tasks_"

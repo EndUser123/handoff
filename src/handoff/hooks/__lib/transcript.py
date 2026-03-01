@@ -16,7 +16,7 @@ import logging
 import re
 from collections.abc import Iterator, Sequence
 from pathlib import Path
-from typing import Annotated, Any, TypedDict
+from typing import Any, TypedDict
 
 logger = logging.getLogger(__name__)
 
