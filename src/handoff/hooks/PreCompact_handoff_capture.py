@@ -159,6 +159,36 @@ class PreCompactHandoffCapture:
             )
             return None
 
+    @staticmethod
+    def _check_transcript_availability(transcript_path: str | None) -> bool:
+        """Check if transcript file is available and contains user messages.
+
+        Args:
+            transcript_path: Path to transcript file
+
+        Returns:
+            True if transcript is available and readable, False otherwise
+        """
+        if not transcript_path:
+            logger.warning("[PreCompact] WARNING: No transcript path available - skipping handoff capture")
+            return False
+
+        transcript_file = Path(transcript_path)
+        if not transcript_file.exists():
+            logger.warning("[PreCompact] WARNING: Transcript file missing - cannot capture authentic context")
+            return False
+
+        try:
+            file_size = transcript_file.stat().st_size
+            if file_size == 0:
+                logger.warning("[PreCompact] WARNING: Transcript file is empty - skipping handoff capture")
+                return False
+        except OSError:
+            logger.warning("[PreCompact] WARNING: Could not read transcript - skipping handoff capture")
+            return False
+
+        return True
+
     def __init__(self, hook_input: dict[str, Any] | None = None):
         """Initialize PreCompact handoff orchestrator.
 
