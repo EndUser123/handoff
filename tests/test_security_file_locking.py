@@ -142,11 +142,12 @@ class TestFileLockingRaceCondition:
 
             # Launch two worker processes simultaneously
             # This creates a race condition window
+            # Both processes use the SAME terminal ID to compete for the SAME file
             workers = []
             for i in range(2):
                 p = Process(
                     target=write_handoff_process,
-                    args=(i, task_file_path, result_queue),
+                    args=(i, task_file_path, result_queue, terminal_id),
                 )
                 workers.append(p)
 
