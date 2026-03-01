@@ -7,17 +7,68 @@ to /code task templates for the iterative fix-all workflow.
 Run with: pytest tests/test_findings_to_tasks.py -v
 """
 
+from __future__ import annotations
+
 import json
 import sys
 import tempfile
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-# Add the lib directory to Python path
-# From P:\packages\handoff\tests\ go up 4 levels to P:\, then to .claude\skills\code\lib
-lib_path = Path(__file__).parent.parent.parent.parent / ".claude" / "skills" / "code" / "lib"
-sys.path.insert(0, str(lib_path))
+# Add the lib directory to Python path for the code skill library
+# From tests/ go up to project root (P:/), then to .claude/skills/code/lib
+if TYPE_CHECKING:
+    from findings_to_tasks import convert_findings_to_tasks
+else:
+    lib_path = Path(__file__).parent.parent.parent.parent / ".claude" / "skills" / "code" / "lib"
+    sys.path.insert(0, str(lib_path))
+    from findings_to_tasks import convert_findings_to_tasks
 
-from findings_to_tasks import convert_findings_to_tasks
+
+def _create_temp_findings_file(findings_data: dict) -> Path:
+    """Create a temporary JSON file with findings data.
+
+    Args:
+        findings_data: Dictionary containing findings to write
+
+    Returns:
+        Path to the temporary file
+    """
+    f = tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False)
+    json.dump(findings_data, f)
+    f.close()
+    return Path(f.name)
+
+
+def _base_finding(
+    finding_id: str,
+    severity: str,
+    title: str,
+    file_path: str = "src/file.py",
+    line: int = 1,
+) -> dict:
+    """Create a base finding dictionary with common fields.
+
+    Args:
+        finding_id: Unique identifier for the finding
+        severity: Severity level (CRITICAL, HIGH, MEDIUM, LOW)
+        title: Brief title describing the finding
+        file_path: Path to the file with the finding
+        line: Line number of the finding
+
+    Returns:
+        Dictionary with finding data
+    """
+    return {
+        "id": finding_id,
+        "severity": severity,
+        "title": title,
+        "confidence": 95,
+        "file": file_path,
+        "line": line,
+        "description": f"Description for {finding_id}",
+        "recommended_action": f"Fix {finding_id}",
+    }
 
 
 class TestConvertCriticalFindings:
