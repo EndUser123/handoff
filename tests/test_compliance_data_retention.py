@@ -107,14 +107,10 @@ class TestDataRetentionAutomaticCleanup:
 
         # Act: Simulate compaction WITHOUT --cleanup flag
         # This is the key test: compaction should auto-cleanup old data
-        # Currently, this does NOTHING (no auto-cleanup)
+        # Call the cleanup function that PreCompact hook uses
+        from handoff.config import cleanup_old_handoffs
 
-        # Simulate what happens during normal compaction (no cleanup flags)
-        # In the current implementation, this is a NOOP for cleanup
-        # After the fix, this should trigger automatic cleanup
-
-        # For RED phase: Verify current behavior (no auto-cleanup)
-        # We'll check if old files still exist (they should - this is the bug)
+        cleanup_old_handoffs(temp_project_root)
 
         # Assert: COMP-001 VIOLATION - old files are NOT automatically cleaned up
         files_still_exist = []
