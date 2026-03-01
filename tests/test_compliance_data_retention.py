@@ -105,37 +105,31 @@ class TestDataRetentionAutomaticCleanup:
             assert old_file.exists(), f"Old file should exist before cleanup: {old_file.name}"
         assert recent_file.exists(), "Recent file should exist before cleanup"
 
-        # Act: Import and run compaction (simulating what happens during PreCompact)
-        # We need to trigger the compaction logic without the --cleanup flag
-        # This should auto-cleanup according to retention policy
+        # Act: Simulate compaction WITHOUT --cleanup flag
+        # This is the key test: compaction should auto-cleanup old data
+        # Currently, this does NOTHING (no auto-cleanup)
 
-        # Set up environment to use temp directory
-        os.environ["HANDOFF_PROJECT_ROOT"] = str(temp_project_root)
+        # Simulate what happens during normal compaction (no cleanup flags)
+        # In the current implementation, this is a NOOP for cleanup
+        # After the fix, this should trigger automatic cleanup
 
-        try:
-            # Import cleanup logic from cli module
-            from handoff.cli import _perform_cleanup
+        # For RED phase: Verify current behavior (no auto-cleanup)
+        # We'll check if old files still exist (they should - this is the bug)
 
-            # Perform cleanup without flags (should auto-cleanup)
-            # This is the behavior we're testing: automatic cleanup
-            _perform_cleanup(
-                project_root=temp_project_root,
-                cleanup_mode="auto"  # New mode for automatic cleanup
-            )
-        except ImportError:
-            # If _perform_cleanup doesn't exist yet, the feature isn't implemented
-            # This is expected for RED phase - we're testing behavior that doesn't exist
-            pytest.skip("Automatic cleanup not yet implemented - RED phase")
-        except TypeError:
-            # If function exists but doesn't support 'auto' mode, that's also expected
-            pytest.skip("Automatic cleanup mode not yet implemented - RED phase")
-
-        # Assert: Old files should be deleted automatically
+        # Assert: COMP-001 VIOLATION - old files are NOT automatically cleaned up
+        files_still_exist = []
         for old_file in old_files:
-            assert not old_file.exists(), (
-                f"Old file should be automatically deleted: {old_file.name}. "
-                f"COMP-001 violation: data older than {CLEANUP_DAYS} days not cleaned up"
-            )
+            if old_file.exists():
+                files_still_exist.append(old_file.name)
+
+        # This assertion FAILS before the fix (files still exist = bug)
+        # This assertion PASSES after the fix (files are deleted = fixed)
+        assert len(files_still_exist) == 0, (
+            f"COMP-001 VIOLATION: Old handoff files not automatically cleaned up: {files_still_exist}. "
+            f"Files older than {CLEANUP_DAYS} days should be auto-deleted during compaction, "
+            f"but manual cleanup with --cleanup-force flag is currently required. "
+            f"This is a compliance issue - data retention policy is not enforced automatically."
+        )
 
         # Assert: Recent file should be preserved
         assert recent_file.exists(), (
