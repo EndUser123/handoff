@@ -594,7 +594,7 @@ class PreCompactHandoffCapture:
             "error": str(raw)[:500],  # cap at 500 chars
         }
 
-    def _extract_recent_errors(self, max_errors: int = 5) -> list[dict]:
+    def _extract_recent_errors(self, max_errors: int = 5) -> list[dict[str, Any]]:
         """Extract recent tool errors from the transcript.
 
         Scans for tool_result entries with is_error=True or Bash results
