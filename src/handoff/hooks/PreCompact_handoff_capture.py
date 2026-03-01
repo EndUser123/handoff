@@ -515,7 +515,7 @@ class PreCompactHandoffCapture:
         """
         if not self.transcript_path:
             return []
-        last_todos: list[dict] = []
+        last_todos: list[dict[str, Any]] = []
         with open(self.transcript_path, encoding="utf-8") as f:
             for line in f:
                 try:
