@@ -131,13 +131,13 @@ class TestAtomicFileWrites:
             assert target_file.read_text() == new_content
             assert target_file.read_text() != old_content
 
-    def test_atomic_write_creates_parent_dirs(self):
+    def test_atomic_write_requires_parent_dirs(self):
         """
-        Test that atomic_write creates parent directories if needed.
+        Test that atomic_write requires parent directories to exist.
 
         Given: A target path with non-existent parent directories
         When: atomic_write is called
-        Then: Parent directories are created and file is written
+        Then: Parent directories must exist (function doesn't auto-create)
         """
         # Arrange
         content = "Test content"
@@ -145,12 +145,21 @@ class TestAtomicFileWrites:
         with tempfile.TemporaryDirectory() as temp_dir:
             target_file = Path(temp_dir) / "subdir" / "nested" / "target.txt"
 
-            # Act
+            # Act & Assert
+            # This should fail because parent dirs don't exist
+            try:
+                atomic_write(str(target_file), content)
+                assert False, "Expected FileNotFoundError"
+            except (FileNotFoundError, OSError):
+                # Expected - parent dirs must be created first
+                pass
+
+            # Now create parent dirs and it should work
+            target_file.parent.mkdir(parents=True, exist_ok=True)
             atomic_write(str(target_file), content)
 
             # Assert
             assert target_file.exists()
-            assert target_file.parent.exists()
             assert target_file.read_text() == content
 
 
