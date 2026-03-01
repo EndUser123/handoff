@@ -65,7 +65,8 @@ class TestFullPipelineWithMockFindings:
         try:
             # Act - Import and use the converter
             # Add path before importing
-            code_lib_path = Path(__file__).parent.parent.parent / ".claude" / "skills" / "code" / "lib"
+            # From P:\packages\handoff\tests\ go up 4 levels to P:\, then to .claude\skills\code\lib
+            code_lib_path = Path(__file__).parent.parent.parent.parent / ".claude" / "skills" / "code" / "lib"
             if str(code_lib_path) not in sys.path:
                 sys.path.insert(0, str(code_lib_path))
 
