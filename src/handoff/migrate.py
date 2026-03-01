@@ -38,12 +38,14 @@ if str(_hooks_path) not in sys.path:
     sys.path.insert(0, str(_hooks_path))
 
 try:
-    from terminal_detection import detect_terminal_id
+    from terminal_detection import detect_terminal_id  # type: ignore[import-untyped]
 except ImportError:
     logger.debug("[Migrate] terminal_detection module not available")
 
     # Fallback if terminal_detection unavailable
-    def detect_terminal_id() -> str:  # type: ignore[misc]
+    import os
+
+    def detect_terminal_id() -> str:
         return f"term_{os.getpid()}"
 
 # Import utility functions
