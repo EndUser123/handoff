@@ -14,9 +14,10 @@ Expected State (AFTER consolidation):
 
 import pytest
 
+from handoff.checkpoint_ops import PendingOperation as CheckpointOpsPendingOperation
+
 # Test imports from both modules
 from handoff.models import PendingOperation as ModelsPendingOperation
-from handoff.checkpoint_ops import PendingOperation as CheckpointOpsPendingOperation
 
 
 class TestPendingOperationConsolidation:
