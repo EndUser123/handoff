@@ -89,7 +89,7 @@ except ImportError:
 
 
 try:
-    from tool_sequence_manager import load_tool_sequence
+    from tool_sequence_manager import load_tool_sequence  # type: ignore[import-untyped]
 
     _TOOL_SEQUENCE_AVAILABLE = True
 except ImportError:
