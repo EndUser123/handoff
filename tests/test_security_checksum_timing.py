@@ -182,17 +182,23 @@ class TestChecksumTimingVulnerability:
 
         # This test FAILS if the vulnerable code is still present
         # (i.e., the fix has NOT been applied yet)
-        assert has_vulnerable_code and not has_secure_fix, (
-            "SEC-004: VULNERABLE CODE DETECTED\n"
-            "The _verify_handoff_checksum() function uses startswith() which is "
-            "vulnerable to timing attacks.\n\n"
-            "Current code (line 109):\n"
-            "    if not stored_checksum.startswith(computed):\n\n"
-            "Required fix:\n"
-            "    import hmac\n"
-            "    if not hmac.compare_digest(stored_checksum, computed):\n\n"
-            "This test will PASS after the fix is applied."
-        )
+        # We WANT this to fail initially, then pass after the fix
+        if has_vulnerable_code and not has_secure_fix:
+            # VULNERABLE CODE DETECTED - test FAILS
+            raise AssertionError(
+                "SEC-004: VULNERABLE CODE DETECTED\n"
+                "The _verify_handoff_checksum() function uses startswith() which is "
+                "vulnerable to timing attacks.\n\n"
+                "Current code (line 109):\n"
+                "    if not stored_checksum.startswith(computed):\n\n"
+                "Required fix:\n"
+                "    import hmac\n"
+                "    if not hmac.compare_digest(stored_checksum, computed):\n\n"
+                "This test will PASS after the fix is applied."
+            )
+
+        # If we get here, the fix has been applied
+        assert True, "Fix applied - using hmac.compare_digest()"
 
     def test_vulnerable_implementation_shows_timing_difference(self, sample_checksum, mismatch_first_char, mismatch_last_char):
         """
