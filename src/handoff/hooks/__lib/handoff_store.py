@@ -504,7 +504,13 @@ class HandoffStore:
         Args:
             project_root: Path to project root directory
             terminal_id: Terminal identifier for task tracking
+
+        Raises:
+            ValueError: If terminal_id fails validation (SEC-002)
         """
+        # SEC-002: Validate terminal_id format to prevent path traversal and injection attacks
+        self._validate_terminal_id(terminal_id)
+
         self.project_root = project_root
         self.terminal_id = terminal_id
         self._parsed_entries_cache: list[dict[str, Any]] | None = None
@@ -513,6 +519,58 @@ class HandoffStore:
         # Track current checkpoint for parent linking
         self._current_checkpoint_id: str | None = None
         self._current_chain_id: str | None = None
+
+    def _validate_terminal_id(self, terminal_id: str) -> None:
+        """Validate terminal_id format to prevent security issues (SEC-002).
+
+        Security validation checks:
+        - Reject empty or whitespace-only strings
+        - Reject null bytes (null byte injection)
+        - Reject path traversal patterns (../, ./, etc.)
+        - Reject absolute paths
+        - Enforce format: ^term_[a-zA-Z0-9_-]+$
+
+        Args:
+            terminal_id: Terminal identifier to validate
+
+        Raises:
+            ValueError: If terminal_id fails any validation check with descriptive message
+        """
+        # Check for empty or whitespace-only
+        if not terminal_id or not terminal_id.strip():
+            raise ValueError(
+                "terminal_id cannot be empty or whitespace-only. "
+                "Format: term_[a-zA-Z0-9_-]+"
+            )
+
+        # Check for null bytes (null byte injection prevention)
+        if '\x00' in terminal_id:
+            raise ValueError(
+                "terminal_id cannot contain null bytes. "
+                "Format: term_[a-zA-Z0-9_-]+"
+            )
+
+        # Check for path traversal patterns
+        if '..' in terminal_id or terminal_id.startswith('./'):
+            raise ValueError(
+                "terminal_id cannot contain path traversal sequences (.. or ./). "
+                "Format: term_[a-zA-Z0-9_-]+"
+            )
+
+        # Check for absolute paths
+        if terminal_id.startswith('/') or terminal_id.startswith('\\'):
+            raise ValueError(
+                "terminal_id cannot be an absolute path. "
+                "Format: term_[a-zA-Z0-9_-]+"
+            )
+
+        # Check format against regex pattern
+        if not TERMINAL_ID_PATTERN.match(terminal_id):
+            raise ValueError(
+                "terminal_id format invalid. "
+                "Must match pattern: term_[a-zA-Z0-9_-]+ "
+                f"(got: '{terminal_id}')"
+            )
 
     def build_handoff_data(
         self,
