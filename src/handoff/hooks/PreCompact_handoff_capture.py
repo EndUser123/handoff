@@ -120,11 +120,38 @@ class PreCompactHandoffCapture:
     """
 
     def _find_terminal_transcript(self) -> str | None:
-        """Find terminal-specific transcript using session_id from hook input.
+        """Find terminal-specific transcript using transcript_path from hook input.
+
+        Claude Code provides transcript_path directly in the hook input, so we use that
+        instead of building the path ourselves (which can fail due to path format issues).
 
         Returns:
             Path to transcript file or None if not found
         """
+        payload = self.hook_input or {}
+
+        # First priority: Use transcript_path from hook input (most reliable)
+        transcript_path = payload.get("transcript_path")
+        if isinstance(transcript_path, str) and transcript_path.strip():
+            candidate_path = transcript_path.strip()
+            if os.path.exists(candidate_path):
+                size_mb = os.path.getsize(candidate_path) / (1024 * 1024)
+                # Sanity check: skip if obviously wrong (too large or subagent file)
+                if size_mb <= 50 and "subagent" not in candidate_path.lower():
+                    logger.info(
+                        f"[PreCompact] Found transcript from hook input: {candidate_path} ({size_mb:.1f}MB)"
+                    )
+                    return candidate_path
+                else:
+                    logger.info(
+                        f"[PreCompact] Transcript from hook input fails sanity check: {size_mb:.1f}MB"
+                    )
+            else:
+                logger.info(
+                    f"[PreCompact] transcript_path from hook input does not exist: {candidate_path}"
+                )
+
+        # Fallback: Build from session_id (legacy behavior)
         project_conversations_dir = os.path.expanduser("~/.claude/projects/P--/")
         if not os.path.exists(project_conversations_dir):
             logger.info(
