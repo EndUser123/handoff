@@ -40,12 +40,27 @@ logger = logging.getLogger(__name__)
 # - Must not contain null bytes, path traversal, or special characters
 TERMINAL_ID_PATTERN = re.compile(r'^term_[a-zA-Z0-9_-]+$')
 
-# Import utility functions
+# Import utility functions and constants
 try:
-    from handoff.config import utcnow_iso
+    from handoff.config import (
+        LOCK_CHECK_INTERVAL_SECONDS,
+        LOCK_CHECKS_PER_SECOND,
+        LOCK_TIMEOUT_SECONDS,
+        MAX_RETRIES,
+        RETRY_BASE_DELAY_SECONDS,
+        STALE_LOCK_AGE_SECONDS,
+        utcnow_iso,
+    )
 except ImportError:
     # Fallback for testing
     from datetime import UTC, datetime
+
+    LOCK_TIMEOUT_SECONDS = 5.0
+    MAX_RETRIES = 5
+    RETRY_BASE_DELAY_SECONDS = 0.005
+    LOCK_CHECK_INTERVAL_SECONDS = 0.1
+    LOCK_CHECKS_PER_SECOND = 10
+    STALE_LOCK_AGE_SECONDS = 10.0
 
     def utcnow_iso() -> str:
         return datetime.now(UTC).isoformat()
