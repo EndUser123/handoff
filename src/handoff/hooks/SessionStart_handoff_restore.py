@@ -763,7 +763,11 @@ def main() -> int:
     # Validate schema
     is_valid, error = _validate_handoff_schema(handoff_data)
     if not is_valid:
-        # NOTE: Schema validation failures are silent - don't spam on every session
+        # Issue #10: Log schema validation failures at WARNING level
+        logger.warning(f"[SessionStart] Schema validation failed: {error}")
+        print(f"[SessionStart] Warning: Handoff data validation failed - {error}")
+        print("[SessionStart] Handoff restoration skipped due to invalid data structure")
+        # Still return 0 to allow session start
         return 0
 
     # Verify checksum

@@ -40,6 +40,15 @@ TIMEOUT_MINUTES = 45  # Release tasks in_progress longer than this
 # Lock settings
 LOCK_TIMEOUT_SECONDS = 5.0  # File lock acquisition timeout
 
+# Retry settings for atomic write operations
+MAX_RETRIES = 5  # Maximum retry attempts for atomic write operations
+RETRY_BASE_DELAY_SECONDS = 0.005  # Base delay for exponential backoff (5ms)
+
+# File lock polling settings
+LOCK_CHECK_INTERVAL_SECONDS = 0.1  # Interval between lock acquisition attempts (100ms)
+LOCK_CHECKS_PER_SECOND = 10  # Number of lock checks per second (1 / LOCK_CHECK_INTERVAL_SECONDS)
+STALE_LOCK_AGE_SECONDS = 10.0  # Age after which a lock is considered stale (10 seconds)
+
 
 def get_handoff_dir(project_root: Path | None = None) -> Path:
     """
