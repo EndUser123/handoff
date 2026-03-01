@@ -392,7 +392,7 @@ class PreCompactHandoffCapture:
 
         msg = entry.get("message", {})
         if isinstance(msg, dict):
-            return msg.get("content", "")
+            return str(msg.get("content", ""))
         elif isinstance(msg, str):
             return msg
         return ""
