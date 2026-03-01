@@ -513,15 +513,15 @@ if __name__ == "__main__":
     # Test the manager
     manager = TaskIdentityManager()
 
-    logger.info(Testing Task Identity ManagerTesting Task Identity Manager)
+    logger.info("Testing Task Identity Manager")
     logger.info("=" * 50)
 
     # Test: Get current task
     task = manager.get_current_task()
-    logger.info(Current task: {task}fCurrent task: {task})
+    logger.info(f"Current task: {task}")
 
     # Test: Set task
     if task:
-        logger.info(\nTask '{task}' recovered from sourcef\nTask '{task}' recovered from source)
+        logger.info(f"\nTask '{task}' recovered from source")
     else:
-        logger.info(\nNo task found - would prompt user\nNo task found - would prompt user)
+        logger.info("\nNo task found - would prompt user")
