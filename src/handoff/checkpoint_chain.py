@@ -19,8 +19,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from handoff.migrate import migrate_checkpoint_chain_fields
-
 
 @dataclass(slots=True)
 class HandoffCheckpointRef:
@@ -147,6 +145,31 @@ class CheckpointChain:
         # Sort by created_at (oldest first)
         checkpoints.sort(key=lambda c: c.created_at)
         return checkpoints
+
+    def _get_or_migrate_handoff(self, task_id: str, handoff: dict) -> dict:
+        """Get or migrate handoff data for a task.
+
+        Args:
+            task_id: Task identifier
+            handoff: Handoff data dictionary
+
+        Returns:
+            Migrated handoff data
+        """
+        if task_id in self._migration_cache:
+            return self._migration_cache[task_id]
+
+        # Apply migration with lock to prevent race conditions
+        with self._migration_lock:
+            # Double-check after acquiring lock
+            if task_id not in self._migration_cache:
+                from .migrate import migrate_checkpoint_chain_fields
+                migrated_handoff = migrate_checkpoint_chain_fields(handoff)
+                # Cache the migrated handoff for this session
+                self._migration_cache[task_id] = migrated_handoff
+                return migrated_handoff
+            else:
+                return self._migration_cache[task_id]
 
     def get_chain(self, chain_id: str) -> list[HandoffCheckpointRef]:
         """Get all checkpoints in a chain, ordered oldest to newest.
