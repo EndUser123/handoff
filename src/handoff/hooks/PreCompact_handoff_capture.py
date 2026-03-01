@@ -710,7 +710,7 @@ class PreCompactHandoffCapture:
         """
         if not self.transcript_path:
             return []
-        edits: list[dict] = []
+        edits: list[dict[str, Any]] = []
         with open(self.transcript_path, encoding="utf-8") as f:
             lines = f.readlines()
         recent = lines[-200:] if len(lines) > 200 else lines
