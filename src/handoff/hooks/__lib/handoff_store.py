@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import tempfile
 import time
 from datetime import UTC, datetime
@@ -22,6 +23,13 @@ from typing import Any
 from uuid import uuid4
 
 logger = logging.getLogger(__name__)
+
+# Terminal ID validation pattern (SEC-002)
+# Format: term_[a-zA-Z0-9_-]+
+# - Must start with 'term_' prefix
+# - Must contain only alphanumeric characters, underscores, and hyphens
+# - Must not contain null bytes, path traversal, or special characters
+TERMINAL_ID_PATTERN = re.compile(r'^term_[a-zA-Z0-9_-]+$')
 
 # Import utility functions
 try:
