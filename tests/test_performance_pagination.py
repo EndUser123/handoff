@@ -11,10 +11,7 @@ Expected behavior: Lazy loading with itertools.islice() or similar
 Run with: pytest tests/test_performance_pagination.py -v
 """
 
-import pytest
-from unittest.mock import MagicMock, patch
-import sys
-from pathlib import Path
+from unittest.mock import MagicMock
 
 
 class TestModificationsLazyLoading:
