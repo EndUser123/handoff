@@ -103,7 +103,8 @@ def load_json_file(file_path: Path) -> dict[str, Any] | None:
     try:
         if not file_path.exists():
             return None
-        return json.loads(file_path.read_text(encoding="utf-8"))
+        result = json.loads(file_path.read_text(encoding="utf-8"))
+        return result if isinstance(result, dict) else None  # type: ignore[return-value]
     except (json.JSONDecodeError, OSError) as e:
         logger.debug(f"[Config] Could not load JSON file {file_path}: {e}")
         # Log error but don't raise - caller decides if None is fatal
