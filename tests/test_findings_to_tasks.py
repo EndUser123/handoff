@@ -119,7 +119,7 @@ class TestConvertCriticalFindings:
 class TestConvertHighFindings:
     """Tests for HIGH severity findings conversion."""
 
-    def test_convert_high_findings(self):
+    def test_convert_high_findings(self) -> None:
         """
         Test that HIGH severity findings are converted to tasks.
 
@@ -146,13 +146,10 @@ class TestConvertHighFindings:
             "testing": []
         }
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            json.dump(findings_data, f)
-            findings_file = f.name
-
+        findings_file = _create_temp_findings_file(findings_data)
         try:
             # Act
-            tasks = convert_findings_to_tasks(findings_file, min_severity="MEDIUM")
+            tasks = convert_findings_to_tasks(str(findings_file), min_severity="MEDIUM")
 
             # Assert
             assert len(tasks) == 1
@@ -161,7 +158,7 @@ class TestConvertHighFindings:
             assert tasks[0]["metadata"]["severity"] == "HIGH"
             assert tasks[0]["metadata"]["id"] == "PERF-001"
         finally:
-            Path(findings_file).unlink()
+            findings_file.unlink()
 
 
 class TestConvertMediumFindings:
