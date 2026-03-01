@@ -34,7 +34,7 @@ class StructureInfo(TypedDict):
     search_keys: list[str]
 
 
-class BlockerDict(TypedDict):
+class BlockerDef(TypedDict):
     """TypedDict for blocker parameter in extract_user_message_from_blocker.
 
     Attributes:
