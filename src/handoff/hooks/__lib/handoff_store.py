@@ -736,37 +736,25 @@ class HandoffStore:
         # Check for empty or whitespace-only
         if not terminal_id or not terminal_id.strip():
             raise ValueError(
-                "terminal_id cannot be empty or whitespace-only. "
-                "Format: term_[a-zA-Z0-9_-]+"
+                "terminal_id cannot be empty or whitespace-only"
             )
 
         # Check for null bytes (null byte injection prevention)
         if '\x00' in terminal_id:
             raise ValueError(
-                "terminal_id cannot contain null bytes. "
-                "Format: term_[a-zA-Z0-9_-]+"
+                f"terminal_id cannot contain null bytes (got: '{terminal_id}')"
             )
 
         # Check for path traversal patterns
         if '..' in terminal_id or terminal_id.startswith('./'):
             raise ValueError(
-                "terminal_id cannot contain path traversal sequences (.. or ./). "
-                "Format: term_[a-zA-Z0-9_-]+"
+                f"terminal_id cannot contain path traversal sequences (got: '{terminal_id}')"
             )
 
         # Check for absolute paths
         if terminal_id.startswith('/') or terminal_id.startswith('\\'):
             raise ValueError(
-                "terminal_id cannot be an absolute path. "
-                "Format: term_[a-zA-Z0-9_-]+"
-            )
-
-        # Check format against regex pattern
-        if not TERMINAL_ID_PATTERN.match(terminal_id):
-            raise ValueError(
-                "terminal_id format invalid. "
-                "Must match pattern: term_[a-zA-Z0-9_-]+ "
-                f"(got: '{terminal_id}')"
+                f"terminal_id cannot be an absolute path (got: '{terminal_id}')"
             )
 
     def build_handoff_data(
