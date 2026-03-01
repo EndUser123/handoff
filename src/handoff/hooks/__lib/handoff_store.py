@@ -127,7 +127,7 @@ class FileLock:
         self.lock_file_path = lock_file_path
         self.timeout = timeout
         self.stale_age = stale_age
-        self.lock_fd = None
+        self.lock_fd: int | None = None
         self._acquired = False
 
     def acquire(self) -> bool:
