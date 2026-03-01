@@ -18,6 +18,7 @@ import re
 
 # Platform-specific imports for file locking
 import sys
+
 if sys.platform == 'win32':
     import msvcrt
 else:
@@ -175,7 +176,7 @@ class FileLock:
                 # Lock file exists but we couldn't open it
                 self._check_and_remove_stale_lock()
                 time.sleep(retry_interval)
-            except OSError as e:
+            except OSError:
                 # Error during lock acquisition
                 if self.lock_fd is not None:
                     try:
@@ -246,7 +247,7 @@ class FileLock:
                 pass
             self._acquired = False
 
-    def __enter__(self) -> "FileLock":
+    def __enter__(self) -> FileLock:
         """Enter context manager and acquire lock."""
         if not self.acquire():
             # Timeout waiting for lock
@@ -919,58 +920,59 @@ class HandoffStore:
         task_data["tasks"][CONTINUE_SESSION_TASK_ID] = continue_task
         task_data["last_update"] = utcnow_iso()
 
-        # Issue #6: Add file locking to prevent concurrent compaction race condition
-        # Use exclusive lock file to serialize writes across terminals/processes
+        # SEC-003: Use atomic file locking to prevent concurrent compaction race condition
+        # Platform-specific locking (Windows: msvcrt.locking, Unix: fcntl.flock)
+        # This replaces the vulnerable os.open(O_CREAT|O_EXCL) approach which had TOCTOU vulnerability
         lock_file_path = task_file_path.with_suffix(".lock")
-        lock_fd = None
+
         try:
-            # Try to create lock file exclusively (fails if lock exists)
-            import time
-            max_lock_wait = 5  # Wait up to 5 seconds for lock
-            lock_acquired = False
-            for attempt in range(max_lock_wait * 10):  # 10 checks per second
+            # Acquire lock with timeout and stale lock handling
+            # FileLock context manager ensures lock is released even on error
+            with FileLock(lock_file_path, timeout=5.0, stale_age=10.0):
+                # Atomic write: temp file + rename
+                fd, temp_path = tempfile.mkstemp(
+                    suffix=".tmp", dir=str(task_tracker_dir), prefix=f"{self.terminal_id}_tasks_"
+                )
                 try:
-                    lock_fd = os.open(lock_file_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-                    lock_acquired = True
-                    break
-                except FileExistsError:
-                    # Lock exists, wait and retry
-                    time.sleep(0.1)
-                    # Check if lock is stale (older than 10 seconds)
+                    with os.fdopen(fd, "w", encoding="utf-8") as f:
+                        json.dump(task_data, f, indent=2)
+
+                    # Atomic rename with retry for Windows PermissionError (WinError 5)
+                    atomic_write_with_retry(temp_path, task_file_path)
+
+                    print(
+                        f"[HandoffStore] active_session task added to {task_file_path.name} (PID {os.getpid()})"
+                    )
+                    print(f"[HandoffStore] continue_session task added to {task_file_path.name}")
+                except OSError as write_error:
+                    logger.error(
+                        f"[HandoffStore] Failed to write task file {task_file_path}: {write_error}"
+                    )
                     try:
-                        lock_stat = os.stat(lock_file_path)
-                        lock_age = time.time() - lock_stat.st_mtime
-                        if lock_age > 10:
-                            # Stale lock, remove it
-                            os.unlink(lock_file_path)
-                            logger.warning(
-                                f"[HandoffStore] Removed stale lock file: {lock_file_path.name}"
-                            )
+                        os.unlink(temp_path)
                     except OSError:
                         pass
+                    raise write_error
 
-            if not lock_acquired:
-                logger.warning(
-                    f"[HandoffStore] Could not acquire lock for {task_file_path.name} after "
-                    f"{max_lock_wait}s - proceeding with write anyway"
-                )
-                lock_fd = None
-
-            # Atomic write: temp file + rename
+        except TimeoutError:
+            # Lock acquisition timeout - log warning but proceed with write
+            # This maintains backward compatibility with original behavior
+            logger.warning(
+                f"[HandoffStore] Could not acquire lock for {task_file_path.name} after "
+                f"5s timeout - proceeding with write anyway (risk of concurrent writes)"
+            )
+            # Proceed with write anyway (risky but maintains compatibility)
             fd, temp_path = tempfile.mkstemp(
                 suffix=".tmp", dir=str(task_tracker_dir), prefix=f"{self.terminal_id}_tasks_"
             )
             try:
                 with os.fdopen(fd, "w", encoding="utf-8") as f:
                     json.dump(task_data, f, indent=2)
-
-                # Atomic rename with retry for Windows PermissionError (WinError 5)
                 atomic_write_with_retry(temp_path, task_file_path)
-
                 print(
-                    f"[HandoffStore] active_session task added to {task_file_path.name} (PID {os.getpid()})"
+                    f"[HandoffStore] active_session task added to {task_file_path.name} (PID {os.getpid()}) [no lock]"
                 )
-                print(f"[HandoffStore] continue_session task added to {task_file_path.name}")
+                print(f"[HandoffStore] continue_session task added to {task_file_path.name} [no lock]")
             except OSError as write_error:
                 logger.error(
                     f"[HandoffStore] Failed to write task file {task_file_path}: {write_error}"
@@ -980,15 +982,3 @@ class HandoffStore:
                 except OSError:
                     pass
                 raise write_error
-        finally:
-            # Issue #6: Only release lock file if WE acquired it
-            # Important: Don't delete another process's lock file!
-            if lock_acquired and lock_fd is not None:
-                try:
-                    os.close(lock_fd)
-                except OSError:
-                    pass
-                try:
-                    lock_file_path.unlink(missing_ok=True)
-                except OSError:
-                    pass
