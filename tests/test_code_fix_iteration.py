@@ -17,7 +17,8 @@ import tempfile
 from pathlib import Path
 
 # Add lib directory to Python path
-lib_path = Path(__file__).parent.parent.parent / ".claude" / "skills" / "p" / "lib"
+# From P:\packages\handoff\tests\ go up 4 levels to P:\, then to .claude\skills\p\lib
+lib_path = Path(__file__).parent.parent.parent.parent / ".claude" / "skills" / "p" / "lib"
 sys.path.insert(0, str(lib_path))
 
 # Import from p skill lib
