@@ -13,7 +13,8 @@ import tempfile
 from pathlib import Path
 
 # Add the lib directory to Python path
-lib_path = Path(__file__).parent.parent.parent / ".claude" / "skills" / "code" / "lib"
+# From P:\packages\handoff\tests\ go up 4 levels to P:\, then to .claude\skills\code\lib
+lib_path = Path(__file__).parent.parent.parent.parent / ".claude" / "skills" / "code" / "lib"
 sys.path.insert(0, str(lib_path))
 
 from findings_to_tasks import convert_findings_to_tasks
