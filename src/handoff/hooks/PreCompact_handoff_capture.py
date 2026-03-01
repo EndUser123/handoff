@@ -44,7 +44,7 @@ if str(claude_hooks_dir) not in sys.path:
     sys.path.insert(0, str(claude_hooks_dir))
 
 # Import auto-logging decorator
-from __lib.hook_base import hook_main
+from __lib.hook_base import hook_main  # type: ignore[import-untyped]
 
 # Import from handoff package
 from handoff.config import ensure_directories
