@@ -266,7 +266,8 @@ def _load_or_create_task_file(task_file_path: Path, terminal_id: str) -> dict[st
     if task_file_path.exists():
         try:
             with open(task_file_path, encoding="utf-8") as f:
-                return json.load(f)
+                data: dict[str, Any] = json.load(f)
+                return data
         except (json.JSONDecodeError, OSError, ValueError) as e:
             logger.debug(f"[Migrate] Task file corrupt, creating new: {e}")
             # File exists but is corrupt, create new structure
