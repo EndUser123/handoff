@@ -155,7 +155,7 @@ class TestConvertMediumFindings:
 
             # Assert
             assert len(tasks) == 1
-            assert tasks[0]["subject"] == "Fix inefficient duplicate detection"
+            assert tasks[0]["subject"] == "Fix inefficient duplicate detection O(n*m)"
             assert "PERF-002" in tasks[0]["description"]
             assert tasks[0]["metadata"]["severity"] == "MEDIUM"
             assert tasks[0]["metadata"]["id"] == "PERF-002"
