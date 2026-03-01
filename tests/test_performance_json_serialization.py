@@ -254,6 +254,13 @@ class TestJSONSerializationPerformance:
         )
 
 
+@pytest.fixture
+def temp_dir():
+    """Create temporary directory for test files (shared across all tests)."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        yield Path(tmpdir)
+
+
 class TestSerializationPerformanceImpact:
     """Tests measuring performance impact of duplicate serialization."""
 
