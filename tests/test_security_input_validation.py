@@ -348,31 +348,18 @@ class TestHandoffStoreTerminalIdValidation:
 
         Given: A malicious terminal_id with path traversal
         When: HandoffStore is initialized with malicious terminal_id
-        Then: It should sanitize or reject the terminal_id
+        Then: It should raise ValueError for path traversal sequences
 
-        Current behavior (BUG): terminal_id is used directly in file paths
-        Expected behavior: Should validate terminal_id before use
+        SECURITY FIX: Path traversal sequences (..) are now rejected at
+        initialization time, preventing any file operations outside project_root.
         """
         with tempfile.TemporaryDirectory() as tmpdir:
             project_root = Path(tmpdir)
             malicious_terminal_id = "../../../etc/passwd"
 
-            # This should sanitize the terminal_id before using it in paths
-            store = HandoffStore(project_root, malicious_terminal_id)
-
-            # Verify terminal_id is sanitized
-            # If not sanitized, the file path could escape the temp directory
-            assert store.terminal_id is not None
-
-            # Verify any operations don't escape project_root
-            # (This would fail if terminal_id is not sanitized)
-            task_file = project_root / ".claude" / "state" / "task_tracker" / f"{store.terminal_id}_tasks.json"
-
-            # The task file path should be within project_root
-            try:
-                task_file.resolve().relative_to(project_root.resolve())
-            except ValueError:
-                pytest.fail(f"Task file path escapes project root: {task_file}")
+            # Should raise ValueError for path traversal
+            with pytest.raises(ValueError, match="path traversal"):
+                HandoffStore(project_root, malicious_terminal_id)
 
     def test_reject_null_byte_in_terminal_id(self):
         """
