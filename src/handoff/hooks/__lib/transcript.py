@@ -1339,7 +1339,7 @@ if __name__ == "__main__":
         print("Usage: python transcript.py <path_to_transcript.json>")
 
 
-def extract_user_message_from_blocker(blocker: dict[str, Any] | str | None) -> str | None:
+def extract_user_message_from_blocker(blocker: BlockerDict | str | None) -> str | None:
     """Extract the user's last message from a blocker.
 
     The blocker description may contain a "User's last question:" prefix.
