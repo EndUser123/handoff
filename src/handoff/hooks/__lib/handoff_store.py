@@ -1031,6 +1031,22 @@ class HandoffStore:
                     f"[HandoffStore] active_session task added to {task_file_path.name} (PID {os.getpid()}) [no lock]"
                 )
                 print(f"[HandoffStore] continue_session task added to {task_file_path.name} [no lock]")
+
+                # Write manifest file atomically (even without lock)
+                fd_manifest, temp_manifest_path = tempfile.mkstemp(
+                    suffix=".tmp", dir=str(task_tracker_dir), prefix="active_session_manifest_"
+                )
+                try:
+                    with os.fdopen(fd_manifest, "w", encoding="utf-8") as f:
+                        json.dump(manifest_data, f, indent=2)
+                    atomic_write_with_retry(temp_manifest_path, manifest_path)
+                    logger.debug(f"[HandoffStore] Created manifest file: {manifest_path.name} [no lock]")
+                except OSError as manifest_error:
+                    logger.error(f"[HandoffStore] Failed to write manifest file: {manifest_error}")
+                    try:
+                        os.unlink(temp_manifest_path)
+                    except OSError:
+                        pass
             except OSError as write_error:
                 logger.error(
                     f"[HandoffStore] Failed to write task file {task_file_path}: {write_error}"
