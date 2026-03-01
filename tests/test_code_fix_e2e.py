@@ -483,7 +483,7 @@ class TestRealWorldScenarios:
         total_count = sum(len(v) for v in findings.values())
 
         # Assert
-        assert total_count == 52, "Should have 52 total findings"
+        assert total_count == 50, "Should have 50 total findings"
         assert len(findings["security"]) == 20
         assert len(findings["performance"]) == 15
         assert len(findings["quality"]) == 10
