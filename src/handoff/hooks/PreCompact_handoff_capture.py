@@ -616,7 +616,7 @@ class PreCompactHandoffCapture:
         tool_name_map = self._build_tool_name_map(recent)
 
         # Collect errors from tool_result entries
-        errors: list[dict] = []
+        errors: list[dict[str, Any]] = []
         for line in recent:
             try:
                 entry = json.loads(line)
