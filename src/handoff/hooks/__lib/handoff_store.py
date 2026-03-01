@@ -553,19 +553,17 @@ def _validate_handoff_data_size(
     if isinstance(handover, dict):
         validated["handover"] = _truncate_handover_section(handover)
 
-    # Compute final size and warn if still exceeds 500 KB
-    # PERF-002: Use cached JSON if available to avoid re-serialization
+    # PERF-002: Skip size check if cached_json is None (caller will handle it)
+    # This avoids duplicate serialization during atomic_write_with_validation
     if cached_json is not None:
+        # Use cached JSON if available to avoid re-serialization
         estimated_size = len(cached_json.encode("utf-8"))
-    else:
-        estimated_size = len(json.dumps(validated).encode("utf-8"))
-
-    if estimated_size > MAX_HANDOFF_SIZE_BYTES:
-        print(
-            f"[HandoffStore] Warning: Handoff still exceeds "
-            f"{MAX_HANDOFF_SIZE_BYTES} bytes: {estimated_size} bytes"
-        )
-        validated = _apply_last_resort_truncation(validated)
+        if estimated_size > MAX_HANDOFF_SIZE_BYTES:
+            print(
+                f"[HandoffStore] Warning: Handoff still exceeds "
+                f"{MAX_HANDOFF_SIZE_BYTES} bytes: {estimated_size} bytes"
+            )
+            validated = _apply_last_resort_truncation(validated)
 
     return validated
 
