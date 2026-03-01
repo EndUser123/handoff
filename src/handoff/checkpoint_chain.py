@@ -124,23 +124,11 @@ class CheckpointChain:
         except (json.JSONDecodeError, OSError):
             return []
 
+        # Process all tasks and extract checkpoint references
         checkpoints = []
         for task_id, task in task_data.get("tasks", {}).items():
-            metadata = task.get("metadata", {})
-            if "handoff" in metadata:
-                handoff = metadata["handoff"]
-
-                # Migrate old format handoffs that don't have checkpoint_id
-                if "checkpoint_id" not in handoff:
-                    migrated_handoff = self._get_or_migrate_handoff(task_id, handoff)
-                    metadata = {**metadata, "handoff": migrated_handoff}
-
-                # Get the (possibly migrated) handoff from metadata
-                final_handoff = metadata.get("handoff", {})
-
-                # After migration, all handoffs should have checkpoint_id
-                if "checkpoint_id" in final_handoff:
-                    checkpoints.append(HandoffCheckpointRef.from_task_metadata(task_id, metadata))
+            if cp := self._process_task_metadata(task_id, task):
+                checkpoints.append(cp)
 
         # Sort by created_at (oldest first)
         checkpoints.sort(key=lambda c: c.created_at)
@@ -170,6 +158,34 @@ class CheckpointChain:
                 return migrated_handoff
             else:
                 return self._migration_cache[task_id]
+
+    def _process_task_metadata(self, task_id: str, task: dict) -> HandoffCheckpointRef | None:
+        """Process task metadata to extract checkpoint reference.
+
+        Args:
+            task_id: Task identifier
+            task: Task data dictionary
+
+        Returns:
+            HandoffCheckpointRef or None if no valid checkpoint
+        """
+        metadata = task.get("metadata", {})
+        if "handoff" not in metadata:
+            return None
+
+        handoff = metadata["handoff"]
+
+        # Migrate old format handoffs that don't have checkpoint_id
+        if "checkpoint_id" not in handoff:
+            metadata = {**metadata, "handoff": self._get_or_migrate_handoff(task_id, handoff)}
+
+        # Get the (possibly migrated) handoff from metadata
+        final_handoff = metadata.get("handoff", {})
+
+        # After migration, all handoffs should have checkpoint_id
+        if "checkpoint_id" in final_handoff:
+            return HandoffCheckpointRef.from_task_metadata(task_id, metadata)
+        return None
 
     def get_chain(self, chain_id: str) -> list[HandoffCheckpointRef]:
         """Get all checkpoints in a chain, ordered oldest to newest.
