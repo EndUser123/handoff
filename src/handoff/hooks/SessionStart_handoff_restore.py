@@ -642,28 +642,11 @@ def _load_active_session_task(terminal_id: str) -> tuple[dict[str, Any] | None, 
                 # Load from the terminal specified in manifest
                 manifest_task_file = task_tracker_dir / f"{source_terminal}_tasks.json"
                 if manifest_task_file.exists():
-                    try:
-                        with open(manifest_task_file, encoding="utf-8") as f:
-                            task_data = json.load(f)
-
-                        # Look for active_session task
-                        active_session = task_data.get("tasks", {}).get("active_session")
-                        if active_session:
-                            logger.debug(f"[SessionStart] Found active_session via manifest in {source_terminal}_tasks.json")
-                            return active_session, source_terminal
-
-                        # Fallback to continue_session task
-                        continue_session = task_data.get("tasks", {}).get("continue_session")
-                        if continue_session:
-                            logger.debug(f"[SessionStart] Found continue_session via manifest in {source_terminal}_tasks.json")
-                            return continue_session, source_terminal
-
-                    except (json.JSONDecodeError, OSError) as e:
-                        logger.error(f"[SessionStart] CORRUPTED task file from manifest {manifest_task_file}: {e}")
-                        try:
-                            manifest_task_file.unlink(missing_ok=True)
-                        except OSError:
-                            pass
+                    session_data, _ = _load_session_from_task_file(
+                        manifest_task_file, source_terminal, " via manifest"
+                    )
+                    if session_data:
+                        return session_data, source_terminal
 
         except (json.JSONDecodeError, OSError) as e:
             logger.error(f"[SessionStart] CORRUPTED manifest file {manifest_path}: {e}")
