@@ -117,7 +117,12 @@ def test_detect_structure_type_return_type_specificity():
 
     # This FAILS because current implementation uses generic 'dict[str, Any]'
     # After fix, should use TypedDict with specific fields
-    assert "TypedDict" in return_type or '"type"' in return_type, (
+    # Check for TypedDict, the specific StructureInfo class, or field names
+    assert (
+        "TypedDict" in return_type
+        or "StructureInfo" in return_type
+        or '"type"' in return_type
+    ), (
         f"Return type should be TypedDict with specific fields like 'type', 'search_keys', "
         f"but got generic '{return_type}'. "
         f"Generic 'dict[str, Any]' loses type information."
