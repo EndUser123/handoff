@@ -22,6 +22,13 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
+# Platform-specific imports for file locking
+import sys
+if sys.platform == 'win32':
+    import msvcrt
+else:
+    import fcntl
+
 logger = logging.getLogger(__name__)
 
 # Terminal ID validation pattern (SEC-002)

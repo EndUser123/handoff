@@ -15,7 +15,6 @@ Renamed from checkpoint package to handoff package.
 
 from __future__ import annotations
 
-import hmac
 import json
 import logging
 import os
