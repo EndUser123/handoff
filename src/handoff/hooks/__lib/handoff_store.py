@@ -97,6 +97,170 @@ QUALITY_SCORE_GOOD = 0.70  # 0.7-0.8: Good
 QUALITY_SCORE_ACCEPTABLE = 0.50  # 0.5-0.6: Acceptable
 
 
+class FileLock:
+    """Platform-specific atomic file locking context manager.
+
+    This provides atomic file locking to prevent race conditions in file access.
+    Uses platform-specific primitives:
+    - Windows: msvcrt.locking() with LK_NBLCK (non-blocking lock)
+    - Unix: fcntl.flock() with LOCK_EX | LOCK_NB (exclusive non-blocking lock)
+
+    The lock is automatically released when exiting the context manager.
+    """
+
+    def __init__(self, lock_file_path: Path, timeout: float = 5.0, stale_age: float = 10.0):
+        """Initialize file lock.
+
+        Args:
+            lock_file_path: Path to lock file
+            timeout: Maximum seconds to wait for lock acquisition (default: 5.0)
+            stale_age: Seconds after which a lock is considered stale (default: 10.0)
+        """
+        self.lock_file_path = lock_file_path
+        self.timeout = timeout
+        self.stale_age = stale_age
+        self.lock_fd = None
+        self._acquired = False
+
+    def acquire(self) -> bool:
+        """Acquire the file lock with retry logic.
+
+        Returns:
+            True if lock was acquired, False if timeout expired
+
+        Raises:
+            OSError: If lock file operations fail
+        """
+        start_time = time.time()
+        retry_interval = 0.1  # Check 10 times per second
+
+        while time.time() - start_time < self.timeout:
+            try:
+                # Open lock file (create if doesn't exist)
+                flags = os.O_RDWR | os.O_CREAT
+                self.lock_fd = os.open(self.lock_file_path, flags)
+
+                # Try to acquire lock atomically
+                if sys.platform == 'win32':
+                    # Windows: msvcrt.locking() with LK_NBLCK (non-blocking)
+                    # Lock mode: write lock (LK_LOCK) with non-blocking (LK_NBLCK)
+                    try:
+                        msvcrt.locking(self.lock_fd, msvcrt.LK_NBLCK, 1)
+                        self._acquired = True
+                        return True
+                    except OSError:
+                        # Lock is held by another process
+                        os.close(self.lock_fd)
+                        self.lock_fd = None
+                else:
+                    # Unix: fcntl.flock() with LOCK_EX | LOCK_NB
+                    # LOCK_EX: Exclusive lock
+                    # LOCK_NB: Non-blocking (don't wait)
+                    try:
+                        fcntl.flock(self.lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                        self._acquired = True
+                        return True
+                    except OSError:
+                        # Lock is held by another process
+                        os.close(self.lock_fd)
+                        self.lock_fd = None
+
+                # Lock acquisition failed, check for stale lock
+                self._check_and_remove_stale_lock()
+
+                # Wait before retry
+                time.sleep(retry_interval)
+
+            except FileExistsError:
+                # Lock file exists but we couldn't open it
+                self._check_and_remove_stale_lock()
+                time.sleep(retry_interval)
+            except OSError as e:
+                # Error during lock acquisition
+                if self.lock_fd is not None:
+                    try:
+                        os.close(self.lock_fd)
+                    except OSError:
+                        pass
+                    self.lock_fd = None
+                raise
+
+        # Timeout expired
+        logger.warning(
+            f"[FileLock] Could not acquire lock {self.lock_file_path.name} "
+            f"after {self.timeout:.1f}s"
+        )
+        return False
+
+    def _check_and_remove_stale_lock(self) -> None:
+        """Check if lock file is stale and remove it if so.
+
+        A lock is considered stale if it's older than stale_age seconds.
+        This handles cases where a process crashed while holding the lock.
+        """
+        try:
+            if self.lock_file_path.exists():
+                lock_stat = os.stat(self.lock_file_path)
+                lock_age = time.time() - lock_stat.st_mtime
+                if lock_age > self.stale_age:
+                    # Stale lock found, remove it
+                    os.unlink(self.lock_file_path)
+                    logger.warning(
+                        f"[FileLock] Removed stale lock file: {self.lock_file_path.name} "
+                        f"(age: {lock_age:.1f}s)"
+                    )
+        except OSError as e:
+            # Best effort - don't fail if we can't check/remove stale lock
+            logger.debug(f"[FileLock] Could not check stale lock: {e}")
+
+    def release(self) -> None:
+        """Release the file lock and clean up lock file.
+
+        This is safe to call even if lock wasn't acquired.
+        """
+        if self.lock_fd is not None:
+            try:
+                # Release the platform-specific lock
+                if sys.platform == 'win32':
+                    # Windows: msvcrt.locking() with LK_UNLCK
+                    msvcrt.locking(self.lock_fd, msvcrt.LK_UNLCK, 1)
+                else:
+                    # Unix: fcntl.flock() with LOCK_UN
+                    fcntl.flock(self.lock_fd, fcntl.LOCK_UN)
+            except OSError:
+                # Ignore errors during lock release
+                pass
+
+            # Close file descriptor
+            try:
+                os.close(self.lock_fd)
+            except OSError:
+                pass
+            self.lock_fd = None
+
+        # Remove lock file (only if we acquired it)
+        if self._acquired:
+            try:
+                self.lock_file_path.unlink(missing_ok=True)
+            except OSError:
+                pass
+            self._acquired = False
+
+    def __enter__(self) -> "FileLock":
+        """Enter context manager and acquire lock."""
+        if not self.acquire():
+            # Timeout waiting for lock
+            raise TimeoutError(
+                f"Could not acquire lock {self.lock_file_path.name} "
+                f"after {self.timeout:.1f}s"
+            )
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        """Exit context manager and release lock."""
+        self.release()
+
+
 def atomic_write_with_retry(temp_path: str, target_path: str | Path, max_retries: int = 5) -> None:
     """Perform atomic file write with retry logic for Windows file locking.
 
