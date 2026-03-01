@@ -292,7 +292,7 @@ class PreCompactHandoffCapture:
                 if cmd_data:
                     command = cmd_data.get("command", "")
                     if command:
-                        return command
+                        return command  # type: ignore[no-any-return]
 
         except Exception as e:
             logger.debug(f"[PreCompact] Could not extract implementation status: {e}")
