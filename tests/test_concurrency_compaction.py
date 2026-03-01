@@ -332,7 +332,8 @@ class TestConcurrencyCompaction:
             # Verify handoff data is present
             handoff = continue_task["metadata"]["handoff"]
             assert "task_name" in handoff, "Handoff must have task_name"
-            assert "progress_pct" in handoff, "Handoff must have progress_pct"
+            # Note: handoff_metadata uses "progress_percent" not "progress_pct"
+            assert "progress_percent" in handoff, "Handoff must have progress_percent"
             assert "next_steps" in handoff, "Handoff must have next_steps"
 
             print("\n" + "=" * 60)

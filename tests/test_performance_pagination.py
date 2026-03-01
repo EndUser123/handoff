@@ -11,9 +11,7 @@ Expected behavior: Lazy loading with itertools.islice() (no intermediate list)
 Run with: pytest tests/test_performance_pagination.py -v
 """
 
-import pytest
 import gc
-import sys
 from unittest.mock import patch
 
 
