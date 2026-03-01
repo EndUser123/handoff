@@ -149,6 +149,51 @@ class TestChecksumTimingVulnerability:
         """Checksum that differs in the last character."""
         return "a1b2c3d4e5f67890abcdef1234567890abcdef1234567890abcdef1234567891"
 
+    def test_current_implementation_uses_startswith(self):
+        """
+        FAILING TEST: Current implementation uses vulnerable startswith().
+
+        This test FAILS because the current code at line 109 uses:
+            if not stored_checksum.startswith(computed):
+
+        This is VULNERABLE to timing attacks because startswith() returns
+        early on the first character mismatch, leaking timing information.
+
+        Expected: Should use hmac.compare_digest() for constant-time comparison
+        Actual: Uses startswith() which has early-return behavior
+
+        This test MUST FAIL until the vulnerability is fixed.
+        """
+        # Read the actual source file
+        source_file = "P:/packages/handoff/src/handoff/hooks/SessionStart_handoff_restore.py"
+        with open(source_file, encoding="utf-8") as f:
+            source_code = f.read()
+
+        # Check if the vulnerable code is still present
+        vulnerable_pattern = "stored_checksum.startswith(computed)"
+        secure_pattern = "hmac.compare_digest"
+
+        has_vulnerable_code = vulnerable_pattern in source_code
+        has_secure_fix = secure_pattern in source_code
+
+        print(f"\n[SECURITY CHECK]")
+        print(f"Contains vulnerable startswith(): {has_vulnerable_code}")
+        print(f"Contains secure hmac.compare_digest(): {has_secure_fix}")
+
+        # This test FAILS if the vulnerable code is still present
+        # (i.e., the fix has NOT been applied yet)
+        assert has_vulnerable_code and not has_secure_fix, (
+            "SEC-004: VULNERABLE CODE DETECTED\n"
+            "The _verify_handoff_checksum() function uses startswith() which is "
+            "vulnerable to timing attacks.\n\n"
+            "Current code (line 109):\n"
+            "    if not stored_checksum.startswith(computed):\n\n"
+            "Required fix:\n"
+            "    import hmac\n"
+            "    if not hmac.compare_digest(stored_checksum, computed):\n\n"
+            "This test will PASS after the fix is applied."
+        )
+
     def test_vulnerable_implementation_shows_timing_difference(self, sample_checksum, mismatch_first_char, mismatch_last_char):
         """
         Test that vulnerable implementation (startswith) shows timing differences.
