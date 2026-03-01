@@ -22,15 +22,15 @@ Run with:
 """
 
 import json
-from unittest.mock import MagicMock, patch
-from pathlib import Path
 import tempfile
+from pathlib import Path
+from unittest.mock import patch
+
 import pytest
 
 from handoff.hooks.__lib.handoff_store import (
-    atomic_write_with_validation,
     _validate_handoff_data_size,
-    HandoffStore,
+    atomic_write_with_validation,
 )
 
 
@@ -142,7 +142,7 @@ class TestJSONSerializationPerformance:
             if call["data_size"] == 1000  # Our test data has 1000 modifications
         ]
 
-        print(f"\n=== JSON Serialization Calls ===")
+        print("\n=== JSON Serialization Calls ===")
         print(f"Total handoff serializations: {len(handoff_serializations)}")
         for i, call in enumerate(handoff_serializations, 1):
             print(f"  Call {i}: indent={call['kwargs'].get('indent', 'default')}")
@@ -191,7 +191,7 @@ class TestJSONSerializationPerformance:
             and len(call["args"][0].get("modifications", [])) == 1000
         ]
 
-        print(f"\n=== Validation Serialization Calls ===")
+        print("\n=== Validation Serialization Calls ===")
         print(f"Serializations during validation: {len(handoff_serializations)}")
 
         # CURRENT BEHAVIOR: 1 serialization for size check (line 346)
@@ -235,7 +235,7 @@ class TestJSONSerializationPerformance:
         assert target_path.exists()
         assert result["truncated"] is True
 
-        print(f"\n=== Write Serialization Calls ===")
+        print("\n=== Write Serialization Calls ===")
         print(f"Total json.dumps calls: {len(json_dumps_calls)}")
         for i, call in enumerate(json_dumps_calls, 1):
             print(f"  Call {i}: mod_count={call['mod_count']}, indent={call['indent']}")
@@ -313,7 +313,7 @@ class TestSerializationPerformanceImpact:
                 "time_seconds": elapsed,
             })
 
-        print(f"\n=== Serialization Performance ===")
+        print("\n=== Serialization Performance ===")
         for result in serialization_times:
             print(
                 f"Mods: {result['modifications']:4d} | "
@@ -362,7 +362,7 @@ class TestSerializationPerformanceImpact:
         result = atomic_write_with_validation(data, target_path)
         full_process_time = time.perf_counter() - start
 
-        print(f"\n=== Performance Cost Analysis ===")
+        print("\n=== Performance Cost Analysis ===")
         print(f"Single serialization: {single_serialization_time*1000:.2f} ms")
         print(f"Full process (validation + write): {full_process_time*1000:.2f} ms")
         print(f"Overhead: {(full_process_time - single_serialization_time)*1000:.2f} ms")

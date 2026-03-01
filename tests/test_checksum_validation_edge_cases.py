@@ -13,9 +13,10 @@ Current implementation (models.py lines 114-139):
 Run with: pytest P:/packages/handoff/tests/test_checksum_validation_edge_cases.py -v
 """
 
-import pytest
 import sys
 from pathlib import Path
+
+import pytest
 
 # Add src to path for imports
 src_dir = Path("P:/packages/handoff/src").resolve()

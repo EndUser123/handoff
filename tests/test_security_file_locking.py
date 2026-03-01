@@ -27,9 +27,9 @@ After the fix, it should PASS consistently.
 import json
 import os
 import tempfile
-from pathlib import Path
-from multiprocessing import Process, Queue
 import time
+from multiprocessing import Process, Queue
+from pathlib import Path
 
 from handoff.hooks.__lib.handoff_store import HandoffStore
 
@@ -163,14 +163,14 @@ class TestFileLockingRaceCondition:
             success_count = sum(1 for r in results if r[0] == "success")
             error_count = sum(1 for r in results if r[0] == "error")
 
-            print(f"\nRace condition test results:")
+            print("\nRace condition test results:")
             print(f"  Successful writes: {success_count}")
             print(f"  Failed writes: {error_count}")
             print(f"  Total attempts: {len(results)}")
 
             # Load and validate the final task file
             try:
-                with open(task_file_path, "r", encoding="utf-8") as f:
+                with open(task_file_path, encoding="utf-8") as f:
                     final_data = json.load(f)
 
                 # Verify file is valid JSON
@@ -200,7 +200,7 @@ class TestFileLockingRaceCondition:
                     assert isinstance(active_task, dict), "active_session task should be a dict"
                     assert "metadata" in active_task, "active_session task should have 'metadata'"
 
-                print(f"  File validation: PASSED")
+                print("  File validation: PASSED")
                 print(f"  Tasks in file: {len(tasks)}")
 
             except json.JSONDecodeError as e:
@@ -220,9 +220,9 @@ class TestFileLockingRaceCondition:
             # For now, we'll accept that both might succeed (demonstrates the bug)
             # but the file must still be valid
             if success_count > 1:
-                print(f"\n  WARNING: Both processes succeeded - lock mechanism failed!")
-                print(f"  This demonstrates the TOCTOU vulnerability.")
-                print(f"  File data is valid, but locking is broken.")
+                print("\n  WARNING: Both processes succeeded - lock mechanism failed!")
+                print("  This demonstrates the TOCTOU vulnerability.")
+                print("  File data is valid, but locking is broken.")
 
             # After fix, uncomment this to enforce proper locking:
             # assert success_count == 1, (
@@ -268,13 +268,13 @@ class TestFileLockingRaceCondition:
                 # In the vulnerable code, both processes might pass this check
                 try:
                     lock_fd_b = os.open(lock_file_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-                    print(f"Process B ALSO acquired lock: VULNERABILITY DEMONSTRATED!")
-                    print(f"  Both processes think they have exclusive access.")
-                    print(f"  This is the TOCTOU vulnerability.")
+                    print("Process B ALSO acquired lock: VULNERABILITY DEMONSTRATED!")
+                    print("  Both processes think they have exclusive access.")
+                    print("  This is the TOCTOU vulnerability.")
                     os.close(lock_fd_b)
                     lock_acquired_by_b = True
                 except FileExistsError:
-                    print(f"Process B blocked by lock: Correct behavior")
+                    print("Process B blocked by lock: Correct behavior")
                     lock_acquired_by_b = False
 
                 # Clean up lock A
@@ -282,15 +282,15 @@ class TestFileLockingRaceCondition:
                 lock_file_path.unlink(missing_ok=True)
 
             except FileExistsError:
-                print(f"Lock already exists (unexpected in this test)")
+                print("Lock already exists (unexpected in this test)")
                 lock_acquired_by_b = False
 
             # After fix, lock_acquired_by_b should always be False
             # Currently, it may be True (showing the vulnerability)
             if lock_acquired_by_b:
-                print(f"\n  VULNERABILITY: Lock file did not prevent concurrent acquisition")
-                print(f"  Expected: FileExistsError for second process")
-                print(f"  Actual: Both processes acquired lock")
+                print("\n  VULNERABILITY: Lock file did not prevent concurrent acquisition")
+                print("  Expected: FileExistsError for second process")
+                print("  Actual: Both processes acquired lock")
 
             # This assertion will fail after proper fix is implemented
             # For now, we document the vulnerability
@@ -353,7 +353,7 @@ class TestFileLockingRaceCondition:
                     task_id="task_id_stale",
                     handoff_metadata=handoff_data,
                 )
-                print(f"\nStale lock test: Successfully acquired lock after stale cleanup")
+                print("\nStale lock test: Successfully acquired lock after stale cleanup")
             except Exception as e:
                 # If stale lock wasn't cleaned up, this might fail
                 print(f"\nStale lock test: Failed with error: {e}")
@@ -365,6 +365,6 @@ class TestFileLockingRaceCondition:
                 lock_age = time.time() - lock_stat.st_mtime
                 print(f"  Lock file age: {lock_age:.2f} seconds")
                 if lock_age < 1:
-                    print(f"  Lock file is fresh (was recreated)")
+                    print("  Lock file is fresh (was recreated)")
                 else:
-                    print(f"  WARNING: Stale lock may not have been cleaned up")
+                    print("  WARNING: Stale lock may not have been cleaned up")
