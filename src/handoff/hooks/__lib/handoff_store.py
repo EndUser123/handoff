@@ -20,9 +20,9 @@ import re
 import sys
 
 if sys.platform == 'win32':
-    import msvcrt
+    pass
 else:
-    import fcntl
+    pass
 
 import tempfile
 import time

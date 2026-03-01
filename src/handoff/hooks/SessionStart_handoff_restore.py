@@ -712,13 +712,38 @@ def _safe_id(value: str) -> str:
     Uses an allow-list approach to prevent glob metacharacters and other
     unsafe characters from appearing in constructed paths/patterns.
 
+    Security: Detects and blocks path traversal attempts including:
+    - Parent directory references (..)
+    - Current directory references (.)
+    - Mixed traversal patterns
+
     Args:
         value: String to sanitize
 
     Returns:
         Sanitized string safe for file paths and glob patterns
+
+    Raises:
+        ValueError: If path traversal patterns are detected
     """
-    return re.sub(r"[^a-zA-Z0-9_.-]+", "_", str(value))
+    # Convert to string first
+    str_value = str(value)
+
+    # Check for path traversal patterns BEFORE sanitization
+    # This prevents attackers from bypassing checks with encoding or obfuscation
+    if '..' in str_value:
+        raise ValueError(f"Path traversal detected: parent directory reference (..) not allowed in: {str_value}")
+
+    # Check for current directory reference patterns
+    if './' in str_value or str_value.startswith('.'):
+        raise ValueError(f"Path traversal detected: current directory reference (.) not allowed in: {str_value}")
+
+    # Sanitize using allow-list approach (alphanumeric, underscore, hyphen only)
+    # Note: We deliberately EXCLUDE dots from the safe character set to prevent
+    # any possibility of path traversal through file extensions or hidden files
+    sanitized = re.sub(r"[^a-zA-Z0-9_-]+", "_", str_value)
+
+    return sanitized
 
 
 @hook_main
