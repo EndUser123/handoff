@@ -6,11 +6,110 @@
   "context": {
     "claude_md_files": [],
     "changed_files": ["CHANGELOG.md", "pyproject.toml"],
-    "git_context": "Version bump from 0.2.0 to 0.5.0 (Alpha → Beta), pytest dependency moved from optional to main dependencies"
+    "git_context": "Version bump from 0.2.0 to 0.5.0 (Alpha → Beta), pytest dependency moved from optional to main dependencies",
+    "classification": "PRODUCTION"
   },
-  "agents_completed": [],
-  "raw_findings": [],
+  "agents_completed": ["security", "quality", "testing", "compliance"],
+  "raw_findings": [
+    {
+      "agent": "security",
+      "findings": [
+        {
+          "id": "SEC-001",
+          "severity": "P1_HIGH",
+          "confidence": 95,
+          "file": "pyproject.toml",
+          "line": 28,
+          "type": "dependency_bloat",
+          "title": "pytest should not be a runtime dependency",
+          "description": "pytest>=7.0.0 is listed in main dependencies array. pytest is a development/testing tool and should NOT be installed for end users of the handoff library. This unnecessarily increases installation size and attack surface for production users who only need the handoff functionality.",
+          "why": "Runtime dependencies are installed for ALL users. pytest is only needed for running tests (dev/test environment), not for using the handoff library in production. This violates Python packaging best practices.",
+          "recommended_action": "Move pytest from dependencies to [project.optional-dependencies] test section. pytest is already listed in test dependencies on line 39, so this is a duplicate.",
+          "evidence": "Line 28-30 has pytest in dependencies, but line 39 already has pytest>=7.0 in test optional dependencies"
+        }
+      ]
+    },
+    {
+      "agent": "quality",
+      "findings": [
+        {
+          "id": "QUAL-001",
+          "severity": "P0_CRITICAL",
+          "confidence": 100,
+          "file": "src/handoff/__init__.py",
+          "line": 28,
+          "type": "version_mismatch",
+          "title": "Version mismatch between __init__.py and pyproject.toml",
+          "description": "__version__ in src/handoff/__init__.py is '0.2.0' but pyproject.toml declares version '0.5.0'. This inconsistency will cause confusion and potential issues with version detection at runtime.",
+          "why": "When a package declares version 0.5.0 in pyproject.toml but __init__.__version__ returns '0.2.0', any code relying on handoff.__version__ will get incorrect information. This breaks the single source of truth principle.",
+          "recommended_action": "Update src/handoff/__init__.py line 28 from __version__ = '0.2.0' to __version__ = '0.5.0' to match pyproject.toml.",
+          "evidence": "pyproject.toml line 7: version = '0.5.0' vs __init__.py line 28: __version__ = '0.2.0'"
+        },
+        {
+          "id": "QUAL-002",
+          "severity": "P1_HIGH",
+          "confidence": 90,
+          "file": "src/handoff/models.py",
+          "line": 20,
+          "type": "code_duplication",
+          "title": "Duplicate PendingOperation class definition",
+          "description": "PendingOperation class is defined in both src/handoff/models.py (lines 20-82) and src/handoff/checkpoint_ops.py (lines 24-224). The checkpoint_ops.py version has more comprehensive validation (slots, state transition validation, MAX_TARGET_LENGTH constant).",
+          "why": "Having two classes with the same name in different modules causes confusion and maintenance burden. The models.py version lacks the advanced validation in checkpoint_ops.py. Import ambiguity: which version should code use?",
+          "recommended_action": "Remove PendingOperation from models.py and update imports to use checkpoint_ops.PendingOperation. Or consolidate into a single location with full functionality.",
+          "evidence": "grep 'class PendingOperation' finds 2 definitions: models.py:20 and checkpoint_ops.py:24"
+        },
+        {
+          "id": "QUAL-003",
+          "severity": "P2_MEDIUM",
+          "confidence": 85,
+          "file": "CHANGELOG.md",
+          "line": 15,
+          "type": "documentation_accuracy",
+          "title": "Test coverage metrics in CHANGELOG may be misleading",
+          "description": "CHANGELOG states '54.5% test ratio (24/44 files)' but context shows 37% coverage. The 'test ratio' metric (files with tests / total files) is not the same as code coverage (lines executed / total lines).",
+          "why": "Claiming 'strong engineering practices' based on file count ratio is misleading. 37% actual code coverage means 63% of code is untested. Users might misinterpret '54.5% test ratio' as code coverage percentage.",
+          "recommended_action": "Clarify the metric: '54.5% of files have test coverage' OR replace with actual code coverage from pytest-cov. Consider removing if not truly representative of quality.",
+          "evidence": "CHANGELOG line 15 claims 54.5% but actual coverage is 37% per context"
+        }
+      ]
+    },
+    {
+      "agent": "testing",
+      "findings": [
+        {
+          "id": "TEST-001",
+          "severity": "P2_MEDIUM",
+          "confidence": 80,
+          "file": "pyproject.toml",
+          "line": 28,
+          "type": "test_dependency_in_runtime",
+          "title": "pytest in runtime dependencies violates separation of concerns",
+          "description": "pytest is a testing framework and should only be available in test environments. Including it in runtime dependencies violates the principle of separating test dependencies from production dependencies.",
+          "why": "Production deployments of the handoff library should not include test frameworks. This increases bundle size unnecessarily and blurs the line between test and production code.",
+          "recommended_action": "Remove pytest from dependencies array. It's already in [project.optional-dependencies] test section.",
+          "evidence": "pytest appears in both dependencies (line 29) and test optional-dependencies (line 39)"
+        }
+      ]
+    },
+    {
+      "agent": "compliance",
+      "findings": [
+        {
+          "id": "COMP-001",
+          "severity": "P0_CRITICAL",
+          "confidence": 100,
+          "file": "pyproject.toml",
+          "line": 7,
+          "type": "version_consistency",
+          "title": "SemVer version bump without checking all version declarations",
+          "description": "pyproject.toml updated to 0.5.0 but __init__.py still has 0.2.0. For proper SemVer compliance, all version declarations in the codebase must be updated together.",
+          "why": "SemVer requires that the version number be the single source of truth. Having mismatched versions violates this principle and can cause confusion in version checking, dependency resolution, and release notes.",
+          "recommended_action": "Update all __version__ declarations in the codebase to match pyproject.toml version. Establish a checklist for version bumps: pyproject.toml, __init__.py, any VERSION files.",
+          "evidence": "pyproject.toml version=0.5.0 vs __init__.py __version__='0.2.0'"
+        }
+      ]
+    }
+  ],
   "filtered_findings": null,
-  "status": "in_progress",
-  "started_at": "2026-02-28T22:35:00Z"
+  "status": "in_progress"
 }
