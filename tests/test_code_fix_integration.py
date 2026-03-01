@@ -64,16 +64,24 @@ class TestFullPipelineWithMockFindings:
 
         try:
             # Act - Import and use the converter
+            # Add path before importing
             code_lib_path = Path(__file__).parent.parent.parent / ".claude" / "skills" / "code" / "lib"
-            sys.path.insert(0, str(code_lib_path))
-            from findings_to_tasks import convert_findings_to_tasks
+            if str(code_lib_path) not in sys.path:
+                sys.path.insert(0, str(code_lib_path))
 
-            tasks = convert_findings_to_tasks(findings_file, min_severity="MEDIUM")
+            try:
+                from findings_to_tasks import convert_findings_to_tasks
+                tasks = convert_findings_to_tasks(findings_file, min_severity="MEDIUM")
 
-            # Assert
-            assert len(tasks) == 2
-            assert any(t["metadata"]["id"] == "SEC-001" for t in tasks)
-            assert any(t["metadata"]["id"] == "PERF-001" for t in tasks)
+                # Assert
+                assert len(tasks) == 2
+                assert any(t["metadata"]["id"] == "SEC-001" for t in tasks)
+                assert any(t["metadata"]["id"] == "PERF-001" for t in tasks)
+            except ImportError as e:
+                # If module not available, test the data structure would work
+                # This validates the integration contract without requiring the actual module
+                # (useful for testing in different environments)
+                assert False, f"findings_to_tasks module not available: {e}"
         finally:
             Path(findings_file).unlink()
 
