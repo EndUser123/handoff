@@ -94,6 +94,29 @@ class TaskIdentityManager:
         self.metadata_file = state_base / f"last-compact-metadata-{self.terminal_id}.json"
         self.mapping_file = state_base / "task-worktree-mapping.json"  # Global, not terminal-scoped
 
+    @staticmethod
+    def _is_metadata_fresh(timestamp_str: str, max_age_seconds: int = COMPACT_METADATA_FRESHNESS_SECONDS) -> bool:
+        """Check if compact metadata timestamp is fresh enough to use.
+
+        Args:
+            timestamp_str: ISO format timestamp string
+            max_age_seconds: Maximum age in seconds (default: COMPACT_METADATA_FRESHNESS_SECONDS)
+
+        Returns:
+            True if timestamp is fresh enough, False otherwise
+        """
+        if not timestamp_str:
+            return False
+
+        try:
+            timestamp = datetime.fromisoformat(timestamp_str)
+            if timestamp.tzinfo is None:
+                timestamp = timestamp.replace(tzinfo=UTC)
+            age = (datetime.now(UTC) - timestamp).total_seconds()
+            return age < max_age_seconds
+        except (ValueError, OSError):
+            return False
+
     def get_current_task(self) -> str | None:
         """
         Get current task using 6-source resilience chain.
