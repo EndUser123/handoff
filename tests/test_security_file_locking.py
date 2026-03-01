@@ -267,7 +267,7 @@ class TestFileLockingRaceCondition:
             task_tracker_dir = temp_path / ".claude" / "state" / "task_tracker"
             task_tracker_dir.mkdir(parents=True, exist_ok=True)
 
-            terminal_id = "test_terminal_lock"
+            terminal_id = "term_lock"
             task_file_path = task_tracker_dir / f"{terminal_id}_tasks.json"
             lock_file_path = task_file_path.with_suffix(".lock")
 
