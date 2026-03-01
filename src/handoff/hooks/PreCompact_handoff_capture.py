@@ -781,31 +781,12 @@ class PreCompactHandoffCapture:
                 entry = json.loads(line)
                 role = entry.get("type")
                 if role == "user":
-                    msg = entry.get("message", {})
-                    content = msg.get("content", "") if isinstance(msg, dict) else ""
-                    if isinstance(content, list):
-                        text = " ".join(
-                            c.get("text", "")
-                            for c in content
-                            if isinstance(c, dict) and c.get("type") == "text"
-                        )
-                    else:
-                        text = str(content)
-                    text = text.strip()
-                    if text and len(text) > 5:
+                    text = self._extract_user_text(entry)
+                    if text:
                         messages.append({"role": "user", "text": text[:800]})
                 elif role == "assistant":
-                    msg = entry.get("message", {})
-                    content = msg.get("content", []) if isinstance(msg, dict) else []
-                    text_parts = []
-                    if isinstance(content, list):
-                        for block in content:
-                            if isinstance(block, dict) and block.get("type") == "text":
-                                text_parts.append(block.get("text", ""))
-                    elif isinstance(content, str):
-                        text_parts = [content]
-                    text = " ".join(text_parts).strip()
-                    if text and len(text) > 5:
+                    text = self._extract_assistant_text(entry)
+                    if text:
                         messages.append({"role": "assistant", "text": text[:800]})
             except (json.JSONDecodeError, KeyError, TypeError) as e:
                 logger.debug(f"[PreCompact] Skipping invalid checkpoint entry: {e}")
