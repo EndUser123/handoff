@@ -289,7 +289,7 @@ class TestFilterLowFindings:
 class TestGroupByFile:
     """Tests for task grouping by file."""
 
-    def test_group_by_file(self):
+    def test_group_by_file(self) -> None:
         """
         Test that tasks are correctly grouped by file.
 
@@ -326,20 +326,17 @@ class TestGroupByFile:
             "testing": []
         }
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            json.dump(findings_data, f)
-            findings_file = f.name
-
+        findings_file = _create_temp_findings_file(findings_data)
         try:
             # Act
-            tasks = convert_findings_to_tasks(findings_file, min_severity="MEDIUM")
+            tasks = convert_findings_to_tasks(str(findings_file), min_severity="MEDIUM")
 
             # Assert
             assert len(tasks) == 2
             file_paths = {task["metadata"]["file"] for task in tasks}
             assert file_paths == {"src/file_a.py", "src/file_b.py"}
         finally:
-            Path(findings_file).unlink()
+            findings_file.unlink()
 
 
 class TestHandleEmptyFindings:
