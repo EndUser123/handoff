@@ -1318,31 +1318,31 @@ if __name__ == "__main__":
         test_path = sys.argv[1]
         parser = TranscriptParser(test_path)
 
-        print("=== Testing TranscriptLines ===")
+        logger.info(=== Testing TranscriptLines ====== Testing TranscriptLines ===)
         lines = TranscriptLines(test_path)
-        print(f"Total lines: {len(lines)}")
+        logger.info(Total lines: {len(lines)}fTotal lines: {len(lines)})
         if len(lines) > 0:
-            print(f"First line: {lines[0][:100]}")
+            logger.info(First line: {lines[0][:100]}fFirst line: {lines[0][:100]})
         if len(lines) > 1:
-            print(f"Last line: {lines[-1][:100]}")
+            logger.info(Last line: {lines[-1][:100]}fLast line: {lines[-1][:100]})
 
-        print("\n=== Testing TranscriptParser ===")
+        logger.info(\n=== Testing TranscriptParser ===\n=== Testing TranscriptParser ===)
         blocker = parser.extract_current_blocker()
-        print(f"Current blocker: {blocker}")
+        logger.info(Current blocker: {blocker}fCurrent blocker: {blocker})
 
         mods = parser.extract_modifications()
-        print(f"Modifications: {len(mods)} found")
+        logger.info(Modifications: {len(mods)} foundfModifications: {len(mods)} found)
 
         decisions = parser.extract_session_decisions()
-        print(f"Session decisions: {len(decisions)} found")
+        logger.info(Session decisions: {len(decisions)} foundfSession decisions: {len(decisions)} found)
 
         patterns = parser.extract_session_patterns()
-        print(f"Session patterns: {len(patterns)} found")
+        logger.info(Session patterns: {len(patterns)} foundfSession patterns: {len(patterns)} found)
 
         controversial = parser.extract_controversial_decisions()
-        print(f"Controversial decisions: {len(controversial)} found")
+        logger.info(Controversial decisions: {len(controversial)} foundfControversial decisions: {len(controversial)} found)
     else:
-        print("Usage: python transcript.py <path_to_transcript.json>")
+        logger.info(Usage: python transcript.py <path_to_transcript.json>Usage: python transcript.py <path_to_transcript.json>)
 
 
 def extract_user_message_from_blocker(blocker: BlockerDef | str | None) -> str | None:

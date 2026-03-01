@@ -359,8 +359,8 @@ def atomic_write_with_validation(
 
     # PERF-002: Perform size check here using cached JSON instead of re-serializing
     if final_size > MAX_HANDOFF_SIZE_BYTES:
-        print(
-            f"[HandoffStore] Warning: Handoff still exceeds "
+        logger.warning(
+            f"[HandoffStore] Handoff still exceeds "
             f"{MAX_HANDOFF_SIZE_BYTES} bytes: {final_size} bytes"
         )
         validated_data = _apply_last_resort_truncation(validated_data)
@@ -495,7 +495,7 @@ def _apply_last_resort_truncation(validated: dict[str, Any]) -> dict[str, Any]:
             if field in task_aware and task_aware[field]:
                 task_aware[field] = []
         validated["task_aware"] = task_aware
-        print("[HandoffStore] Truncated task_aware fields to reduce size")
+        logger.info([HandoffStore] Truncated task_aware fields to reduce size[HandoffStore] Truncated task_aware fields to reduce size)
 
     return validated
 
@@ -964,7 +964,7 @@ class HandoffStore:
                     print(
                         f"[HandoffStore] active_session task added to {task_file_path.name} (PID {os.getpid()})"
                     )
-                    print(f"[HandoffStore] continue_session task added to {task_file_path.name}")
+                    logger.info([HandoffStore] continue_session task added to {task_file_path.name}f[HandoffStore] continue_session task added to {task_file_path.name})
 
                     # Write manifest file atomically
                     fd_manifest, temp_manifest_path = tempfile.mkstemp(
@@ -1010,7 +1010,7 @@ class HandoffStore:
                 print(
                     f"[HandoffStore] active_session task added to {task_file_path.name} (PID {os.getpid()}) [no lock]"
                 )
-                print(f"[HandoffStore] continue_session task added to {task_file_path.name} [no lock]")
+                logger.info([HandoffStore] continue_session task added to {task_file_path.name} [no lock]f[HandoffStore] continue_session task added to {task_file_path.name} [no lock])
 
                 # Write manifest file atomically (even without lock)
                 fd_manifest, temp_manifest_path = tempfile.mkstemp(
