@@ -159,7 +159,7 @@ class CheckpointChain:
             else:
                 return self._migration_cache[task_id]
 
-    def _process_task_metadata(self, task_id: str, task: dict) -> HandoffCheckpointRef | None:
+    def _process_task_metadata(self, task_id: str, task: dict[str, Any]) -> HandoffCheckpointRef | None:
         """Process task metadata to extract checkpoint reference.
 
         Args:
