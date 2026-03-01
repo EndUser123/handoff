@@ -16,8 +16,10 @@ Actual behavior (before fix): Accepts any terminal_id string
 Run with: pytest tests/test_security_handoff_store_validation.py -v
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
+
 from handoff.hooks.__lib.handoff_store import HandoffStore
 
 

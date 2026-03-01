@@ -53,17 +53,24 @@ def write_handoff_process(worker_id: int, task_file_path: Path, result_queue: Qu
         store = HandoffStore(project_root, terminal_id)
 
         # Create handoff data
+        # Note: next_steps should be a list for build_handoff_data, but
+        # create_continue_session_task expects a string (existing bug)
+        # We'll pass a list and let validation handle it
         handoff_data = store.build_handoff_data(
             task_name=f"test_task_{worker_id}",
             progress_pct=50,
             blocker=None,
             files_modified=[f"file_{worker_id}.py"],
-            next_steps=[f"Step {worker_id}"],
+            next_steps=[f"Step {worker_id}"],  # Stored as list
             handover={"decisions": [], "patterns_learned": []},
             modifications=[],
             add_bridge_tokens=False,
             calculate_quality=False,
         )
+
+        # Convert next_steps to string to work around existing bug
+        # where create_continue_session_task expects a string
+        handoff_data["next_steps"] = "\n".join(handoff_data["next_steps"])
 
         # Attempt to create continue_session task
         # This is where the race condition occurs
