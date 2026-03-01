@@ -1228,9 +1228,24 @@ class PreCompactHandoffCapture:
                         if not self._check_transcript_availability(self.transcript_path):
                             transcript_unavailable = True
                         else:
-                            # File has content but no user messages - system-only transcript
-                            logger.warning("[PreCompact] WARNING: Transcript has no user messages - skipping handoff capture to avoid stale data")
-                            transcript_unavailable = True
+                            # File exists but extract_last_user_message() returned None
+                            # This could mean:
+                            # a) System-only transcript (no user messages at all)
+                            # b) All user messages are meta-tagged (<local-command-caveat>, etc.)
+                            # Check if there are ANY user-type entries in transcript
+                            has_user_entries = self.parser._get_parsed_entries() and any(
+                                e.get("type") == "user" for e in self.parser._get_parsed_entries()
+                            )
+                            if has_user_entries:
+                                # Transcript has user messages (even if meta-tagged) - proceed with handoff
+                                logger.info(
+                                    "[PreCompact] User messages exist but are meta-tagged - proceeding with handoff"
+                                )
+                                # last_user_message stays None, will use fallback options below
+                            else:
+                                # Truly system-only transcript - skip handoff
+                                logger.warning("[PreCompact] WARNING: Transcript has no user messages - skipping handoff capture to avoid stale data")
+                                transcript_unavailable = True
                 else:
                     logger.warning("[PreCompact] WARNING: No transcript path available - skipping handoff capture")
                     transcript_unavailable = True
