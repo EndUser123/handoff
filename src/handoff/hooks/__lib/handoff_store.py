@@ -496,11 +496,14 @@ def _apply_last_resort_truncation(validated: dict[str, Any]) -> dict[str, Any]:
     return validated
 
 
-def _validate_handoff_data_size(handoff_data: dict[str, Any]) -> dict[str, Any]:
+def _validate_handoff_data_size(
+    handoff_data: dict[str, Any], cached_json: str | None = None
+) -> dict[str, Any]:
     """Validate and truncate handoff data to enforce size limits.
 
     Args:
         handoff_data: Handoff data to validate
+        cached_json: Optional cached JSON string to avoid re-serialization (PERF-002)
 
     Returns:
         Validated handoff data with size limits applied
@@ -539,7 +542,12 @@ def _validate_handoff_data_size(handoff_data: dict[str, Any]) -> dict[str, Any]:
         validated["handover"] = _truncate_handover_section(handover)
 
     # Compute final size and warn if still exceeds 500 KB
-    estimated_size = len(json.dumps(validated).encode("utf-8"))
+    # PERF-002: Use cached JSON if available to avoid re-serialization
+    if cached_json is not None:
+        estimated_size = len(cached_json.encode("utf-8"))
+    else:
+        estimated_size = len(json.dumps(validated).encode("utf-8"))
+
     if estimated_size > MAX_HANDOFF_SIZE_BYTES:
         print(
             f"[HandoffStore] Warning: Handoff still exceeds "
