@@ -570,7 +570,7 @@ def _load_active_session_task(terminal_id: str) -> tuple[dict[str, Any] | None, 
     Returns:
         Tuple of (task dict with handoff in metadata, or None; source terminal_id)
     """
-    task_tracker_dir = Path("P:/.claude/state/task_tracker")
+    task_tracker_dir = PROJECT_ROOT / ".claude" / "state" / "task_tracker"
 
     # Fast path: check current terminal first
     task_file_path = task_tracker_dir / f"{terminal_id}_tasks.json"
@@ -639,7 +639,7 @@ def _cleanup_active_session_task(source_terminal_id: str) -> None:
         source_terminal_id: Terminal identifier where the handoff was loaded from
     """
     # Use the source terminal's task file (where the handoff was found)
-    task_tracker_dir = Path("P:/.claude/state/task_tracker")
+    task_tracker_dir = PROJECT_ROOT / ".claude" / "state" / "task_tracker"
     task_file_path = task_tracker_dir / f"{source_terminal_id}_tasks.json"
 
     if not task_file_path.exists():
