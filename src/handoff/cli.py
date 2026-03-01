@@ -117,6 +117,31 @@ def expand_all_bridge_tokens(handoff_data: dict[str, Any]) -> dict[str, Any]:
     return expanded
 
 
+def _format_decision(decision: dict[str, Any], expand_tokens: bool) -> list[str]:
+    """Format a single decision for LLM prompt.
+
+    Args:
+        decision: Decision data dictionary
+        expand_tokens: Whether to use expanded context
+
+    Returns:
+        List of formatted lines
+    """
+    topic = decision.get('topic', 'Unknown')
+    result = [f"### {topic}"]
+
+    if expand_tokens and (expanded := decision.get('expanded_context')):
+        result.append(expanded)
+    else:
+        bridge_token = decision.get('bridge_token', '')
+        decision_text = decision.get('decision', '')[:150]
+        if bridge_token:
+            result.append(f"**Bridge Token**: `{bridge_token}`")
+        result.append(f"{decision_text}...")
+    result.append("")
+    return result
+
+
 def format_llm_prompt(handoff_data: dict[str, Any], expand_tokens: bool = True) -> str:
     """Format handoff data as an LLM-ready prompt for pasting into another LLM.
 
