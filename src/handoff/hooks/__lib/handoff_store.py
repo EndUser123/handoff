@@ -974,7 +974,7 @@ class HandoffStore:
             # This maintains backward compatibility with original behavior
             logger.warning(
                 f"[HandoffStore] Could not acquire lock for {task_file_path.name} after "
-                f"5s timeout - proceeding with write anyway (risk of concurrent writes)"
+                f"{LOCK_TIMEOUT_SECONDS}s timeout - proceeding with write anyway (risk of concurrent writes)"
             )
             # Proceed with write anyway (risky but maintains compatibility)
             fd, temp_path = tempfile.mkstemp(
