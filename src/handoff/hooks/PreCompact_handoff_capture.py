@@ -1183,6 +1183,11 @@ class PreCompactHandoffCapture:
                 print(f"[PreCompact] Warning: Failed to create continue_session task: {e}")
 
         print("[PreCompact] Handoff complete. Ready for compaction.")
+
+        # Step 6: Automatic cleanup of old handoffs (COMP-001)
+        # This runs on every compaction, not just with --cleanup flag
+        self._cleanup_old_handoffs()
+
         return True
 
 
