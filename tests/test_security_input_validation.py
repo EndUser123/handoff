@@ -13,15 +13,16 @@ Expected: All tests FAIL (vulnerabilities exist before fixes)
 After fix: All tests PASS (vulnerabilities mitigated)
 """
 
-import pytest
 import os
 import tempfile
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+
+import pytest
+
+from handoff.hooks.__lib.handoff_store import HandoffStore
 
 # Import functions to test
 from handoff.hooks.SessionStart_handoff_restore import _safe_id
-from handoff.hooks.__lib.handoff_store import HandoffStore
 
 
 class TestSafeIdPathTraversal:
@@ -551,6 +552,6 @@ class TestSafeIdAdditionalEdgeCases:
         result = _safe_id(malicious_input)
 
         assert result is not None
-        assert '..' not in result, f"Path traversal not blocked in long input"
+        assert '..' not in result, "Path traversal not blocked in long input"
         # Result should be reasonably sized
         assert len(result) < 20000, f"Result too long: {len(result)} characters"
