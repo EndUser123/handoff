@@ -26,11 +26,17 @@ class TestSessionStartHookIntegration:
         When: The hook runs
         Then: The active_session task is loaded successfully
         """
-        # Arrange - Create task file at the hard-coded path used by the hook
+        # Arrange - Create task file at the path used by the hook
         import shutil
 
+        # Import PROJECT_ROOT from hook module to match path computation
+        import sys
+        hooks_dir = Path("P:/packages/handoff/src/handoff/hooks").resolve()
+        sys.path.insert(0, str(hooks_dir))
+        from SessionStart_handoff_restore import PROJECT_ROOT
+
         # Save current state if specific task file exists (not the entire directory)
-        task_tracker_base = Path("P:/.claude/state/task_tracker")
+        task_tracker_base = PROJECT_ROOT / ".claude" / "state" / "task_tracker"
         terminal_id = "test_terminal_123"
         task_file = task_tracker_base / f"{terminal_id}_tasks.json"
 
