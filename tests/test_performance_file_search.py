@@ -36,7 +36,6 @@ import json
 import tempfile
 import time
 from pathlib import Path
-from typing import Any
 
 import pytest
 
@@ -182,7 +181,7 @@ class TestActiveSessionFileSearchPerformance:
 
         # If it passes, it's still slower than optimal but acceptable
         print(f"  Performance: Acceptable but not optimal ({elapsed*1000:.2f} ms)")
-        print(f"  After fix with manifest: Expected < 50 ms")
+        print("  After fix with manifest: Expected < 50 ms")
 
     def test_search_finds_active_session_at_end(self, mock_project_root):
         """

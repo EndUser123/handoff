@@ -343,7 +343,7 @@ class TestChecksumValidFormats:
         Then: No exception is raised
         """
         # Realistic SHA256-like hex string (exactly 64 hex chars)
-        valid_checksum = "sha256:a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90ab"
+        valid_checksum = "sha256:a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90"
         HandoffCheckpoint._validate_checksum(valid_checksum)
 
     def test_valid_with_numbers_only(self):
