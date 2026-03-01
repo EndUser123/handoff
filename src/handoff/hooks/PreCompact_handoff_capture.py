@@ -377,6 +377,49 @@ class PreCompactHandoffCapture:
             return [m.get("file") for m in modifications if m.get("file")]  # type: ignore[misc]
         return []
 
+    @staticmethod
+    def _extract_content_from_entry(entry: dict[str, Any]) -> str:
+        """Extract text content from a transcript entry.
+
+        Args:
+            entry: Transcript entry dictionary
+
+        Returns:
+            Extracted content string
+        """
+        if entry.get("type") != "assistant":
+            return ""
+
+        msg = entry.get("message", {})
+        if isinstance(msg, dict):
+            return msg.get("content", "")
+        elif isinstance(msg, str):
+            return msg
+        return ""
+
+    @staticmethod
+    def _count_test_results(content: str, test_pattern: re.Pattern[str]) -> tuple[int, int]:
+        """Count passed and failed test results from content.
+
+        Args:
+            content: Text content to search
+            test_pattern: Compiled regex pattern for test results
+
+        Returns:
+            Tuple of (passed_count, failed_count)
+        """
+        passed = 0
+        failed = 0
+
+        for match in test_pattern.finditer(content):
+            result = match.group("result").upper()
+            if result in ("PASSED", "✓", "✅"):
+                passed += 1
+            elif result in ("FAILED", "✗", "❌"):
+                failed += 1
+
+        return passed, failed
+
     def _scan_transcript_for_test_results(self, recent_lines: list[str]) -> dict[str, Any]:
         """Scan transcript lines for test results and verification activity.
 
@@ -400,29 +443,19 @@ class PreCompactHandoffCapture:
         for line in recent_lines:
             try:
                 entry = json.loads(line)
-                content = ""
+                content = self._extract_content_from_entry(entry)
 
-                # Extract content from various message formats
-                if entry.get("type") == "assistant":
-                    msg = entry.get("message", {})
-                    if isinstance(msg, dict):
-                        content = msg.get("content", "")
-                    elif isinstance(msg, str):
-                        content = msg
+                if not content:
+                    continue
 
-                    # Check for test results
-                    if content:
-                        # Count passed/failed indicators
-                        for match in test_pattern.finditer(content):
-                            result = match.group("result").upper()
-                            if result in ("PASSED", "✓", "✅"):
-                                passed += 1
-                            elif result in ("FAILED", "✗", "❌"):
-                                failed += 1
+                # Count passed/failed indicators
+                p, f = self._count_test_results(content, test_pattern)
+                passed += p
+                failed += f
 
-                        # Check for verification activity
-                        if verification_pattern.search(content):
-                            verification_found = True
+                # Check for verification activity
+                if verification_pattern.search(content):
+                    verification_found = True
 
             except (json.JSONDecodeError, KeyError, TypeError) as e:
                 logger.debug(f"[PreCompact] Skipping invalid checkpoint entry: {e}")

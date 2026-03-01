@@ -8,7 +8,6 @@ Issue: Some public functions have generic or incomplete type hints
 """
 
 import ast
-import inspect
 from pathlib import Path
 from typing import get_type_hints
 
