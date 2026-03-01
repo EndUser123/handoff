@@ -948,9 +948,9 @@ class PreCompactHandoffCapture:
             # Validate session ownership
             if handoff_session != current_session:
                 logger.info(f"[PreCompact] ⊘ Skipping handoff: '{task_name}' from stale session")
-                print(f"  Handoff session: {handoff_session}")
-                print(f"  Current session: {current_session}")
-                print("  Action: Preventing wasted I/O on cross-session handoff")
+                logger.info(f"  Handoff session: {handoff_session}")
+                logger.info(f"  Current session: {current_session}")
+                logger.info("  Action: Preventing wasted I/O on cross-session handoff")
                 # Skip handoff creation - return early with success
                 return True
 
