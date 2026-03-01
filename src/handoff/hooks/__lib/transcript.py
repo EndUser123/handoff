@@ -725,42 +725,14 @@ class TranscriptParser:
                     if isinstance(content, list):
                         # Find actual text content, skip tool results and meta tags
                         for item in content:
-                            # Skip dict items (tool_result, thinking, etc.) - only extract user text
                             if isinstance(item, dict):
                                 continue
-                            if isinstance(item, str):
-                                item = item.strip()
-                                # Skip meta tags and system messages
-                                if (
-                                    item.startswith("<")
-                                    or item.startswith("This session is being continued")
-                                    or item.startswith("Stop hook feedback")
-                                    or len(item) < self._MIN_CONTENT_LENGTH
-                                ):
-                                    continue
-                                # Found substantial user message
-                                return {
-                                    "description": (
-                                        f"User's last question: {item[:200]}"
-                                        f"{'...' if len(item) > 200 else ''}"
-                                    ),
-                                    "severity": "info",
-                                    "source": "transcript",
-                                }
+                            if self._is_substantial_user_message(item, self._MIN_CONTENT_LENGTH):
+                                return self._build_user_message_description(item.strip())
+
                     # Handle string content (less common)
-                    elif (
-                        isinstance(content, str) and len(content.strip()) > self._MIN_CONTENT_LENGTH
-                    ):
-                        user_message = content.strip()
-                        if not user_message.startswith("<"):
-                            return {
-                                "description": (
-                                    f"User's last question: {user_message[:200]}"
-                                    f"{'...' if len(user_message) > 200 else ''}"
-                                ),
-                                "severity": "info",
-                                "source": "transcript",
-                            }
+                    elif self._is_substantial_user_message(content, self._MIN_CONTENT_LENGTH):
+                        return self._build_user_message_description(content.strip())
         except Exception as e:
             logger.error(f"[TranscriptParser] Could not read transcript: {e}")
 
