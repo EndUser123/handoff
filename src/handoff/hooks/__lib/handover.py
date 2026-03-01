@@ -98,9 +98,8 @@ class HandoverBuilder:
                 for line in objectives_file.read_text().split("\n")[:5]:
                     line = line.strip()
                     if line and not line.startswith("#"):
-                        handover["session_objectives"].append(
-                            {"text": line[:100], "status": "in_progress", "priority": "medium"}
-                        )
+                        # Store as string for consistency with other fields
+                        handover["session_objectives"].append(line[:100])
 
         except Exception as e:
             logger.error(f"[HandoverBuilder] Handover generation failed: {e}")
