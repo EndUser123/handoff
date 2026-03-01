@@ -241,11 +241,11 @@ class TestFileLockingRaceCondition:
                 print("  This demonstrates the TOCTOU vulnerability.")
                 print("  File data is valid, but locking is broken.")
 
-            # After fix, uncomment this to enforce proper locking:
-            # assert success_count == 1, (
-            #     f"Expected exactly 1 successful write, got {success_count}. "
-            #     f"Lock mechanism failed to serialize concurrent access."
-            # )
+            # After fix: enforce proper locking - only one process should succeed
+            assert success_count == 1, (
+                f"Expected exactly 1 successful write, got {success_count}. "
+                f"Lock mechanism failed to serialize concurrent access."
+            )
 
     def test_lock_file_prevents_concurrent_writes(self):
         """
