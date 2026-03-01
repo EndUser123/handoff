@@ -377,7 +377,9 @@ class TaskIdentityManager:
             logger.error(f"[TaskID] Error registering mapping: {e}")
             return False
 
-    def record_active_command(self, command: str, phase: str, metadata: dict | None = None) -> bool:
+    def record_active_command(
+        self, command: str, phase: str, metadata: dict[str, object] | None = None
+    ) -> bool:
         """
         Record active ad-hoc command for handoff recovery.
 
