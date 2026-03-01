@@ -1318,29 +1318,29 @@ if __name__ == "__main__":
         test_path = sys.argv[1]
         parser = TranscriptParser(test_path)
 
-        logger.info(=== Testing TranscriptLines ====== Testing TranscriptLines ===)
+        logger.info("=== Testing TranscriptLines ===")
         lines = TranscriptLines(test_path)
-        logger.info(Total lines: {len(lines)}fTotal lines: {len(lines)})
+        logger.info(f"Total lines: {len(lines)}")
         if len(lines) > 0:
-            logger.info(First line: {lines[0][:100]}fFirst line: {lines[0][:100]})
+            logger.info(f"First line: {lines[0][:100]}")
         if len(lines) > 1:
-            logger.info(Last line: {lines[-1][:100]}fLast line: {lines[-1][:100]})
+            logger.info(f"Last line: {lines[-1][:100]}")
 
-        logger.info(\n=== Testing TranscriptParser ===\n=== Testing TranscriptParser ===)
+        logger.info("\n=== Testing TranscriptParser ===")
         blocker = parser.extract_current_blocker()
-        logger.info(Current blocker: {blocker}fCurrent blocker: {blocker})
+        logger.info(f"Current blocker: {blocker}")
 
         mods = parser.extract_modifications()
-        logger.info(Modifications: {len(mods)} foundfModifications: {len(mods)} found)
+        logger.info(f"Modifications: {len(mods)} found")
 
         decisions = parser.extract_session_decisions()
-        logger.info(Session decisions: {len(decisions)} foundfSession decisions: {len(decisions)} found)
+        logger.info(f"Session decisions: {len(decisions)} found")
 
         patterns = parser.extract_session_patterns()
-        logger.info(Session patterns: {len(patterns)} foundfSession patterns: {len(patterns)} found)
+        logger.info(f"Session patterns: {len(patterns)} found")
 
         controversial = parser.extract_controversial_decisions()
-        logger.info(Controversial decisions: {len(controversial)} foundfControversial decisions: {len(controversial)} found)
+        logger.info(f"Controversial decisions: {len(controversial)} found")
     else:
         logger.info(Usage: python transcript.py <path_to_transcript.json>Usage: python transcript.py <path_to_transcript.json>)
 
