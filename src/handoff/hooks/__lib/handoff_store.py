@@ -130,6 +130,39 @@ class FileLock:
         self.lock_fd: int | None = None
         self._acquired = False
 
+    def _try_acquire_lock_once(self) -> bool:
+        """Attempt to acquire the lock once (non-blocking).
+
+        Returns:
+            True if lock was acquired successfully
+            False if lock is held by another process (should retry)
+
+        Raises:
+            OSError: If there's a fatal error during lock acquisition
+        """
+        # Open lock file (create if doesn't exist)
+        flags = os.O_RDWR | os.O_CREAT
+        lock_fd = os.open(self.lock_file_path, flags)
+
+        try:
+            # Try to acquire lock atomically
+            if sys.platform == 'win32':
+                # Windows: msvcrt.locking() with LK_NBLCK (non-blocking)
+                msvcrt.locking(lock_fd, msvcrt.LK_NBLCK, 1)
+                self.lock_fd = lock_fd
+                self._acquired = True
+                return True
+            else:
+                # Unix: fcntl.flock() with LOCK_EX | LOCK_NB
+                fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                self.lock_fd = lock_fd
+                self._acquired = True
+                return True
+        except OSError:
+            # Lock is held by another process
+            os.close(lock_fd)
+            return False
+
     def acquire(self) -> bool:
         """Acquire the file lock with retry logic.
 
