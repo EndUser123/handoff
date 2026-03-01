@@ -344,7 +344,7 @@ class PreCompactHandoffCapture:
         """
         modifications = self.parser.extract_modifications()
         if modifications:
-            return [m.get("file") for m in modifications if m.get("file")]
+            return [m.get("file") for m in modifications if m.get("file")]  # type: ignore[misc]
         return []
 
     def _scan_transcript_for_test_results(self, recent_lines: list[str]) -> dict[str, Any]:
