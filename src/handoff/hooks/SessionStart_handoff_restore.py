@@ -568,6 +568,8 @@ def _load_active_session_task(terminal_id: str) -> tuple[dict[str, Any] | None, 
     Uses terminal-scoped task file to prevent cross-terminal contamination.
     Falls back to searching all terminal task files for restoration tasks.
 
+    PERF-001: Uses manifest file for O(1) lookup instead of O(n) glob scan.
+
     Args:
         terminal_id: Terminal identifier for isolation
 
@@ -603,7 +605,50 @@ def _load_active_session_task(terminal_id: str) -> tuple[dict[str, Any] | None, 
             except OSError:
                 pass
 
+    # PERF-001: Fast path using manifest file (O(1) lookup)
+    manifest_path = task_tracker_dir / "active_session_manifest.json"
+    if manifest_path.exists():
+        try:
+            with open(manifest_path, encoding="utf-8") as f:
+                manifest = json.load(f)
+
+            source_terminal = manifest.get("terminal_id")
+            if source_terminal:
+                # Load from the terminal specified in manifest
+                manifest_task_file = task_tracker_dir / f"{source_terminal}_tasks.json"
+                if manifest_task_file.exists():
+                    try:
+                        with open(manifest_task_file, encoding="utf-8") as f:
+                            task_data = json.load(f)
+
+                        # Look for active_session task
+                        active_session = task_data.get("tasks", {}).get("active_session")
+                        if active_session:
+                            logger.debug(f"[SessionStart] Found active_session via manifest in {source_terminal}_tasks.json")
+                            return active_session, source_terminal
+
+                        # Fallback to continue_session task
+                        continue_session = task_data.get("tasks", {}).get("continue_session")
+                        if continue_session:
+                            logger.debug(f"[SessionStart] Found continue_session via manifest in {source_terminal}_tasks.json")
+                            return continue_session, source_terminal
+
+                    except (json.JSONDecodeError, OSError) as e:
+                        logger.error(f"[SessionStart] CORRUPTED task file from manifest {manifest_task_file}: {e}")
+                        try:
+                            manifest_task_file.unlink(missing_ok=True)
+                        except OSError:
+                            pass
+
+        except (json.JSONDecodeError, OSError) as e:
+            logger.error(f"[SessionStart] CORRUPTED manifest file {manifest_path}: {e}")
+            try:
+                manifest_path.unlink(missing_ok=True)
+            except OSError:
+                pass
+
     # Slow path: search all terminal task files (handles terminal_id change after compaction)
+    # Only runs if manifest doesn't exist or is invalid
     for task_file in task_tracker_dir.glob("*_tasks.json"):
         try:
             with open(task_file, encoding="utf-8") as f:
