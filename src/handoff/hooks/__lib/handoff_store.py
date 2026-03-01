@@ -718,14 +718,14 @@ class HandoffStore:
         self._current_chain_id: str | None = None
 
     def _validate_terminal_id(self, terminal_id: str) -> None:
-        """Validate terminal_id format to prevent security issues (SEC-002).
+        """Validate terminal_id to prevent security issues (SEC-002).
 
         Security validation checks:
         - Reject empty or whitespace-only strings
         - Reject null bytes (null byte injection)
         - Reject path traversal patterns (../, ./, etc.)
         - Reject absolute paths
-        - Enforce format: ^term_[a-zA-Z0-9_-]+$
+        - Allow alphanumeric, underscore, hyphen, and UUID-like formats
 
         Args:
             terminal_id: Terminal identifier to validate
