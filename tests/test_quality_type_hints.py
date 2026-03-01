@@ -181,8 +181,10 @@ def test_all_public_functions_have_complete_type_hints():
     violations = []
 
     for func_name, args, return_annotation in public_functions:
-        # Check each parameter
+        # Check each parameter (skip 'self' as it doesn't need type hint in Python)
         for param_name, param_annotation in args:
+            if param_name == "self":
+                continue  # self parameter doesn't need type hint
             if param_annotation is None:
                 violations.append(f"{func_name}.{param_name}: Missing type hint")
             elif "Any" in param_annotation:
