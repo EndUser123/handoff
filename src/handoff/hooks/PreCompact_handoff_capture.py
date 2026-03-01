@@ -173,38 +173,7 @@ class PreCompactHandoffCapture:
         _UNSET = object()
         transcript_path_value = self.hook_input.get("transcript_path", _UNSET)
         if transcript_path_value is _UNSET:
-            self.transcript_path = None
-            # TERMINAL ISOLATION: Use session_id to find this terminal's specific transcript
-            # NOT the most recently modified file (breaks multi-terminal isolation)
-            project_conversations_dir = os.path.expanduser("~/.claude/projects/P--/")
-            if os.path.exists(project_conversations_dir) and _SESSION_ACTIVITY_AVAILABLE:
-                session_id = _get_session_id_from_env()
-                if session_id:
-                    # Build transcript path directly from session_id (terminal-isolated)
-                    candidate_path = os.path.join(project_conversations_dir, f"{session_id}.jsonl")
-                    if os.path.exists(candidate_path):
-                        size_mb = os.path.getsize(candidate_path) / (1024 * 1024)
-                        # Sanity check: skip if obviously wrong (too large or subagent file)
-                        if size_mb <= 50 and "subagent" not in candidate_path.lower():
-                            self.transcript_path = candidate_path
-                            print(
-                                f"[PreCompact] Found terminal transcript: {session_id} ({size_mb:.1f}MB)"
-                            )
-                        else:
-                            print(
-                                f"[PreCompact] Transcript exists but fails sanity check: {size_mb:.1f}MB"
-                            )
-                    else:
-                        print(f"[PreCompact] Session transcript not found: {session_id}.jsonl")
-                else:
-                    print(
-                        "[PreCompact] No session_id available - cannot find terminal-specific transcript"
-                    )
-            else:
-                print(
-                    "[PreCompact] Project conversations directory not found or session activity unavailable"
-                )
-
+            self.transcript_path = self._find_terminal_transcript()
             if not self.transcript_path:
                 print(
                     "[PreCompact] No suitable session transcript found - skipping transcript parsing"
