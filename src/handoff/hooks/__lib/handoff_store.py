@@ -124,13 +124,13 @@ class FileLock:
     The lock is automatically released when exiting the context manager.
     """
 
-    def __init__(self, lock_file_path: Path, timeout: float = 5.0, stale_age: float = 10.0):
+    def __init__(self, lock_file_path: Path, timeout: float = LOCK_TIMEOUT_SECONDS, stale_age: float = STALE_LOCK_AGE_SECONDS):
         """Initialize file lock.
 
         Args:
             lock_file_path: Path to lock file
-            timeout: Maximum seconds to wait for lock acquisition (default: 5.0)
-            stale_age: Seconds after which a lock is considered stale (default: 10.0)
+            timeout: Maximum seconds to wait for lock acquisition (from config.LOCK_TIMEOUT_SECONDS)
+            stale_age: Seconds after which a lock is considered stale (from config.STALE_LOCK_AGE_SECONDS)
         """
         self.lock_file_path = lock_file_path
         self.timeout = timeout
