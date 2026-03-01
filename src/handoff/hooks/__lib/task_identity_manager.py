@@ -514,7 +514,7 @@ if __name__ == "__main__":
     manager = TaskIdentityManager()
 
     logger.info(Testing Task Identity ManagerTesting Task Identity Manager)
-    print("=" * 50)
+    logger.info("=" * 50)
 
     # Test: Get current task
     task = manager.get_current_task()

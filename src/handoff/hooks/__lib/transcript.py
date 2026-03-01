@@ -571,7 +571,7 @@ class TranscriptParser:
         try:
             file_size = transcript_file.stat().st_size
             if file_size > self._MAX_FILE_SIZE:
-                print(
+                logger.info(
                     f"[TranscriptParser] Warning: Transcript file size ({file_size / 1024 / 1024:.1f}MB) "
                     f"exceeds limit ({self._MAX_FILE_SIZE / 1024 / 1024:.1f}MB). "
                     f"Skipping parsing to prevent OOM (QUAL-006)."
@@ -589,7 +589,7 @@ class TranscriptParser:
         for line in self._iter_transcript_lines():
             # QUAL-006: Stop parsing if we exceed max entries
             if entry_count >= self._MAX_ENTRIES:
-                print(
+                logger.info(
                     f"[TranscriptParser] Warning: Reached maximum entry count ({self._MAX_ENTRIES}). "
                     f"Stopping parsing early to prevent hang (QUAL-006)."
                 )

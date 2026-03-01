@@ -373,7 +373,7 @@ def atomic_write_with_validation(
 
     # Log warning if data was truncated
     if truncated:
-        print(
+        logger.info(
             f"[HandoffStore] Warning: Handoff data truncated from "
             f"{original_size} to {final_size} bytes"
         )
@@ -551,7 +551,7 @@ def _validate_handoff_data_size(
         # Use cached JSON if available to avoid re-serialization
         estimated_size = len(cached_json.encode("utf-8"))
         if estimated_size > MAX_HANDOFF_SIZE_BYTES:
-            print(
+            logger.info(
                 f"[HandoffStore] Warning: Handoff still exceeds "
                 f"{MAX_HANDOFF_SIZE_BYTES} bytes: {estimated_size} bytes"
             )
@@ -961,7 +961,7 @@ class HandoffStore:
                     # Atomic rename with retry for Windows PermissionError (WinError 5)
                     atomic_write_with_retry(temp_path, task_file_path)
 
-                    print(
+                    logger.info(
                         f"[HandoffStore] active_session task added to {task_file_path.name} (PID {os.getpid()})"
                     )
                     logger.info([HandoffStore] continue_session task added to {task_file_path.name}f[HandoffStore] continue_session task added to {task_file_path.name})
@@ -1007,7 +1007,7 @@ class HandoffStore:
                 with os.fdopen(fd, "w", encoding="utf-8") as f:
                     json.dump(task_data, f, indent=2)
                 atomic_write_with_retry(temp_path, task_file_path)
-                print(
+                logger.info(
                     f"[HandoffStore] active_session task added to {task_file_path.name} (PID {os.getpid()}) [no lock]"
                 )
                 logger.info([HandoffStore] continue_session task added to {task_file_path.name} [no lock]f[HandoffStore] continue_session task added to {task_file_path.name} [no lock])

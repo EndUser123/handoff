@@ -128,14 +128,14 @@ class PreCompactHandoffCapture:
         """
         project_conversations_dir = os.path.expanduser("~/.claude/projects/P--/")
         if not (os.path.exists(project_conversations_dir) and _SESSION_ACTIVITY_AVAILABLE):
-            print(
+            logger.info(
                 "[PreCompact] Project conversations directory not found or session activity unavailable"
             )
             return None
 
         session_id = _get_session_id_from_env()
         if not session_id:
-            print(
+            logger.info(
                 "[PreCompact] No session_id available - cannot find terminal-specific transcript"
             )
             return None
@@ -149,12 +149,12 @@ class PreCompactHandoffCapture:
         size_mb = os.path.getsize(candidate_path) / (1024 * 1024)
         # Sanity check: skip if obviously wrong (too large or subagent file)
         if size_mb <= 50 and "subagent" not in candidate_path.lower():
-            print(
+            logger.info(
                 f"[PreCompact] Found terminal transcript: {session_id} ({size_mb:.1f}MB)"
             )
             return candidate_path
         else:
-            print(
+            logger.info(
                 f"[PreCompact] Transcript exists but fails sanity check: {size_mb:.1f}MB"
             )
             return None
@@ -175,7 +175,7 @@ class PreCompactHandoffCapture:
         if transcript_path_value is _UNSET:
             self.transcript_path = self._find_terminal_transcript()
             if not self.transcript_path:
-                print(
+                logger.info(
                     "[PreCompact] No suitable session transcript found - skipping transcript parsing"
                 )
         else:
@@ -974,7 +974,7 @@ class PreCompactHandoffCapture:
             logger.info(f"[PreCompact] Completion state: {impl_status['completion_state']}")
         if impl_status.get("test_results"):
             test_res = impl_status["test_results"]
-            print(
+            logger.info(
                 f"[PreCompact] Test results: {test_res.get('passed', 0)} passed, "
                 f"{test_res.get('failed', 0)} failed"
             )
@@ -983,7 +983,7 @@ class PreCompactHandoffCapture:
             logger.info(f"[PreCompact] Blocker: {blocker.get('description', 'Unknown')}")
 
         if visual_context:
-            print(
+            logger.info(
                 f"[PreCompact] Visual context: {visual_context.get('description', 'Unknown')[:80]}..."
             )
 
@@ -1084,7 +1084,7 @@ class PreCompactHandoffCapture:
                     # the ENTIRE parsed transcript, not just last 20 raw lines
                     last_user_message = self.parser.extract_last_user_message()
                     if last_user_message:
-                        print(
+                        logger.info(
                             f"[PreCompact] Using last_user_message from TranscriptParser: "
                             f"{last_user_message[:50]}..."
                         )
@@ -1127,7 +1127,7 @@ class PreCompactHandoffCapture:
                         ) or handoff_input_data.get("prompt", "")
                         if input_message:
                             last_user_message = input_message
-                            print(
+                            logger.info(
                                 f"[PreCompact] Using last_user_message from hook_input: "
                                 f"{last_user_message[:50]}..."
                             )
@@ -1136,7 +1136,7 @@ class PreCompactHandoffCapture:
                 if not last_user_message:
                     last_user_message = self._load_active_command_file()
                     if last_user_message:
-                        print(
+                        logger.info(
                             f"[PreCompact] Using last_user_message from active_command file: "
                             f"{last_user_message[:50]}..."
                         )
@@ -1145,7 +1145,7 @@ class PreCompactHandoffCapture:
                 if not last_user_message:
                     last_user_message = transcript.extract_user_message_from_blocker(blocker)
                     if last_user_message:
-                        print(
+                        logger.info(
                             f"[PreCompact] Using last_user_message from blocker: "
                             f"{last_user_message[:50]}..."
                         )
