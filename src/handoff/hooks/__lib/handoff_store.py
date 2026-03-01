@@ -148,7 +148,7 @@ class FileLock:
             OSError: If lock file operations fail
         """
         start_time = time.time()
-        retry_interval = 0.1  # Check 10 times per second
+        retry_interval = LOCK_CHECK_INTERVAL_SECONDS
 
         while time.time() - start_time < self.timeout:
             try:
