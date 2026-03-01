@@ -658,33 +658,10 @@ def _load_active_session_task(terminal_id: str) -> tuple[dict[str, Any] | None, 
     # Slow path: search all terminal task files (handles terminal_id change after compaction)
     # Only runs if manifest doesn't exist or is invalid
     for task_file in task_tracker_dir.glob("*_tasks.json"):
-        try:
-            with open(task_file, encoding="utf-8") as f:
-                task_data = json.load(f)
-
-            # Look for active_session task
-            active_session = task_data.get("tasks", {}).get("active_session")
-            if active_session:
-                source_terminal = task_file.stem.replace("_tasks", "")
-                logger.debug(f"[SessionStart] Found active_session in {source_terminal}_tasks.json")
-                return active_session, source_terminal
-
-            # Fallback to continue_session task
-            continue_session = task_data.get("tasks", {}).get("continue_session")
-            if continue_session:
-                source_terminal = task_file.stem.replace("_tasks", "")
-                logger.debug(f"[SessionStart] Found continue_session in {source_terminal}_tasks.json")
-                return continue_session, source_terminal
-
-        except (json.JSONDecodeError, OSError) as e:
-            # Issue #4: Log corrupted task files at ERROR level and delete them
-            logger.error(f"[SessionStart] CORRUPTED task file {task_file.name}: {e}")
-            try:
-                task_file.unlink(missing_ok=True)
-                logger.info(f"[SessionStart] Deleted corrupted task file: {task_file.name}")
-            except OSError:
-                pass
-            continue
+        source_terminal = task_file.stem.replace("_tasks", "")
+        session_data, _ = _load_session_from_task_file(task_file, source_terminal)
+        if session_data:
+            return session_data, source_terminal
 
     return None, None
 
