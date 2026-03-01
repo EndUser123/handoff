@@ -508,6 +508,53 @@ class TranscriptParser:
         self._transcript_cache: Sequence[str] | None = None
         self._parsed_entries_cache: list[dict[str, Any]] | None = None
 
+    @staticmethod
+    def _build_user_message_description(message: str, max_length: int = 200) -> dict[str, Any]:
+        """Build a user message description dict.
+
+        Args:
+            message: The user message text
+            max_length: Maximum length for the description (default: 200)
+
+        Returns:
+            Dictionary with description, severity, and source
+        """
+        truncated = message[:max_length]
+        ellipsis = "..." if len(message) > max_length else ""
+        return {
+            "description": f"User's last question: {truncated}{ellipsis}",
+            "severity": "info",
+            "source": "transcript",
+        }
+
+    @staticmethod
+    def _is_substantial_user_message(text: str, min_length: int = 15) -> bool:
+        """Check if text is a substantial user message (not meta tags).
+
+        Args:
+            text: The text to check
+            min_length: Minimum content length (default: 15)
+
+        Returns:
+            True if text is a substantial user message, False otherwise
+        """
+        if not isinstance(text, str):
+            return False
+
+        text = text.strip()
+        if len(text) < min_length:
+            return False
+
+        # Skip meta tags and system messages
+        if text.startswith("<"):
+            return False
+        if text.startswith("This session is being continued"):
+            return False
+        if text.startswith("Stop hook feedback"):
+            return False
+
+        return True
+
     def _get_transcript_lines(self) -> Sequence[str]:
         """Get transcript lines from cache (read once, use many times).
 
