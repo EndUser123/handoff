@@ -710,6 +710,14 @@ def _cleanup_active_session_task(source_terminal_id: str) -> None:
         if not removed:
             return
 
+        # PERF-001: Delete manifest file after successful cleanup
+        manifest_path = task_tracker_dir / "active_session_manifest.json"
+        try:
+            manifest_path.unlink(missing_ok=True)
+            logger.debug(f"[SessionStart] Deleted manifest file: {manifest_path.name}")
+        except OSError as e:
+            logger.warning(f"[SessionStart] Could not delete manifest file: {e}")
+
         # Write back
         import tempfile
 
