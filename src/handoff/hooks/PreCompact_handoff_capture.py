@@ -485,8 +485,7 @@ class PreCompactHandoffCapture:
             verification_found = test_scan["verification_found"]
 
             # Build test results dict
-            test_results_dict = self._build_test_results_dict(passed, failed)
-            status["test_results"] = test_results_dict  # type: ignore[assignment]
+            status["test_results"] = self._build_test_results_dict(passed, failed)
 
             # Determine completion state
             files_modified = status["files_modified"]
