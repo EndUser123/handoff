@@ -626,29 +626,9 @@ def _load_active_session_task(terminal_id: str) -> tuple[dict[str, Any] | None, 
     # Fast path: check current terminal first
     task_file_path = task_tracker_dir / f"{terminal_id}_tasks.json"
     if task_file_path.exists():
-        try:
-            with open(task_file_path, encoding="utf-8") as f:
-                task_data = json.load(f)
-
-            # Look for active_session task (restoration after compaction)
-            active_session = task_data.get("tasks", {}).get("active_session")
-            if active_session:
-                return active_session, terminal_id
-
-            # Fallback to continue_session task (also for restoration)
-            continue_session = task_data.get("tasks", {}).get("continue_session")
-            if continue_session:
-                return continue_session, terminal_id
-
-        except (json.JSONDecodeError, OSError) as e:
-            # Issue #4: Log corrupted task files at ERROR level (not DEBUG)
-            logger.error(f"[SessionStart] CORRUPTED task file {task_file_path}: {e}")
-            # Delete corrupted file to prevent future failures
-            try:
-                task_file_path.unlink(missing_ok=True)
-                logger.info(f"[SessionStart] Deleted corrupted task file: {task_file_path}")
-            except OSError:
-                pass
+        session_data, _ = _load_session_from_task_file(task_file_path, terminal_id)
+        if session_data:
+            return session_data, terminal_id
 
     # PERF-001: Fast path using manifest file (O(1) lookup)
     manifest_path = task_tracker_dir / "active_session_manifest.json"
