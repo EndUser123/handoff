@@ -98,39 +98,6 @@ def secure_comparison_hmac(stored_checksum: str, computed: str) -> bool:
     return hmac.compare_digest(stored_checksum, computed)
 
 
-def current_vulnerable_comparison(stored_checksum: str, computed: str) -> bool:
-    """Current vulnerable implementation using startswith().
-
-    This is the VULNERABLE implementation from line 109:
-        if not stored_checksum.startswith(computed):
-
-    Args:
-        stored_checksum: The stored checksum from handoff data
-        computed: The computed checksum
-
-    Returns:
-        True if stored_checksum starts with computed (vulnerable to timing)
-    """
-    return stored_checksum.startswith(computed)
-
-
-def secure_comparison_hmac(stored_checksum: str, computed: str) -> bool:
-    """Secure implementation using hmac.compare_digest().
-
-    This is the SECURE implementation that should replace startswith().
-
-    Args:
-        stored_checksum: The stored checksum from handoff data
-        computed: The computed checksum
-
-    Returns:
-        True if checksums match (constant-time comparison)
-    """
-    import hmac
-
-    return hmac.compare_digest(stored_checksum, computed)
-
-
 class TestChecksumTimingVulnerability:
     """Test suite to demonstrate timing attack vulnerability in checksum comparison."""
 
