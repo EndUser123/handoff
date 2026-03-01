@@ -1079,7 +1079,7 @@ class PreCompactHandoffCapture:
                 # Get last user message for handoff metadata
                 # Priority: 1) TranscriptParser (source of truth), 2) hook_input,
                 # 3) active_command file, 4) blocker.description
-                last_user_message = ""
+                last_user_message: str | None = ""
 
                 # Option 1: TranscriptParser - scans the ACTUAL transcript (PRIORITY 1 - most reliable)
                 transcript_unavailable = False
