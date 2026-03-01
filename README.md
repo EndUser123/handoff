@@ -9,6 +9,7 @@
 | Document | Description |
 |----------|-------------|
 | [ARCHITECTURE.md](ARCHITECTURE.md) | System architecture, data models, and design patterns |
+| [docs/api_reference.md](docs/api_reference.md) | API documentation for public interfaces |
 | [examples/](examples/) | Usage examples and integration patterns |
 | [docs/adr/](docs/adr/) | Architecture Decision Records |
 | [CHANGELOG.md](CHANGELOG.md) | Version history and changes |
