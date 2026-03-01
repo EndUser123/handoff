@@ -220,13 +220,8 @@ class TaskIdentityManager:
             if task:
                 # Verify metadata is recent (within 5 minutes)
                 timestamp_str = data.get("timestamp", "")
-                if timestamp_str:
-                    timestamp = datetime.fromisoformat(timestamp_str)
-                    if timestamp.tzinfo is None:
-                        timestamp = timestamp.replace(tzinfo=UTC)
-                    age = (datetime.now(UTC) - timestamp).total_seconds()
-                    if age < COMPACT_METADATA_FRESHNESS_SECONDS:  # 5 minutes
-                        return task
+                if self._is_metadata_fresh(timestamp_str):
+                    return task
         return None
 
     def _from_git_worktree(self) -> str | None:
