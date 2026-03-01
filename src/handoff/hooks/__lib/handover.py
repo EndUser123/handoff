@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, TypedDict, cast
+from typing import TYPE_CHECKING, Any, TypedDict
 
 logger = logging.getLogger(__name__)
 
@@ -113,4 +113,5 @@ class HandoverBuilder:
         except Exception as e:
             logger.error(f"[HandoverBuilder] Handover generation failed: {e}")
 
-        return handover
+        # Cast to dict[str, Any] for compatibility with existing APIs
+        return cast("dict[str, Any]", handover)
