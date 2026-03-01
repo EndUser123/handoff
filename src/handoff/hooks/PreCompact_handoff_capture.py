@@ -504,7 +504,7 @@ class PreCompactHandoffCapture:
 
         return status
 
-    def _extract_todo_list(self) -> list[dict]:
+    def _extract_todo_list(self) -> list[dict[str, Any]]:
         """Extract the last TodoWrite state from the transcript.
 
         Scans the transcript JSONL for the most recent TodoWrite tool_use call
