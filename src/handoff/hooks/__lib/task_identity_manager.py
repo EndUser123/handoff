@@ -41,7 +41,7 @@ from typing import TypeAlias
 _hooks_project_root = (
     Path(__file__).resolve().parent.parent.parent.parent.parent.parent
 )  # Up to packages/handoff
-claude_root = _hooks_project_root.parent  # Up to P:/
+claude_root = _hooks_project_root.parent  # Up to project root (e.g., P:/ or CWD)
 hooks_dir = claude_root / ".claude" / "hooks"
 if str(hooks_dir) not in sys.path:
     sys.path.insert(0, str(hooks_dir))
