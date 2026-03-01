@@ -419,40 +419,6 @@ class TestHandoffStoreTerminalIdValidation:
 
             # If we reach here, the test fails - no file operations should be possible
             pytest.fail("HandoffStore should reject path traversal at initialization")
-                "task_name": "test_task",
-                "progress_pct": 50,
-                "blocker": None,
-                "files_modified": [],
-                "next_steps": "Continue testing",
-                "handover": {"decisions": [], "patterns_learned": []},
-                "modifications": [],
-            }
-
-            # This should not raise an exception or escape project_root
-            # If terminal_id is not sanitized, this could fail
-            try:
-                store.create_continue_session_task(
-                    task_name="test_task",
-                    task_id="test_id",
-                    handoff_metadata=handoff_metadata,
-                )
-
-                # Verify task file was created within project_root
-                task_tracker_dir = project_root / ".claude" / "state" / "task_tracker"
-                task_files = list(task_tracker_dir.glob("*_tasks.json"))
-
-                # All task files should be within project_root
-                for task_file in task_files:
-                    try:
-                        task_file.resolve().relative_to(project_root.resolve())
-                    except ValueError:
-                        pytest.fail(f"Task file escapes project root: {task_file}")
-
-            except Exception as e:
-                # If exception occurs, verify it's not due to path traversal
-                if "path" in str(e).lower() or "escape" in str(e).lower():
-                    pytest.fail(f"Path traversal vulnerability: {e}")
-                # Other exceptions are OK for this test (e.g., missing dependencies)
 
 
 class TestSafeIdAdditionalEdgeCases:
