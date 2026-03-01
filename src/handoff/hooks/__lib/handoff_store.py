@@ -495,7 +495,7 @@ def _apply_last_resort_truncation(validated: dict[str, Any]) -> dict[str, Any]:
             if field in task_aware and task_aware[field]:
                 task_aware[field] = []
         validated["task_aware"] = task_aware
-        logger.info([HandoffStore] Truncated task_aware fields to reduce size[HandoffStore] Truncated task_aware fields to reduce size)
+        logger.info("[HandoffStore] Truncated task_aware fields to reduce size")
 
     return validated
 
