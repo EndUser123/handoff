@@ -331,7 +331,7 @@ def atomic_write_with_retry(temp_path: str, target_path: str | Path, max_retries
 
 
 def atomic_write_with_validation(
-    data: dict[str, Any], target_path: str | Path, max_retries: int = 5
+    data: dict[str, Any], target_path: str | Path, max_retries: int = MAX_RETRIES
 ) -> dict[str, Any]:
     """Perform atomic file write with data size validation.
 
@@ -341,7 +341,7 @@ def atomic_write_with_validation(
     Args:
         data: Dictionary data to write as JSON
         target_path: Path to target file to write to
-        max_retries: Maximum number of retry attempts (default: 5)
+        max_retries: Maximum number of retry attempts (from config.MAX_RETRIES)
 
     Returns:
         Dict with size information:
