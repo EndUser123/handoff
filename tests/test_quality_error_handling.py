@@ -42,8 +42,8 @@ class TestAtomicWritePermissionError:
         caught by the current implementation.
 
         Scenario:
-        1. Call atomic_write_with_validation with a target in read-only directory
-        2. tempfile.mkstemp raises PermissionError
+        1. Call atomic_write_with_validation
+        2. Mock tempfile.mkstemp to raise PermissionError
         3. Verify PermissionError escapes (not caught by OSError handler)
 
         Current behavior (BUG):
@@ -67,30 +67,20 @@ class TestAtomicWritePermissionError:
             "modifications": [],
         }
 
-        # Create a read-only directory to trigger PermissionError
         with tempfile.TemporaryDirectory() as temp_dir:
-            readonly_dir = Path(temp_dir) / "readonly"
-            readonly_dir.mkdir()
+            target_path = Path(temp_dir) / "test_handoff.json"
 
-            # Make directory read-only (Windows)
-            try:
-                import stat
-                os.chmod(readonly_dir, stat.S_IREAD)
-
-                target_path = readonly_dir / "test_handoff.json"
+            # Mock tempfile.mkstemp to raise PermissionError
+            with patch("tempfile.mkstemp") as mock_mkstemp:
+                mock_mkstemp.side_effect = PermissionError(
+                    "[Errno 13] Permission denied: '/tmp/readonly'"
+                )
 
                 # Act & Assert
-                # This SHOULD raise PermissionError because mkstemp can't create file in read-only dir
+                # This SHOULD raise PermissionError because mkstemp raises it
                 # The current implementation does NOT catch this error
                 with pytest.raises(PermissionError):
                     result = atomic_write_with_validation(test_data, target_path)
-            finally:
-                # Restore permissions for cleanup
-                try:
-                    import stat
-                    os.chmod(readonly_dir, stat.S_IWRITE | stat.S_IREAD)
-                except:
-                    pass
 
     def test_permission_error_on_os_replace(self):
         """
