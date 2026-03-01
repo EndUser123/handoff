@@ -794,7 +794,7 @@ def _safe_id(value: str) -> str:
     return sanitized
 
 
-@hook_main
+@hook_main  # type: ignore[misc]
 def main() -> int:
     """Execute SessionStart handoff restoration.
 
