@@ -64,7 +64,7 @@ class HandoverBuilder:
         Returns:
             Handover dict with decisions, patterns, objectives
         """
-        handover = {
+        handover: dict[str, list[str]] = {
             "decisions": [],
             "patterns_learned": [],
             "controversial_decisions": [],
