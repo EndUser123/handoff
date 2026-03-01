@@ -438,7 +438,7 @@ def _truncate_list_with_marker(items: list[Any], max_items: int) -> list[Any]:
     return items
 
 
-def _truncate_list_keep_recent(items: list, max_items: int) -> list:
+def _truncate_list_keep_recent(items: list[Any], max_items: int) -> list[Any]:
     """Truncate list keeping most recent items.
 
     Args:
