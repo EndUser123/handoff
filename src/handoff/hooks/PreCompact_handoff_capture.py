@@ -1086,7 +1086,7 @@ class PreCompactHandoffCapture:
                     # Use the TranscriptParser's extract_last_user_message() which scans
                     # the ENTIRE parsed transcript, not just last 20 raw lines
                     last_user_message = self.parser.extract_last_user_message()
-                    if last_user_message:  # type: ignore[assignment]
+                    if last_user_message:
                         logger.info(
                             f"[PreCompact] Using last_user_message from TranscriptParser: "
                             f"{last_user_message[:50]}..."
