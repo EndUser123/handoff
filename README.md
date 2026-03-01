@@ -2,7 +2,16 @@
 
 > Session handoff management for AI coding environments - capture, restore, and manage conversation state across compaction events
 
-[![Build Status](https://img.shields.io/github/actions/status/EndUser123/handoff?branch=main)](https://github.com/EndUser123/handoff/actions) [![Version](https://img.shields.io/pypi/v/handoff)](https://pypi.org/project/handoff/) [![Python](https://img.shields.io/pypi/pyversions/handoff)](https://pypi.org/project/handoff/) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT) [![Coverage](https://img.shields.io/codecov/c/github/EndUser123/handoff?token=TODO)](https://codecov.io/gh/EndUser123/handoff)
+[![Build Status](https://img.shields.io/github/actions/status/EndUser123/handoff?branch=main)](https://github.com/EndUser123/handoff/actions) [![Version](https://img.shields.io/pypi/v/handoff)](https://pypi.org/project/handoff/) [![Python](https://img.shields.io/pypi/pyversions/handoff)](https://pypi.org/project/handoff/) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+## 📚 Documentation
+
+| Document | Description |
+|----------|-------------|
+| [ARCHITECTURE.md](ARCHITECTURE.md) | System architecture, data models, and design patterns |
+| [examples/](examples/) | Usage examples and integration patterns |
+| [docs/adr/](docs/adr/) | Architecture Decision Records |
+| [CHANGELOG.md](CHANGELOG.md) | Version history and changes |
 
 ## Quick Start
 
