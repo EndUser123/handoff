@@ -1139,7 +1139,7 @@ class PreCompactHandoffCapture:
                 # Option 3: Load from active_command file (can be stale)
                 if not last_user_message:
                     last_user_message = self._load_active_command_file()
-                    if last_user_message:
+                    if last_user_message:  # type: ignore[assignment]
                         logger.info(
                             f"[PreCompact] Using last_user_message from active_command file: "
                             f"{last_user_message[:50]}..."
