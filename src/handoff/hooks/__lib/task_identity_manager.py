@@ -478,7 +478,7 @@ class TaskIdentityManager:
         cutoff = datetime.now().timestamp() - (max_age_hours * SECONDS_PER_HOUR)
 
         try:
-            state_base = Path("P:/.claude/state/task-identity")
+            state_base = claude_root / ".claude" / "state" / "task-identity"
             if not state_base.exists():
                 return 0
 
