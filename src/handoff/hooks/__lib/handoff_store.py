@@ -18,11 +18,10 @@ import re
 
 # Platform-specific imports for file locking
 import sys
-
 if sys.platform == 'win32':
-    pass
+    import msvcrt
 else:
-    pass
+    import fcntl
 
 import tempfile
 import time
