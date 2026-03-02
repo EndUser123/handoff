@@ -4,6 +4,12 @@
 
 [![Build Status](https://img.shields.io/github/actions/status/EndUser123/handoff?branch=main)](https://github.com/EndUser123/handoff/actions) [![Version](https://img.shields.io/pypi/v/handoff)](https://pypi.org/project/handoff/) [![Python](https://img.shields.io/pypi/pyversions/handoff)](https://pypi.org/project/handoff/) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
+## 🎥 Explainer Video
+
+[![Watch Explainer Video](assets/infographics/handoff_architecture.png)](assets/videos/handoff_explainer_pbs.mp4)
+
+*Click image to watch PBS-structured explainer video (2:15) - Problem → Behavior → Solution*
+
 ## 📚 Documentation
 
 | Document | Description |
