@@ -61,8 +61,8 @@ class TestTaskIdentityManagerNoIdentifier:
         When: get_current_task is called
         Then: Should continue to next source without crashing
         """
-        # Arrange: Create empty session file
-        session_file = Path("P:/.claude/state/task-identity") / f"session-task-{manager.terminal_id}.json"
+        # Arrange: Create empty session file using manager's session_file (uses temp_dir)
+        session_file = manager.session_file
         session_file.parent.mkdir(parents=True, exist_ok=True)
         session_file.write_text("")
 
@@ -80,8 +80,8 @@ class TestTaskIdentityManagerNoIdentifier:
         When: get_current_task is called
         Then: Should continue to next source without crashing
         """
-        # Arrange: Create malformed session file
-        session_file = Path("P:/.claude/state/task-identity") / f"session-task-{manager.terminal_id}.json"
+        # Arrange: Create malformed session file using manager's session_file (uses temp_dir)
+        session_file = manager.session_file
         session_file.parent.mkdir(parents=True, exist_ok=True)
         session_file.write_text("{ invalid json }")
 
@@ -174,8 +174,8 @@ class TestTaskIdentityManagerMalformedIDs:
         When: get_current_task is called
         Then: Should continue to next source without crashing
         """
-        # Arrange: Create session file without task_name
-        session_file = Path("P:/.claude/state/task-identity") / f"session-task-{manager.terminal_id}.json"
+        # Arrange: Create session file without task_name using manager's session_file (uses temp_dir)
+        session_file = manager.session_file
         session_file.parent.mkdir(parents=True, exist_ok=True)
         session_file.write_text('{"terminal_id": "test123", "started": "2024-01-01"}')
 
@@ -323,8 +323,8 @@ class TestTaskIdentityManagerNoneInputs:
         active_cmd_file.parent.mkdir(parents=True, exist_ok=True)
         active_cmd_file.write_text("{ corrupted json }")
 
-        # Also clear any session files that might interfere
-        session_file = Path("P:/.claude/state/task-identity") / f"session-task-{manager.terminal_id}.json"
+        # Also clear any session files that might interfere (uses temp_dir)
+        session_file = manager.session_file
         if session_file.exists():
             session_file.unlink()
 
@@ -357,12 +357,12 @@ class TestTaskIdentityManagerGracefulDegradation:
         When: get_current_task is called
         Then: Should try all sources and return None without crashing
         """
-        # Arrange: Create multiple bad files
-        session_file = Path("P:/.claude/state/task-identity") / f"session-task-{manager.terminal_id}.json"
+        # Arrange: Create multiple bad files using manager's files (uses temp_dir)
+        session_file = manager.session_file
         session_file.parent.mkdir(parents=True, exist_ok=True)
         session_file.write_text("{ bad json }")
 
-        metadata_file = Path("P:/.claude/state/task-identity") / f"last-compact-metadata-{manager.terminal_id}.json"
+        metadata_file = manager.metadata_file
         metadata_file.parent.mkdir(parents=True, exist_ok=True)
         metadata_file.write_text("{ also bad }")
 
