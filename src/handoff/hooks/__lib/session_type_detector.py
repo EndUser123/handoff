@@ -197,13 +197,13 @@ class SessionTypeDetector:
         if message_type == file_type:
             return message_type
 
-        # If files are mixed, return mixed (genuine mixed workspace)
-        if file_type == MIXED:
-            return MIXED
-
         # If message is mixed but files are clear, prefer files
         if message_type == MIXED:
             return file_type
 
-        # If both are different clear types, prefer message
-        return message_type
+        # If files are mixed, return mixed
+        if file_type == MIXED:
+            return MIXED
+
+        # If both are different clear types, return mixed
+        return MIXED
