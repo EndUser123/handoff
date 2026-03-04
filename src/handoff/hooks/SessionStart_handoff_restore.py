@@ -202,6 +202,38 @@ def _build_task_status_section(handoff_data: dict[str, Any]) -> list[str]:
         ]
     )
 
+    # Add active task from task tracker if available
+    active_task = handoff_data.get("active_task")
+    if active_task and isinstance(active_task, dict):
+        task_id = active_task.get("id", "unknown")
+        subject = active_task.get("subject", "")
+        status = active_task.get("status", "")
+        task_progress = active_task.get("progress_pct", 0)
+        description = active_task.get("description", "")
+
+        lines.extend(
+            [
+                "**Active Task from Task List:**",
+                f"  **ID:** {task_id}",
+                f"  **Subject:** {subject}",
+            ]
+        )
+
+        if description:
+            # Truncate long descriptions
+            desc_display = description[:150] + "..." if len(description) > 150 else description
+            lines.append(f"  **Description:** {desc_display}")
+
+        lines.extend(
+            [
+                f"  **Status:** {status}",
+                f"  **Progress:** {task_progress}%",
+                "",
+                "**→ This is the task you were working on when the session was compacted.**",
+                "",
+            ]
+        )
+
     # Add blocker if present
     blocker = handoff_data.get("blocker")
     if blocker:
