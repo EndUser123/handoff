@@ -1221,6 +1221,7 @@ class PreCompactHandoffCapture:
 
             # For planning sessions, override blocker with awaiting_approval
             # This prevents AI from implementing plans before user review
+            invoked_command = None
             if session_type == "planning":
                 # Capture the invoked command from the message
                 invoked_command = self._extract_invoked_command(last_user_message)
@@ -1235,8 +1236,9 @@ class PreCompactHandoffCapture:
                 logger.info("[PreCompact] Planning session detected - awaiting_approval blocker set")
                 logger.info(f"[PreCompact] Invoked command: {invoked_command}")
             else:
-                # Use existing blocker for non-planning sessions
-                blocker_description = blocker_description  # Already set above
+                # Use existing blocker_description for non-planning sessions
+                # (already set above at line ~1148)
+                pass
 
             active_task_info = {
                 "terminal_id": self.terminal_id,
@@ -1249,6 +1251,7 @@ class PreCompactHandoffCapture:
                 "git_branch": handoff_data.get("git_branch"),
                 "command_context": command_context_data,
                 "session_type": session_type,
+                "invoked_command": invoked_command,  # Save for SessionStart display
                 "saved_at": utcnow_iso(),
             }
 
