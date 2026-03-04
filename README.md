@@ -63,6 +63,42 @@ pytest packages/handoff/tests/ -v
 - **Seamless Restoration**: Resume work exactly where you left off
 - **Hook Integration**: Automatic capture via PostToolUse and SessionStart hooks
 
+## Session Type Detection
+
+The handoff system automatically detects your session type using **both** message content analysis and file pattern matching:
+
+| Type | Emoji | Description | Message Keywords | File Patterns |
+|------|-------|-------------|------------------|---------------|
+| 🐛 **debug** | Bug fixing | fix, bug, error, broken, fails, crash | error.log, traceback.txt |
+| ✨ **feature** | New features | add, implement, create, build | src/**/*, lib/**/* |
+| 🔧 **refactor** | Code cleanup | refactor, clean up, simplify, optimize | existing .py files |
+| 🧪 **test** | Testing work | test, verify, coverage, assert | test_*.py, *_test.py, pytest.ini |
+| 📝 **docs** | Documentation | document, readme, comment, explain | *.md, README*, doc/** |
+| 🔀 **mixed** | Multiple types | Conflicting signals across message and files | Mixed patterns |
+| ❓ **unknown** | No clear type | No keywords or files detected | N/A |
+
+### How It Works
+
+1. **Capture Phase** (PreCompact): Analyzes last user message + active file paths
+2. **Signal Combination**: Merges message keywords with file patterns
+3. **Restoration Phase** (SessionStart): Displays session type with emoji in "What You Were Working On" section
+
+### Example Restoration Output
+
+```
+## 📍 WHERE WE ARE IN THE TASK
+
+**Task:** Fix authentication bug
+**Progress:** 50%
+
+**What You Were Working On:**
+  **Session Type:** 🐛 debug
+  **Task:** debug_auth
+  **Last request:** Fix the bug in authentication flow
+  **Files:** error.log, traceback.txt
+  **Progress:** 50%
+```
+
 ## Installation
 
 ### As Python Package (Production)
