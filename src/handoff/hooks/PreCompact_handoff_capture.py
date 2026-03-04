@@ -1185,6 +1185,25 @@ class PreCompactHandoffCapture:
             detector = SessionTypeDetectorClass()
             session_type = detector.detect_session_type(last_user_message, files_modified)
 
+            # For planning sessions, override blocker with awaiting_approval
+            # This prevents AI from implementing plans before user review
+            if session_type == "planning":
+                # Capture the invoked command from the message
+                invoked_command = self._extract_invoked_command(last_user_message)
+
+                # Create awaiting_approval blocker
+                blocker_description = {
+                    "type": "awaiting_approval",
+                    "description": "Planning complete. Awaiting user review before implementation.",
+                    "invoked_command": invoked_command,
+                    "requires_action": "user_approval"
+                }
+                logger.info(f"[PreCompact] Planning session detected - awaiting_approval blocker set")
+                logger.info(f"[PreCompact] Invoked command: {invoked_command}")
+            else:
+                # Use existing blocker for non-planning sessions
+                blocker_description = blocker_description  # Already set above
+
             active_task_info = {
                 "terminal_id": self.terminal_id,
                 "task_name": task_name,
