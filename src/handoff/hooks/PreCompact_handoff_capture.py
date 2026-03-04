@@ -62,11 +62,13 @@ from handoff.hooks.__lib import (
     task_identity_manager,
     transcript,
 )
+from handoff.hooks.__lib.session_type_detector import SessionTypeDetector
 
 HandoffStoreClass = handoff_store.HandoffStore
 HandoverBuilder = handover.HandoverBuilder
 TaskIdentityManager = task_identity_manager.TaskIdentityManager
 TranscriptParser = transcript.TranscriptParser
+SessionTypeDetectorClass = SessionTypeDetector
 
 try:
     from modules.session_management.session_activity_tracker import (  # type: ignore[import-untyped]
