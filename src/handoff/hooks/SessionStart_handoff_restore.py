@@ -784,6 +784,24 @@ def main() -> int:
     Returns:
         0 for success (always allow session start)
     """
+    # RCA-001 FIX: Validate that SessionStart was triggered by compaction
+    # Read hook input to check source
+    import json
+    input_text = sys.stdin.read().strip()
+    hook_input = {}
+    if input_text:
+        try:
+            hook_input = json.loads(input_text)
+        except json.JSONDecodeError:
+            pass
+
+    # Only restore handoff when source='compact' (post-compaction restoration)
+    # For other sources (startup, resume), skip restoration even if active_session task exists
+    source = hook_input.get("source", "")
+    if source != "compact":
+        logger.debug(f"[SessionStart] Skipping handoff restoration - source is '{source}', not 'compact'")
+        return 0
+
     terminal_id = detect_terminal_id()  # Used in _load_active_session_task() and _cleanup_active_session_task()
 
     # Load active_session or continue_session task (returns tuple)
@@ -807,6 +825,10 @@ def main() -> int:
         # Issue #10: Log schema validation failures at WARNING level
         logger.warning(f"[SessionStart] Schema validation failed: {error}")
         logger.warning("[SessionStart] Handoff restoration skipped due to invalid data structure")
+        # RCA-002 FIX: Cleanup orphaned task to prevent infinite retry loops
+        if source_terminal:
+            logger.debug(f"[SessionStart] Cleaning up orphaned active_session task from {source_terminal}")
+            _cleanup_active_session_task(source_terminal)
         # Still return 0 to allow session start
         return 0
 
@@ -816,6 +838,10 @@ def main() -> int:
         # Issue #8: Make checksum errors visible to users (was silent DEBUG log)
         logger.error(f"[SessionStart] Checksum verification failed: {error}")
         logger.warning("[SessionStart] Handoff data corrupted, skipping restoration")
+        # RCA-002 FIX: Cleanup orphaned task to prevent infinite retry loops
+        if source_terminal:
+            logger.debug(f"[SessionStart] Cleaning up orphaned active_session task from {source_terminal}")
+            _cleanup_active_session_task(source_terminal)
         # Still return 0 to allow session start, but inform user
         return 0
 

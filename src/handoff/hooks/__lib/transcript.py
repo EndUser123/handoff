@@ -644,8 +644,12 @@ class TranscriptParser:
 
             try:
                 entry = json.loads(line)
-                entries.append(entry)
-                entry_count += 1
+                # Only add dict entries - skip numbers, strings, arrays
+                if isinstance(entry, dict):
+                    entries.append(entry)
+                    entry_count += 1
+                else:
+                    logger.debug(f"[TranscriptParser] Skipping non-dict JSON entry at line {entry_count}: {type(entry).__name__}")
             except json.JSONDecodeError as e:
                 logger.debug(f"[TranscriptParser] Skipping invalid JSON entry at line {entry_count}: {e}")
                 continue

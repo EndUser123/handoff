@@ -1168,6 +1168,28 @@ class PreCompactHandoffCapture:
                         "metadata": cmd_data.get("metadata", {}),
                     }
 
+            # Query TaskRepository for active task (if available)
+            active_task_info = None
+            try:
+                from task_repository_client import TaskRepositoryClient
+                task_repo_client = TaskRepositoryClient(
+                    project_root=self.project_root,
+                    terminal_id=self.terminal_id
+                )
+                if task_repo_client.is_available():
+                    current_task = task_repo_client.get_current_task()
+                    if current_task:
+                        active_task_info = {
+                            "id": current_task.get("id"),
+                            "subject": current_task.get("subject"),
+                            "description": current_task.get("description"),
+                            "status": current_task.get("status"),
+                            "progress_pct": current_task.get("progress_pct"),
+                        }
+                        logger.info(f"[PreCompact] Active task: {active_task_info['id']} - {active_task_info['subject']}")
+            except Exception as e:
+                logger.debug(f"[PreCompact] Could not query TaskRepository: {e}")
+
             # Build handoff data payload for file storage
             handoff_payload = {
                 "task_name": task_name,
@@ -1185,6 +1207,7 @@ class PreCompactHandoffCapture:
                 "handover": handoff_data.get("handover"),
                 "open_conversation_context": open_conversation_context,
                 "visual_context": visual_context,
+                "active_task": active_task_info,  # NEW: Active task from task tracker
                 "saved_at": utcnow_iso(),
             }
             # Compute checksum over the payload itself (excluding checksum key)
