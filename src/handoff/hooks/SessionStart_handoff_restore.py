@@ -267,16 +267,44 @@ def _build_task_status_section(handoff_data: dict[str, Any]) -> list[str]:
     # Add blocker if present
     blocker = handoff_data.get("blocker")
     if blocker:
+        # Check if this is an awaiting_approval blocker (planning session)
+        blocker_type = None
         if isinstance(blocker, dict):
+            blocker_type = blocker.get("type")
             blocker_desc = blocker.get("description", str(blocker))
+            invoked_command = blocker.get("invoked_command", "")
         else:
             blocker_desc = str(blocker)
-        lines.extend(
-            [
-                f"**Current Blocker:** {blocker_desc}",
-                "",
-            ]
-        )
+
+        # Show prominent warning for awaiting_approval blockers
+        if blocker_type == "awaiting_approval":
+            lines.extend(
+                [
+                    "",
+                    "⚠️ **BLOCKER: Awaiting User Approval**",
+                    "",
+                    "Plan has been created but **NOT approved**.",
+                    "DO NOT proceed with implementation until user reviews.",
+                    "",
+                ]
+            )
+            if invoked_command:
+                lines.append(f"**Invoked Command:** {invoked_command}")
+            lines.extend(
+                [
+                    "",
+                    f"**Plan Status:** {blocker_desc}",
+                    "",
+                ]
+            )
+        else:
+            # Regular blocker display
+            lines.extend(
+                [
+                    f"**Current Blocker:** {blocker_desc}",
+                    "",
+                ]
+            )
 
     # Add pending operations
     pending_operations = handoff_data.get("pending_operations", [])
