@@ -233,6 +233,11 @@ def _build_task_status_section(handoff_data: dict[str, Any]) -> list[str]:
         if session_emoji:
             lines.append(f"  **Session Type:** {session_emoji} {session_type}")
 
+        # Show invoked command if present (for planning sessions)
+        invoked_command = active_task.get("invoked_command")
+        if invoked_command and invoked_command != "unknown command":
+            lines.append(f"  **Invoked Command:** {invoked_command}")
+
         if task_name:
             lines.append(f"  **Task:** {task_name}")
 
