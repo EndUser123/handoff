@@ -1,6 +1,6 @@
 """SessionTypeDetector module for analyzing development session context.
 
-Determines session type (debug, feature, refactor, test, docs, mixed, unknown)
+Determines session type (debug, feature, refactor, test, docs, planning, mixed, unknown)
 by analyzing user messages and active file patterns.
 """
 
@@ -12,6 +12,7 @@ FEATURE: Final = "feature"
 REFACTOR: Final = "refactor"
 TEST: Final = "test"
 DOCS: Final = "docs"
+PLANNING: Final = "planning"
 MIXED: Final = "mixed"
 UNKNOWN: Final = "unknown"
 

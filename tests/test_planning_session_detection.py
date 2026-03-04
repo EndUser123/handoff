@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 """Tests for planning session detection and approval blocker system."""
 
-import json
-import tempfile
-from pathlib import Path
 
 import pytest
 
@@ -99,7 +96,6 @@ class TestBlockerCreation:
 
     def test_planning_session_creates_awaiting_approval_blocker(self):
         """Test that planning sessions create awaiting_approval blocker."""
-        from handoff.hooks.PreCompact_handoff_capture import PreCompactHook
 
         # This would require mocking the full PreCompactHook
         # For now, document expected behavior:
