@@ -13,9 +13,9 @@ def test_precompact_includes_session_type_in_state_file():
     # Simulate what PreCompact does
     detector = SessionTypeDetector()
 
-    # Test case 1: Debug session
+    # Test case 1: Debug session (message + error logs)
     last_message = "Fix the bug in authentication"
-    files_modified = ["tests/test_auth.py", "src/auth.py"]
+    files_modified = ["error.log", "traceback.txt"]
     session_type = detector.detect_session_type(last_message, files_modified)
 
     state_data = {
