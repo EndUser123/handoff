@@ -224,7 +224,7 @@ class SessionTypeDetector:
             active_files: List of active file paths
 
         Returns:
-            Session type: 'debug', 'feature', 'refactor', 'test', 'docs', 'mixed', 'unknown'
+            Session type: 'planning', 'debug', 'feature', 'refactor', 'test', 'docs', 'mixed', 'unknown'
         """
         # If either input is None, return unknown (not enough data)
         if last_message is None or active_files is None:
@@ -237,6 +237,10 @@ class SessionTypeDetector:
         # Detect from both signals
         message_type = cls.detect_from_message(message)
         file_type = cls.detect_from_files(files)
+
+        # Priority: PLANNING trumps everything (prevents auto-implementation)
+        if message_type == PLANNING or file_type == PLANNING:
+            return PLANNING
 
         # Handle None/empty cases
         if message_type == UNKNOWN and file_type == UNKNOWN:
