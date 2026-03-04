@@ -1168,27 +1168,40 @@ class PreCompactHandoffCapture:
                         "metadata": cmd_data.get("metadata", {}),
                     }
 
-            # Query TaskRepository for active task (if available)
-            active_task_info = None
+            # Get last user message for state file (also used in continue_session task)
+            last_user_message = self.parser.extract_last_user_message() if self.parser else None
+
+            # Build active_task state from data we already have (no TaskRepository dependency)
+            active_task_info = {
+                "task_name": task_name,
+                "last_user_message": last_user_message[:500] if last_user_message else None,
+                "active_files": handoff_data.get("files_modified", [])[:10],  # Last 10 files
+                "next_steps": "\n".join(handoff_data.get("next_steps", [])),
+                "blocker": blocker_description,
+                "progress_pct": handoff_data["progress_pct"],
+                "git_branch": handoff_data.get("git_branch"),
+                "command_context": command_context_data,
+            }
+
+            # Write active_task state file (simple JSON, no database dependency)
+            state_dir = self.project_root / ".claude" / "state"
+            state_dir.mkdir(parents=True, exist_ok=True)
+            active_task_file = state_dir / f"active_task_{self.terminal_id}.json"
             try:
-                from task_repository_client import TaskRepositoryClient
-                task_repo_client = TaskRepositoryClient(
-                    project_root=self.project_root,
-                    terminal_id=self.terminal_id
-                )
-                if task_repo_client.is_available():
-                    current_task = task_repo_client.get_current_task()
-                    if current_task:
-                        active_task_info = {
-                            "id": current_task.get("id"),
-                            "subject": current_task.get("subject"),
-                            "description": current_task.get("description"),
-                            "status": current_task.get("status"),
-                            "progress_pct": current_task.get("progress_pct"),
-                        }
-                        logger.info(f"[PreCompact] Active task: {active_task_info['id']} - {active_task_info['subject']}")
-            except Exception as e:
-                logger.debug(f"[PreCompact] Could not query TaskRepository: {e}")
+                import json as _json
+                active_task_file.write_text(_json.dumps({
+                    "terminal_id": self.terminal_id,
+                    "task_name": task_name,
+                    "last_user_message": last_user_message[:500] if last_user_message else None,
+                    "active_files": handoff_data.get("files_modified", [])[:10],
+                    "next_steps": "\n".join(handoff_data.get("next_steps", [])),
+                    "blocker": blocker_description,
+                    "progress_pct": handoff_data["progress_pct"],
+                    "saved_at": utcnow_iso(),
+                }, indent=2, default=str))
+                logger.info(f"[PreCompact] Wrote active task state: {active_task_file.name}")
+            except (OSError, json.JSONDecodeError, TypeError) as e:
+                logger.debug(f"[PreCompact] Could not write active_task state file: {e}")
 
             # Build handoff data payload for file storage
             handoff_payload = {
@@ -1207,7 +1220,7 @@ class PreCompactHandoffCapture:
                 "handover": handoff_data.get("handover"),
                 "open_conversation_context": open_conversation_context,
                 "visual_context": visual_context,
-                "active_task": active_task_info,  # NEW: Active task from task tracker
+                "active_task": active_task_info,  # NEW: Active task from state (not TaskRepository)
                 "saved_at": utcnow_iso(),
             }
             # Compute checksum over the payload itself (excluding checksum key)
