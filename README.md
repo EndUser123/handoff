@@ -131,6 +131,70 @@ DO NOT proceed with implementation until user reviews.
   **Progress:** 100% (plan complete)
 ```
 
+## Approval Blocker System
+
+The handoff system includes a **planning session approval mechanism** to prevent AI from auto-implementing plans before user review.
+
+### How It Works
+
+When a planning session is detected:
+1. **PreCompact Hook**: Detects planning commands or plan files
+2. **Blocker Creation**: Creates an `awaiting_approval` blocker with type field
+3. **Command Capture**: Extracts and stores the invoked command (e.g., `/plan-workflow build Implement feature X`)
+4. **SessionStart Hook**: Displays prominent warning preventing implementation until user approval
+
+### Blocker Types
+
+| Type | Purpose | Behavior |
+|------|---------|----------|
+| `awaiting_approval` | Planning sessions | Shows prominent warning, blocks auto-implementation |
+| Regular (string) | All other sessions | Normal blocker display, no special handling |
+
+### State File Format
+
+Planning sessions add additional fields to the handoff state:
+
+```json
+{
+  "blocker": {
+    "type": "awaiting_approval",
+    "description": "Planning complete. Awaiting user review before implementation.",
+    "invoked_command": "/plan-workflow build Implement feature X",
+    "requires_action": "user_approval"
+  },
+  "invoked_command": "/plan-workflow build Implement feature X",
+  "session_type": "planning"
+}
+```
+
+### Comment Context Detection
+
+The system includes **comment context detection** to prevent false positives:
+
+- **Casual mentions**: "I need to remember to run /plan-workflow later" → NOT detected as planning
+- **Actual commands**: "/plan-workflow build Implement feature X" → Detected as planning
+- **Comment indicators**: "I need to", "remember to", "should ", "later ", "thinking about"
+
+This prevents the system from detecting planning sessions when the user is merely mentioning planning commands in casual conversation.
+
+### Priority System
+
+Planning has the **highest priority** in session type detection to prevent accidental implementation:
+
+1. **Planning** (priority: 0) - Blocks auto-implementation
+2. **Debug** (priority: 1) - Bug fixes
+3. **Feature** (priority: 2) - New features
+4. **Refactor** (priority: 3) - Code cleanup
+5. **Test** (priority: 4) - Testing work
+6. **Docs** (priority: 5) - Documentation
+
+### Backward Compatibility
+
+The system maintains backward compatibility with old state files:
+- Old state files without `invoked_command` default to "unknown command"
+- Old state files without `blocker.type` treat blockers as regular strings
+- Old state files without `session_type` default to "unknown"
+
 ## Installation
 
 ### As Python Package (Production)
