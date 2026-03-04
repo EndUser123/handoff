@@ -46,7 +46,8 @@ pytest packages/handoff/tests/ -v
 
 - **Automatic State Capture**: Hook-based capture before transcript compaction
 - **Automatic State Restoration**: Seamless restoration on session resume
-- **Session Type Detection**: Categorizes sessions (debug, feature, refactor, test, docs) using message content + file patterns
+- **Session Type Detection**: Categorizes sessions (debug, feature, refactor, test, docs, planning) using message content + file patterns
+- **Planning Session Approval**: Detects planning sessions and creates awaiting_approval blockers to prevent auto-implementation
 - **Checkpoint Chains**: Parent/child linking for traversing related states
 - **Fault Tolerance**: Tracks incomplete operations (edit, test, read, command, skill)
 - **Visual Context Preservation**: Screenshots and image analysis survive compaction
