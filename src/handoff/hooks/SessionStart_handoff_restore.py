@@ -211,12 +211,27 @@ def _build_task_status_section(handoff_data: dict[str, Any]) -> list[str]:
         active_files = active_task.get("active_files", [])
         next_steps = active_task.get("next_steps", "")
         task_progress = active_task.get("progress_pct", 0)
+        session_type = active_task.get("session_type", "unknown")
 
         lines.extend(
             [
                 "**What You Were Working On:**",
             ]
         )
+
+        # Add session type with emoji if available
+        session_type_emojis = {
+            "debug": "🐛",
+            "feature": "✨",
+            "refactor": "🔧",
+            "test": "🧪",
+            "docs": "📝",
+            "mixed": "🔀",
+            "unknown": "❓",
+        }
+        session_emoji = session_type_emojis.get(session_type, "")
+        if session_emoji:
+            lines.append(f"  **Session Type:** {session_emoji} {session_type}")
 
         if task_name:
             lines.append(f"  **Task:** {task_name}")
