@@ -201,9 +201,14 @@ class SessionTypeDetector:
         if message_type == MIXED:
             return file_type
 
-        # If files are mixed, prefer message (message indicates primary intent)
-        if file_type == MIXED:
+        # If files are refactor and message is different, prefer message
+        # (refactor is the default for existing code, message indicates new intent)
+        if file_type == REFACTOR and message_type != REFACTOR:
             return message_type
+
+        # If files are mixed, return mixed
+        if file_type == MIXED:
+            return MIXED
 
         # If both are different clear types, return mixed
         return MIXED
