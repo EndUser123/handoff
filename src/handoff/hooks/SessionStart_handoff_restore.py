@@ -202,34 +202,48 @@ def _build_task_status_section(handoff_data: dict[str, Any]) -> list[str]:
         ]
     )
 
-    # Add active task from task tracker if available
+    # Add active task context from state file if available
     active_task = handoff_data.get("active_task")
     if active_task and isinstance(active_task, dict):
-        task_id = active_task.get("id", "unknown")
-        subject = active_task.get("subject", "")
-        status = active_task.get("status", "")
+        task_name = active_task.get("task_name", "")
+        last_message = active_task.get("last_user_message", "")
+        active_files = active_task.get("active_files", [])
+        next_steps = active_task.get("next_steps", "")
         task_progress = active_task.get("progress_pct", 0)
-        description = active_task.get("description", "")
 
         lines.extend(
             [
-                "**Active Task from Task List:**",
-                f"  **ID:** {task_id}",
-                f"  **Subject:** {subject}",
+                "**What You Were Working On:**",
             ]
         )
 
-        if description:
-            # Truncate long descriptions
-            desc_display = description[:150] + "..." if len(description) > 150 else description
-            lines.append(f"  **Description:** {desc_display}")
+        if task_name:
+            lines.append(f"  **Task:** {task_name}")
+
+        if last_message:
+            # Truncate long messages
+            msg_display = last_message[:200] + "..." if len(last_message) > 200 else last_message
+            lines.append(f"  **Last request:** {msg_display}")
+
+        if active_files:
+            # Show up to 5 active files
+            files_display = ", ".join(active_files[:5])
+            if len(active_files) > 5:
+                files_display += f" (+{len(active_files) - 5} more)"
+            lines.append(f"  **Files:** {files_display}")
+
+        if next_steps:
+            # Show first line of next_steps
+            steps_preview = next_steps.split("\n")[0][:100]
+            if len(next_steps) > 100:
+                steps_preview += "..."
+            lines.append(f"  **Next:** {steps_preview}")
 
         lines.extend(
             [
-                f"  **Status:** {status}",
                 f"  **Progress:** {task_progress}%",
                 "",
-                "**→ This is the task you were working on when the session was compacted.**",
+                "**→ This is the context from your last session.**",
                 "",
             ]
         )
