@@ -180,9 +180,9 @@ class SessionTypeDetector:
                 detected_types.add(DOCS)
 
             # Check feature patterns:
-            # - Files with "new" in the name
+            # - Files with "new" or "feature" in the name
             # - Files in src/api/ or lib/api/ (new API endpoints)
-            elif ("new" in path_lower and path_lower.endswith(".py")) or                  (("src/api/" in path_lower or "lib/api/" in path_lower) and path_lower.endswith(".py")):
+            elif (("new" in path_lower or "feature" in path_lower) and path_lower.endswith(".py")) or                  (("src/api/" in path_lower or "lib/api/" in path_lower) and path_lower.endswith(".py")):
                 detected_types.add(FEATURE)
 
             # Check refactor patterns (other .py files in src/lib)
