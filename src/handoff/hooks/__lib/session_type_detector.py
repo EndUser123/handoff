@@ -153,13 +153,17 @@ class SessionTypeDetector:
             return detected_types.pop()
         elif len(detected_types) > 1:
             # Use priority to select from multiple types
-            # Only return MIXED if there are 3+ types or the top 2 are equal priority
+            # Return MIXED if there are 3+ types
             if len(detected_types) >= 3:
                 return MIXED
 
-            # Sort by priority and return top
-            sorted_types = sorted(detected_types, key=lambda x: cls._TYPE_PRIORITY[x])
-            return sorted_types[0]
+            # For 2 types, check if one is DEBUG (highest priority)
+            # DEBUG always wins over other types
+            if DEBUG in detected_types:
+                return DEBUG
+
+            # Otherwise, return MIXED for conflicting work types
+            return MIXED
         else:
             return UNKNOWN
 
