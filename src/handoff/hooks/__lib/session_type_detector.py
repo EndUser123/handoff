@@ -20,6 +20,11 @@ UNKNOWN: Final = "unknown"
 class SessionTypeDetector:
     """Detects development session type from message content and file patterns."""
 
+    # Planning commands that require user approval before implementation
+    PLANNING_COMMANDS: Final = (
+        "/plan-workflow", "/arch", "/breakdown", "/design",
+    )
+
     # Keyword patterns for each session type
     DEBUG_KEYWORDS: Final = (
         "fix", "bug", "error", "broken", "fails", "crash",
@@ -41,8 +46,13 @@ class SessionTypeDetector:
         "document", "readme", "comment", "explain", "docstring",
     )
 
+    PLANNING_KEYWORDS: Final = (
+        "plan", "architecture", "breakdown", "design",
+    )
+
     # Priority for tie-breaking (higher priority = lower index)
-    _TYPE_PRIORITY = {DEBUG: 0, FEATURE: 1, REFACTOR: 2, TEST: 3, DOCS: 4}
+    # Planning has HIGHEST priority to prevent auto-implementation
+    _TYPE_PRIORITY = {PLANNING: 0, DEBUG: 1, FEATURE: 2, REFACTOR: 3, TEST: 4, DOCS: 5}
 
     @classmethod
     def detect_from_message(cls, message: str | None) -> str:
