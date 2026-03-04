@@ -1181,6 +1181,10 @@ class PreCompactHandoffCapture:
             # Build active_task state (single source of truth, reused for handoff payload)
             from handoff.config import save_json_file, utcnow_iso
 
+            # Detect session type using BOTH message content AND file patterns
+            detector = SessionTypeDetectorClass()
+            session_type = detector.detect_session_type(last_user_message, files_modified)
+
             active_task_info = {
                 "terminal_id": self.terminal_id,
                 "task_name": task_name,
@@ -1191,6 +1195,7 @@ class PreCompactHandoffCapture:
                 "progress_pct": progress_pct,
                 "git_branch": handoff_data.get("git_branch"),
                 "command_context": command_context_data,
+                "session_type": session_type,
                 "saved_at": utcnow_iso(),
             }
 
