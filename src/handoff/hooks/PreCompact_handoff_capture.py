@@ -1171,36 +1171,34 @@ class PreCompactHandoffCapture:
             # Get last user message for state file (also used in continue_session task)
             last_user_message = self.parser.extract_last_user_message() if self.parser else None
 
-            # Build active_task state from data we already have (no TaskRepository dependency)
+            # Cache handoff_data lookups (efficiency: avoid repeated dict access)
+            files_modified = handoff_data.get("files_modified", [])
+            next_steps = handoff_data.get("next_steps", [])
+            progress_pct = handoff_data["progress_pct"]
+
+            # Build active_task state (single source of truth, reused for handoff payload)
+            from handoff.config import save_json_file, utcnow_iso
+
             active_task_info = {
+                "terminal_id": self.terminal_id,
                 "task_name": task_name,
                 "last_user_message": last_user_message[:500] if last_user_message else None,
-                "active_files": handoff_data.get("files_modified", [])[:10],  # Last 10 files
-                "next_steps": "\n".join(handoff_data.get("next_steps", [])),
+                "active_files": files_modified[:10],  # Last 10 files
+                "next_steps": "\n".join(next_steps),
                 "blocker": blocker_description,
-                "progress_pct": handoff_data["progress_pct"],
+                "progress_pct": progress_pct,
                 "git_branch": handoff_data.get("git_branch"),
                 "command_context": command_context_data,
+                "saved_at": utcnow_iso(),
             }
 
-            # Write active_task state file (simple JSON, no database dependency)
+            # Write active_task state file using existing utility
             state_dir = self.project_root / ".claude" / "state"
-            state_dir.mkdir(parents=True, exist_ok=True)
             active_task_file = state_dir / f"active_task_{self.terminal_id}.json"
             try:
-                import json as _json
-                active_task_file.write_text(_json.dumps({
-                    "terminal_id": self.terminal_id,
-                    "task_name": task_name,
-                    "last_user_message": last_user_message[:500] if last_user_message else None,
-                    "active_files": handoff_data.get("files_modified", [])[:10],
-                    "next_steps": "\n".join(handoff_data.get("next_steps", [])),
-                    "blocker": blocker_description,
-                    "progress_pct": handoff_data["progress_pct"],
-                    "saved_at": utcnow_iso(),
-                }, indent=2, default=str))
-                logger.info(f"[PreCompact] Wrote active task state: {active_task_file.name}")
-            except (OSError, json.JSONDecodeError, TypeError) as e:
+                if save_json_file(active_task_file, active_task_info):
+                    logger.info(f"[PreCompact] Wrote active task state: {active_task_file.name}")
+            except Exception as e:
                 logger.debug(f"[PreCompact] Could not write active_task state file: {e}")
 
             # Build handoff data payload for file storage
@@ -1208,19 +1206,19 @@ class PreCompactHandoffCapture:
                 "task_name": task_name,
                 "task_type": "formal" if os.getenv("CLAUDE_CODE_TASK_NAME") else "adhoc_session",
                 "terminal_id": self.terminal_id,
-                "progress_percent": handoff_data["progress_pct"],
+                "progress_percent": progress_pct,
                 "blocker": blocker_description,
-                "next_steps": "\n".join(handoff_data.get("next_steps", [])),
+                "next_steps": "\n".join(next_steps),
                 "command_context": command_context_data,
                 "git_branch": handoff_data.get("git_branch"),
-                "active_files": handoff_data.get("files_modified", []),
+                "active_files": files_modified,
                 "recent_tools": self._load_tool_sequence(),
                 "dependencies": [],
                 "transcript_path": self.transcript_path,
                 "handover": handoff_data.get("handover"),
                 "open_conversation_context": open_conversation_context,
                 "visual_context": visual_context,
-                "active_task": active_task_info,  # NEW: Active task from state (not TaskRepository)
+                "active_task": active_task_info,  # Reuse same dict (no duplication)
                 "saved_at": utcnow_iso(),
             }
             # Compute checksum over the payload itself (excluding checksum key)

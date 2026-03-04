@@ -205,6 +205,7 @@ def _build_task_status_section(handoff_data: dict[str, Any]) -> list[str]:
     # Add active task context from state file if available
     active_task = handoff_data.get("active_task")
     if active_task and isinstance(active_task, dict):
+        # Cache all lookups (efficiency: single dict access)
         task_name = active_task.get("task_name", "")
         last_message = active_task.get("last_user_message", "")
         active_files = active_task.get("active_files", [])
@@ -221,22 +222,22 @@ def _build_task_status_section(handoff_data: dict[str, Any]) -> list[str]:
             lines.append(f"  **Task:** {task_name}")
 
         if last_message:
-            # Truncate long messages
+            # Truncate long messages (cache len check)
             msg_display = last_message[:200] + "..." if len(last_message) > 200 else last_message
             lines.append(f"  **Last request:** {msg_display}")
 
         if active_files:
             # Show up to 5 active files
-            files_display = ", ".join(active_files[:5])
+            files_to_show = active_files[:5]
+            files_display = ", ".join(files_to_show)
             if len(active_files) > 5:
                 files_display += f" (+{len(active_files) - 5} more)"
             lines.append(f"  **Files:** {files_display}")
 
         if next_steps:
-            # Show first line of next_steps
-            steps_preview = next_steps.split("\n")[0][:100]
-            if len(next_steps) > 100:
-                steps_preview += "..."
+            # Show first line of next_steps (split only once)
+            first_line = next_steps.split("\n", 1)[0]
+            steps_preview = first_line[:100] + "..." if len(first_line) > 100 else first_line
             lines.append(f"  **Next:** {steps_preview}")
 
         lines.extend(
