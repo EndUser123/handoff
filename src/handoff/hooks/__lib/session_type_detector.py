@@ -90,11 +90,7 @@ class SessionTypeDetector:
 
         # Priority 2: Check for comment/non-command context BEFORE keyword scoring
         # This prevents false positives like "I need to remember to run /plan-workflow later"
-        comment_indicators = (
-            "i need to", "need to", "remember to", "should ", "don't forget",
-            "later ", "thinking about", "considering ", "maybe ",
-        )
-        is_comment_context = any(indicator in message_lower for indicator in comment_indicators)
+        is_comment_context = any(indicator in message_lower for indicator in cls.COMMENT_INDICATORS)
 
         # Count keyword matches for each session type
         scores = {
