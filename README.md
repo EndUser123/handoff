@@ -613,13 +613,21 @@ pytest --cov=handoff --cov-report=term-missing
 
 # Run specific test file
 pytest tests/test_checkpoint_chain.py -v
+
+# Run planning session detection tests
+pytest tests/test_planning_session_detection.py -v
+pytest tests/test_session_type_integration.py -v
 ```
 
-**Test Coverage**: 217 tests covering:
+**Test Coverage**: 476+ tests covering:
+- Session type detection (debug, feature, refactor, test, docs, planning, mixed, unknown)
+- Planning session detection and approval blocker system
+- Comment context detection to prevent false positives
+- Invoked command capture and restoration
 - PendingOperation creation and validation
 - HandoffCheckpoint serialization
 - Checkpoint chain linking and traversal
-- Backward compatibility with old handoffs
+- Backward compatibility with old handoffs (without invoked_command, blocker.type, session_type)
 - Migration idempotency
 
 ## Development
