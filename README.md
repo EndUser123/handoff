@@ -69,6 +69,7 @@ The handoff system automatically detects your session type using **both** messag
 
 | Type | Emoji | Description | Message Keywords | File Patterns |
 |------|-------|-------------|------------------|---------------|
+| 📋 **planning** | Planning & design | /plan-workflow, /arch, /breakdown, /design, plan, architecture | plan-*.md, docs/plans/, .claude/hooks/plans/ |
 | 🐛 **debug** | Bug fixing | fix, bug, error, broken, fails, crash | error.log, traceback.txt |
 | ✨ **feature** | New features | add, implement, create, build | src/**/*, lib/**/* |
 | 🔧 **refactor** | Code cleanup | refactor, clean up, simplify, optimize | existing .py files |
@@ -83,8 +84,18 @@ The handoff system automatically detects your session type using **both** messag
 2. **Signal Combination**: Merges message keywords with file patterns
 3. **Restoration Phase** (SessionStart): Displays session type with emoji in "What You Were Working On" section
 
+### Planning Session Detection
+
+Planning sessions are **automatically detected** when:
+- User invokes planning commands: `/plan-workflow`, `/arch`, `/breakdown`, `/design`
+- Working with plan files: `plan-*.md`, `docs/plans/`, `.claude/hooks/plans/`
+- Message contains planning keywords: "plan", "architecture", "breakdown", "design"
+
+**Critical Behavior**: Planning sessions create an **awaiting_approval blocker** that prevents the AI from implementing the plan before user review. This prevents the workflow violation where the AI auto-implements a plan without approval.
+
 ### Example Restoration Output
 
+**Regular Session (e.g., debug):**
 ```
 ## 📍 WHERE WE ARE IN THE TASK
 
@@ -97,6 +108,27 @@ The handoff system automatically detects your session type using **both** messag
   **Last request:** Fix the bug in authentication flow
   **Files:** error.log, traceback.txt
   **Progress:** 50%
+```
+
+**Planning Session (with awaiting_approval blocker):**
+```
+## 📍 WHERE WE ARE IN THE TASK
+
+⚠️ **BLOCKER: Awaiting User Approval**
+
+Plan has been created but **NOT approved**.
+DO NOT proceed with implementation until user reviews.
+
+**Invoked Command:** /plan-workflow build Implement feature X
+
+**Plan Status:** Planning complete. Awaiting user review before implementation.
+
+**What You Were Working On:**
+  **Session Type:** 📋 planning
+  **Task:** plan_feature_x
+  **Last request:** /plan-workflow build Implement feature X
+  **Files:** plan-20260304-feature-x.md
+  **Progress:** 100% (plan complete)
 ```
 
 ## Installation
