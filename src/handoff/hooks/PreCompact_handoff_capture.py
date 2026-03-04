@@ -1298,44 +1298,44 @@ class PreCompactHandoffCapture:
                     return True  # Continue with compaction, but don't create handoff
 
                 # Option 2: Read from hook_input if available (fallback, less reliable)
-                if not last_user_message:
+                if not last_user_message_for_task:
                     handoff_input_data = self.hook_input.get("handoff_data") or self.hook_input
                     if isinstance(handoff_input_data, dict):
                         input_message = handoff_input_data.get(
                             "last_user_message", ""
                         ) or handoff_input_data.get("prompt", "")
                         if input_message:
-                            last_user_message = input_message
+                            last_user_message_for_task = input_message
                             logger.info(
                                 f"[PreCompact] Using last_user_message from hook_input: "
-                                f"{last_user_message[:50]}..."
+                                f"{last_user_message_for_task[:50]}..."
                             )
 
                 # Option 3: Load from active_command file (can be stale)
-                if not last_user_message:
+                if not last_user_message_for_task:
                     active_command = self._load_active_command_file()
                     if active_command:
-                        last_user_message = active_command
+                        last_user_message_for_task = active_command
                         logger.info(
                             f"[PreCompact] Using last_user_message from active_command file: "
-                            f"{last_user_message[:50]}..."
+                            f"{last_user_message_for_task[:50]}..."
                         )
 
                 # Option 4: Use blocker.description (can be from earlier, fallback only)
-                if not last_user_message:
+                if not last_user_message_for_task:
                     blocker_msg = blocker if isinstance(blocker, dict) else None
-                    last_user_message = transcript.extract_user_message_from_blocker(
+                    last_user_message_for_task = transcript.extract_user_message_from_blocker(
                         blocker_msg  # type: ignore[arg-type]
                     )
-                    if last_user_message:
+                    if last_user_message_for_task:
                         logger.info(
                             f"[PreCompact] Using last_user_message from blocker: "
-                            f"{last_user_message[:50]}..."
+                            f"{last_user_message_for_task[:50]}..."
                         )
 
                 # Build full handoff metadata for task storage
-                # Ensure last_user_message is a string
-                final_user_message = last_user_message if last_user_message else ""
+                # Ensure last_user_message_for_task is a string
+                final_user_message = last_user_message_for_task if last_user_message_for_task else ""
                 handoff_metadata = self._build_handoff_metadata(
                     task_name, task_id, handoff_data, handoff_payload, final_user_message
                 )
