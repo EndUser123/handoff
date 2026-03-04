@@ -80,16 +80,13 @@ class SessionTypeDetector:
 
         message_lower = message.lower()
 
-        # Priority 2: Check for planning keywords (but not in comments)
-        # Only trigger if not in a comment context (e.g., "I need to plan...")
-        if any(kw in message_lower for kw in cls.PLANNING_KEYWORDS):
-            # But NOT if it's clearly a comment like "remember to /plan-workflow later"
-            comment_indicators = ("remember to", "need to", "should", "later", "don't forget")
-            if not any(indicator in message_lower for indicator in comment_indicators):
-                # Also check if there are plan-*.md files being created
-                # This will be confirmed by file analysis
-                # For now, mark as planning candidate
-                pass
+        # Priority 2: Check for comment/non-command context BEFORE keyword scoring
+        # This prevents false positives like "I need to remember to run /plan-workflow later"
+        comment_indicators = (
+            "i need to", "need to", "remember to", "should ", "don't forget",
+            "later ", "thinking about", "considering ", "maybe ",
+        )
+        is_comment_context = any(indicator in message_lower for indicator in comment_indicators)
 
         # Count keyword matches for each session type
         scores = {
@@ -117,9 +114,13 @@ class SessionTypeDetector:
         for keyword in cls.DOCS_KEYWORDS:
             if keyword in message_lower:
                 scores[DOCS] += message_lower.count(keyword)
-        for keyword in cls.PLANNING_KEYWORDS:
-            if keyword in message_lower:
-                scores[PLANNING] += message_lower.count(keyword)
+
+        # Only score planning keywords if NOT in a comment context
+        # This prevents casual mentions from triggering planning mode
+        if not is_comment_context:
+            for keyword in cls.PLANNING_KEYWORDS:
+                if keyword in message_lower:
+                    scores[PLANNING] += message_lower.count(keyword)
 
         # Get types with non-zero scores
         detected_types = [(session_type, score) for session_type, score in scores.items() if score > 0]
