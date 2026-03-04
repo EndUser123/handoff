@@ -61,6 +61,8 @@ pytest packages/handoff/tests/ -v
 - **Session Continuity**: Maintain work context across compaction events
 - **Image Preservation**: Screenshots and visual evidence retained
 - **Operation Tracking**: Detect incomplete edits, tests, reads, commands
+- **Planning Session Detection**: Automatically detect planning sessions and block auto-implementation
+- **Approval Blocker System**: Prevent AI from implementing plans before user review
 - **Seamless Restoration**: Resume work exactly where you left off
 - **Hook Integration**: Automatic capture via PostToolUse and SessionStart hooks
 
