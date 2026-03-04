@@ -1251,18 +1251,18 @@ class PreCompactHandoffCapture:
                 # Get last user message for handoff metadata
                 # Priority: 1) TranscriptParser (source of truth), 2) hook_input,
                 # 3) active_command file, 4) blocker.description
-                last_user_message: str | None = ""
+                last_user_message_for_task: str | None = ""
 
                 # Option 1: TranscriptParser - scans the ACTUAL transcript (PRIORITY 1 - most reliable)
                 transcript_unavailable = False
                 if self.transcript_path:
                     # Use the TranscriptParser's extract_last_user_message() which scans
                     # the ENTIRE parsed transcript, not just last 20 raw lines
-                    last_user_message = self.parser.extract_last_user_message()
-                    if last_user_message:
+                    last_user_message_for_task = self.parser.extract_last_user_message()
+                    if last_user_message_for_task:
                         logger.info(
                             f"[PreCompact] Using last_user_message from TranscriptParser: "
-                            f"{last_user_message[:50]}..."
+                            f"{last_user_message_for_task[:50]}..."
                         )
                     else:
                         # Check if transcript is missing or empty (Issue #2, #3)
