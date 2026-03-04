@@ -4,9 +4,7 @@ Determines session type (debug, feature, refactor, test, docs, mixed, unknown)
 by analyzing user messages and active file patterns.
 """
 
-from pathlib import Path
 from typing import Final
-
 
 # Session type constants
 DEBUG: Final = "debug"
@@ -127,25 +125,25 @@ class SessionTypeDetector:
             # Check debug patterns (error logs, traceback)
             if "error.log" in path_lower or "traceback" in path_lower:
                 detected_types.add(DEBUG)
-            
+
             # Check test patterns (test files, pytest config)
             elif ("test_" in path_lower and path_lower.endswith(".py")) or                  "_test.py" in path_lower or                  "pytest.ini" in path_lower or                  "conftest.py" in path_lower:
                 detected_types.add(TEST)
-            
+
             # Check docs patterns (markdown files)
             elif path_lower.endswith(".md") or "readme" in path_lower or                  ("doc/" in path_lower and path_lower.endswith(".rst")):
                 detected_types.add(DOCS)
-            
+
             # Check feature patterns:
             # - Files with "new" in the name
             # - Files in src/api/ or lib/api/ (new API endpoints)
             elif ("new" in path_lower and path_lower.endswith(".py")) or                  (("src/api/" in path_lower or "lib/api/" in path_lower) and path_lower.endswith(".py")):
                 detected_types.add(FEATURE)
-            
+
             # Check refactor patterns (other .py files in src/lib)
             elif ("src/" in path_lower or "lib/" in path_lower) and                  path_lower.endswith(".py") and                  "test_" not in path_lower and                  "_test.py" not in path_lower and                  "/api/" not in path_lower:
                 detected_types.add(REFACTOR)
-            
+
             # Check refactor patterns for other .py files
             elif path_lower.endswith(".py") and                  "test_" not in path_lower and                  "_test.py" not in path_lower:
                 detected_types.add(REFACTOR)
@@ -199,11 +197,13 @@ class SessionTypeDetector:
         if message_type == file_type:
             return message_type
 
-        # If one signal is mixed and the other is clear, prefer the clear signal
-        if message_type == MIXED and file_type != MIXED:
-            return file_type
-        if file_type == MIXED and message_type != MIXED:
-            return message_type
+        # If files are mixed, return mixed (genuine mixed workspace)
+        if file_type == MIXED:
+            return MIXED
 
-        # If both are mixed or both are different clear types, return mixed
-        return MIXED
+        # If message is mixed but files are clear, prefer files
+        if message_type == MIXED:
+            return file_type
+
+        # If both are different clear types, prefer message
+        return message_type
