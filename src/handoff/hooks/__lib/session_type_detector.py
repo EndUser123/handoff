@@ -148,7 +148,7 @@ class SessionTypeDetector:
             files: List of file paths to analyze
 
         Returns:
-            Session type: 'debug', 'feature', 'refactor', 'test', 'docs', 'mixed', 'unknown'
+            Session type: 'planning', 'debug', 'feature', 'refactor', 'test', 'docs', 'mixed', 'unknown'
         """
         if not files:
             return UNKNOWN
@@ -159,6 +159,13 @@ class SessionTypeDetector:
             path_str = str(file_path)
             path_lower = path_str.lower()
 
+            # Check planning patterns FIRST (plan-*.md files, docs/plans/)
+            # These indicate planning session even without explicit command
+            if "plan-" in path_lower and path_lower.endswith(".md"):
+                return PLANNING  # Early return - planning detected
+            elif "docs/plans/" in path_lower or ".claude/hooks/plans/" in path_lower:
+                return PLANNING  # Early return - planning detected
+
             # Check debug patterns (error logs, traceback)
             if "error.log" in path_lower or "traceback" in path_lower:
                 detected_types.add(DEBUG)
@@ -167,7 +174,7 @@ class SessionTypeDetector:
             elif ("test_" in path_lower and path_lower.endswith(".py")) or                  "_test.py" in path_lower or                  "pytest.ini" in path_lower or                  "conftest.py" in path_lower:
                 detected_types.add(TEST)
 
-            # Check docs patterns (markdown files)
+            # Check docs patterns (markdown files, but not planning files)
             elif path_lower.endswith(".md") or "readme" in path_lower or                  ("doc/" in path_lower and path_lower.endswith(".rst")):
                 detected_types.add(DOCS)
 
@@ -194,8 +201,8 @@ class SessionTypeDetector:
             if len(detected_types) >= 3:
                 return MIXED
 
-            # For 2 types, check if one is DEBUG (highest priority)
-            # DEBUG always wins over other types
+            # For 2 types, check if one is DEBUG (highest priority after PLANNING)
+            # DEBUG always wins over other non-planning types
             if DEBUG in detected_types:
                 return DEBUG
 
