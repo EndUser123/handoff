@@ -201,9 +201,9 @@ class SessionTypeDetector:
         if message_type == MIXED:
             return file_type
 
-        # If files are mixed, return mixed
+        # If files are mixed, prefer message (message indicates primary intent)
         if file_type == MIXED:
-            return MIXED
+            return message_type
 
         # If both are different clear types, return mixed
         return MIXED
