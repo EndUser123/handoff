@@ -632,6 +632,40 @@ class PreCompactHandoffCapture:
 
         return status
 
+    def _extract_invoked_command(self, message: str | None) -> str:
+        """Extract the invoked command from the user message.
+
+        For planning sessions, captures the exact command that was invoked
+        (e.g., "/plan-workflow", "/arch", "/breakdown", "/design").
+
+        Args:
+            message: The last user message from the transcript
+
+        Returns:
+            The invoked command string, or "unknown command" if not found
+        """
+        if not message or not message.strip():
+            return "unknown command"
+
+        # Try to match against known planning commands first
+        from handoff.hooks.__lib.session_type_detector import SessionTypeDetector
+        for cmd in SessionTypeDetector.PLANNING_COMMANDS:
+            if message.startswith(cmd):
+                # Extract the full command including arguments
+                remaining = message[len(cmd):].strip()
+                if remaining:
+                    return f"{cmd} {remaining}"
+                else:
+                    return cmd
+
+        # Fallback: extract first slash command from message
+        # Matches patterns like "/command args" or just "/command"
+        match = re.search(r'/[a-z-]+(?:\s+[^\n]+)?', message)
+        if match:
+            return match.group(0).strip()
+
+        return "unknown command"
+
     def _extract_todo_list(self) -> list[dict[str, Any]]:
         """Extract the last TodoWrite state from the transcript.
 
@@ -1198,7 +1232,7 @@ class PreCompactHandoffCapture:
                     "invoked_command": invoked_command,
                     "requires_action": "user_approval"
                 }
-                logger.info(f"[PreCompact] Planning session detected - awaiting_approval blocker set")
+                logger.info("[PreCompact] Planning session detected - awaiting_approval blocker set")
                 logger.info(f"[PreCompact] Invoked command: {invoked_command}")
             else:
                 # Use existing blocker for non-planning sessions
