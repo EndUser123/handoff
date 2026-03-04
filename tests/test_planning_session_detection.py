@@ -86,9 +86,9 @@ class TestPlanningSessionDetection:
 
         session_type = detector.detect_session_type(message, files)
 
-        # Should detect as docs (mentions "remember", documentation-like)
-        # or feature (working on feature.py), not planning
-        assert session_type != "planning", f"Comment mentioning planning should not trigger, got '{session_type}'"
+        # Should detect as feature (working on src/feature.py) or docs
+        # The message contains "remember" but it's a comment, not a command
+        assert session_type in ["feature", "docs"], f"Comment mentioning planning should not trigger, got '{session_type}'"
 
 
 class TestBlockerCreation:
