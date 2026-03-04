@@ -102,8 +102,11 @@ class TestPreCompactPriorityFix:
         hook_content = (Path("P:/packages/handoff/src/handoff/hooks/PreCompact_handoff_capture.py")
                         .read_text())
 
-        # Count the "if not last_user_message:" fallback guards
-        fallback_guards = hook_content.count("if not last_user_message:")
+        # Count the "if not last_user_message:" fallback guards (both variable names)
+        fallback_guards = (
+            hook_content.count("if not last_user_message:") +
+            hook_content.count("if not last_user_message_for_task:")
+        )
 
         # Should have exactly 3 fallback guards (after each of the first 3 options)
         assert fallback_guards >= 3, \
