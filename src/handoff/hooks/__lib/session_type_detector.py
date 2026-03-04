@@ -25,6 +25,14 @@ class SessionTypeDetector:
         "/plan-workflow", "/arch", "/breakdown", "/design",
     )
 
+    # Comment context indicators that suggest casual mention, not command invocation
+    # Trailing spaces ensure word boundary matching (e.g., "should " matches "should we"
+    # but not "shoulder"). This prevents false positives from casual mentions.
+    COMMENT_INDICATORS: Final = (
+        "i need to", "need to", "remember to", "should ", "don't forget",
+        "later ", "thinking about", "considering ", "maybe ",
+    )
+
     # Keyword patterns for each session type
     DEBUG_KEYWORDS: Final = (
         "fix", "bug", "error", "broken", "fails", "crash",
