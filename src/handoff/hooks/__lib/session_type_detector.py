@@ -148,11 +148,18 @@ class SessionTypeDetector:
             elif path_lower.endswith(".py") and                  "test_" not in path_lower and                  "_test.py" not in path_lower:
                 detected_types.add(REFACTOR)
 
-        # Return single type or MIXED if multiple detected
+        # Return single type or use priority if multiple detected
         if len(detected_types) == 1:
             return detected_types.pop()
         elif len(detected_types) > 1:
-            return MIXED
+            # Use priority to select from multiple types
+            # Only return MIXED if there are 3+ types or the top 2 are equal priority
+            if len(detected_types) >= 3:
+                return MIXED
+
+            # Sort by priority and return top
+            sorted_types = sorted(detected_types, key=lambda x: cls._TYPE_PRIORITY[x])
+            return sorted_types[0]
         else:
             return UNKNOWN
 
