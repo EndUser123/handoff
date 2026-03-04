@@ -62,12 +62,34 @@ class SessionTypeDetector:
             message: User message to analyze
 
         Returns:
-            Session type: 'debug', 'feature', 'refactor', 'test', 'docs', 'mixed', 'unknown'
+            Session type: 'planning', 'debug', 'feature', 'refactor', 'test', 'docs', 'mixed', 'unknown'
         """
         if not message or not message.strip():
             return UNKNOWN
 
+        # Priority 1: Check for planning commands FIRST (highest priority)
+        # These commands require user approval before implementation
+        for cmd in cls.PLANNING_COMMANDS:
+            if message.startswith(cmd):
+                # Verify it's actually a command, not just mentioning it
+                # Commands must be at start or after explicit slash
+                remaining = message[len(cmd):].strip()
+                # If followed by space or end of string, it's a command
+                if not remaining or remaining[0] == " ":
+                    return PLANNING
+
         message_lower = message.lower()
+
+        # Priority 2: Check for planning keywords (but not in comments)
+        # Only trigger if not in a comment context (e.g., "I need to plan...")
+        if any(kw in message_lower for kw in cls.PLANNING_KEYWORDS):
+            # But NOT if it's clearly a comment like "remember to /plan-workflow later"
+            comment_indicators = ("remember to", "need to", "should", "later", "don't forget")
+            if not any(indicator in message_lower for indicator in comment_indicators):
+                # Also check if there are plan-*.md files being created
+                # This will be confirmed by file analysis
+                # For now, mark as planning candidate
+                pass
 
         # Count keyword matches for each session type
         scores = {
@@ -76,6 +98,7 @@ class SessionTypeDetector:
             REFACTOR: 0,
             TEST: 0,
             DOCS: 0,
+            PLANNING: 0,
         }
 
         # Score each session type by keyword matches
@@ -94,6 +117,9 @@ class SessionTypeDetector:
         for keyword in cls.DOCS_KEYWORDS:
             if keyword in message_lower:
                 scores[DOCS] += message_lower.count(keyword)
+        for keyword in cls.PLANNING_KEYWORDS:
+            if keyword in message_lower:
+                scores[PLANNING] += message_lower.count(keyword)
 
         # Get types with non-zero scores
         detected_types = [(session_type, score) for session_type, score in scores.items() if score > 0]
