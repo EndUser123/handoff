@@ -2,7 +2,7 @@
 
 > Session handoff management for AI coding environments - capture, restore, and manage conversation state across compaction events
 
-[![Build Status](https://img.shields.io/github/actions/status/EndUser123/handoff?branch=main)](https://github.com/EndUser123/handoff/actions) [![Version](https://img.shields.io/pypi/v/handoff)](https://pypi.org/project/handoff/) [![Python](https://img.shields.io/pypi/pyversions/handoff)](https://pypi.org/project/handoff/) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Build Status](https://img.shields.io/github/actions/status/EndUser123/handoff?branch=main)](https://github.com/EndUser123/handoff/actions)  [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 ## 🎥 Explainer Video
 
@@ -106,11 +106,11 @@ Planning sessions are **automatically detected** when:
 **Progress:** 50%
 
 **What You Were Working On:**
-  **Session Type:** 🐛 debug
-  **Task:** debug_auth
-  **Last request:** Fix the bug in authentication flow
-  **Files:** error.log, traceback.txt
-  **Progress:** 50%
+ **Session Type:** 🐛 debug
+ **Task:** debug_auth
+ **Last request:** Fix the bug in authentication flow
+ **Files:** error.log, traceback.txt
+ **Progress:** 50%
 ```
 
 **Planning Session (with awaiting_approval blocker):**
@@ -127,11 +127,11 @@ DO NOT proceed with implementation until user reviews.
 **Plan Status:** Planning complete. Awaiting user review before implementation.
 
 **What You Were Working On:**
-  **Session Type:** 📋 planning
-  **Task:** plan_feature_x
-  **Last request:** /plan-workflow build Implement feature X
-  **Files:** plan-20260304-feature-x.md
-  **Progress:** 100% (plan complete)
+ **Session Type:** 📋 planning
+ **Task:** plan_feature_x
+ **Last request:** /plan-workflow build Implement feature X
+ **Files:** plan-20260304-feature-x.md
+ **Progress:** 100% (plan complete)
 ```
 
 ## Approval Blocker System
@@ -159,14 +159,14 @@ Planning sessions add additional fields to the handoff state:
 
 ```json
 {
-  "blocker": {
-    "type": "awaiting_approval",
-    "description": "Planning complete. Awaiting user review before implementation.",
-    "invoked_command": "/plan-workflow build Implement feature X",
-    "requires_action": "user_approval"
-  },
+ "blocker": {
+  "type": "awaiting_approval",
+  "description": "Planning complete. Awaiting user review before implementation.",
   "invoked_command": "/plan-workflow build Implement feature X",
-  "session_type": "planning"
+  "requires_action": "user_approval"
+ },
+ "invoked_command": "/plan-workflow build Implement feature X",
+ "session_type": "planning"
 }
 ```
 
@@ -241,30 +241,30 @@ git clone https://github.com/csf-nip/handoff.git P:/packages/handoff
 
 ```mermaid
 sequenceDiagram
-    participant User as 👤 User
-    participant Claude as 🤖 Claude Code
-    participant PreCompact as 🔒 PreCompact Hook
-    participant TaskTracker as 📁 Task Tracker
-    participant SessionStart as 🔓 SessionStart Hook
+  participant User as 👤 User
+  participant Claude as 🤖 Claude Code
+  participant PreCompact as 🔒 PreCompact Hook
+  participant TaskTracker as 📁 Task Tracker
+  participant SessionStart as 🔓 SessionStart Hook
 
-    User->>Claude: Working on task...
-    Claude->>Claude: Transcript grows
-    Note over Claude: ⚠️ Compaction triggered!
+  User->>Claude: Working on task...
+  Claude->>Claude: Transcript grows
+  Note over Claude: ⚠️ Compaction triggered!
 
-    PreCompact->>PreCompact: Detect task identity
-    PreCompact->>PreCompact: Parse transcript
-    PreCompact->>PreCompact: Build handoff metadata
-    PreCompact->>TaskTracker: Store handoff in task file
-    Note over TaskTracker: Saved with checkpoint_id,<br/>chain_id, pending_operations
+  PreCompact->>PreCompact: Detect task identity
+  PreCompact->>PreCompact: Parse transcript
+  PreCompact->>PreCompact: Build handoff metadata
+  PreCompact->>TaskTracker: Store handoff in task file
+  Note over TaskTracker: Saved with checkpoint_id,<br/>chain_id, pending_operations
 
-    Claude->>Claude: Compaction completes
-    Note over Claude: Session lost context
+  Claude->>Claude: Compaction completes
+  Note over Claude: Session lost context
 
-    User->>Claude: Resume session
-    SessionStart->>TaskTracker: Load active_session
-    SessionStart->>SessionStart: Validate SHA256 checksum
-    SessionStart->>Claude: Inject restoration prompt
-    Note over Claude: ✅ Full context restored:<br/>original_user_request,<br/>pending_operations,<br/>visual_context
+  User->>Claude: Resume session
+  SessionStart->>TaskTracker: Load active_session
+  SessionStart->>SessionStart: Validate SHA256 checksum
+  SessionStart->>Claude: Inject restoration prompt
+  Note over Claude: ✅ Full context restored:<br/>original_user_request,<br/>pending_operations,<br/>visual_context
 ```
 
 ### Package Structure
@@ -272,22 +272,22 @@ sequenceDiagram
 ```
 handoff/
 ├── src/handoff/
-│   ├── __init__.py              # Package exports
-│   ├── protocol.py               # HandoffStorage Protocol interface
-│   ├── config.py                 # Configuration and paths
-│   ├── models.py                 # HandoffCheckpoint, PendingOperation dataclasses
-│   ├── checkpoint_ops.py         # PendingOperation with validation
-│   ├── migrate.py                # Checksum computation, migration utilities
-│   ├── checkpoint_chain.py       # CheckpointChain traversal
-│   └── hooks/
-│       └── __lib/
-│           ├── transcript.py      # TranscriptParser, TranscriptLines
-│           ├── handoff_store.py  # HandoffStore (build_handoff_data)
-│           ├── handover.py       # HandoverBuilder
-│           ├── task_identity_manager.py  # 6-source task identity recovery
-│           └── bridge_tokens.py  # Cross-session continuity tokens
-├── tests/                        # 476+ tests covering session detection, handoffs, checkpoint chains, and backward compatibility
-└── skill/SKILL.md               # /hod skill documentation
+│  ├── __init__.py       # Package exports
+│  ├── protocol.py        # HandoffStorage Protocol interface
+│  ├── config.py         # Configuration and paths
+│  ├── models.py         # HandoffCheckpoint, PendingOperation dataclasses
+│  ├── checkpoint_ops.py     # PendingOperation with validation
+│  ├── migrate.py        # Checksum computation, migration utilities
+│  ├── checkpoint_chain.py    # CheckpointChain traversal
+│  └── hooks/
+│    └── __lib/
+│      ├── transcript.py   # TranscriptParser, TranscriptLines
+│      ├── handoff_store.py # HandoffStore (build_handoff_data)
+│      ├── handover.py    # HandoverBuilder
+│      ├── task_identity_manager.py # 6-source task identity recovery
+│      └── bridge_tokens.py # Cross-session continuity tokens
+├── tests/            # 476+ tests covering session detection, handoffs, checkpoint chains, and backward compatibility
+└── skill/SKILL.md        # /hod skill documentation
 ```
 
 ## Core Components
@@ -302,10 +302,10 @@ from typing import runtime_checkable
 
 @runtime_checkable
 class HandoffStorage(Protocol):
-    def save_handoff(self, task_name: str, terminal_id: str, data: dict) -> Path: ...
-    def load_handoff(self, task_name: str, terminal_id: str, strict: bool = True) -> dict | None: ...
-    def list_handoffs(self, task_name: str, terminal_id: str) -> list[Path]: ...
-    def delete_handoff(self, task_name: str, terminal_id: str, version: int) -> bool: ...
+  def save_handoff(self, task_name: str, terminal_id: str, data: dict) -> Path: ...
+  def load_handoff(self, task_name: str, terminal_id: str, strict: bool = True) -> dict | None: ...
+  def list_handoffs(self, task_name: str, terminal_id: str) -> list[Path]: ...
+  def delete_handoff(self, task_name: str, terminal_id: str, version: int) -> bool: ...
 ```
 
 ### TranscriptParser
@@ -320,15 +320,15 @@ parser = TranscriptParser(transcript_path="~/.claude/projects/P--/transcript.jso
 # Extract various session elements
 blocker = parser.extract_current_blocker()
 modifications = parser.extract_modifications()
-last_message = parser.extract_last_user_message()  # FULL, untruncated
+last_message = parser.extract_last_user_message() # FULL, untruncated
 decisions = parser.extract_session_decisions()
 patterns = parser.extract_session_patterns()
 visual_context = parser.extract_visual_context()
 pending_ops = parser.extract_pending_operations()
 
 # Resume capability
-offset = parser.get_transcript_offset()  # Character position
-count = parser.get_transcript_entry_count()  # Entry count
+offset = parser.get_transcript_offset() # Character position
+count = parser.get_transcript_entry_count() # Entry count
 ```
 
 ### HandoffStore
@@ -340,22 +340,22 @@ from handoff.hooks.__lib.handoff_store import HandoffStore
 from pathlib import Path
 
 store = HandoffStore(
-    project_root=Path("P:/"),
-    terminal_id="term_abc123"
+  project_root=Path("P:/"),
+  terminal_id="term_abc123"
 )
 
 # Build complete handoff data
 handoff_data = store.build_handoff_data(
-    task_name="implement-feature-x",
-    progress_pct=45,
-    blocker={"description": "Need to clarify requirements"},
-    files_modified=["src/main.py"],
-    next_steps=["1. Write tests", "2. Implement core logic"],
-    handover={"decisions": [...], "patterns_learned": [...]},
-    modifications=[...],
-    pending_operations=[
-        {"type": "edit", "target": "src/main.py", "state": "in_progress"}
-    ]
+  task_name="implement-feature-x",
+  progress_pct=45,
+  blocker={"description": "Need to clarify requirements"},
+  files_modified=["src/main.py"],
+  next_steps=["1. Write tests", "2. Implement core logic"],
+  handover={"decisions": [...], "patterns_learned": [...]},
+  modifications=[...],
+  pending_operations=[
+    {"type": "edit", "target": "src/main.py", "state": "in_progress"}
+  ]
 )
 
 # Returns dict with checkpoint_id, parent_checkpoint_id, chain_id, etc.
@@ -370,8 +370,8 @@ from handoff.checkpoint_chain import CheckpointChain
 from pathlib import Path
 
 chain = CheckpointChain(
-    task_tracker_dir=Path(".claude/state/task_tracker"),
-    terminal_id="term_abc123"
+  task_tracker_dir=Path(".claude/state/task_tracker"),
+  terminal_id="term_abc123"
 )
 
 # Get all checkpoints in a chain
@@ -392,40 +392,40 @@ from handoff.models import HandoffCheckpoint, PendingOperation
 
 # Create typed checkpoint
 checkpoint = HandoffCheckpoint(
-    checkpoint_id="abc-123",
-    parent_checkpoint_id=None,
-    chain_id="chain-456",
-    created_at="2025-02-17T12:00:00Z",
-    transcript_offset=12345,
-    transcript_entry_count=42,
-    task_name="implement-feature-x",
-    task_type="feature",
-    progress_percent=50,
-    blocker=None,
-    next_steps="Complete the work",
-    git_branch="main",
-    active_files=["src/main.py"],
-    recent_tools=[],
-    transcript_path="/transcript.json",
-    handover=None,
-    open_conversation_context=None,
-    visual_context=None,
-    resolved_issues=[],
-    modifications=[],
-    original_user_request="Add feature X",
-    first_user_request="Add feature X",
-    saved_at="2025-02-17T12:00:00Z",
-    version=1,
-    implementation_status=None,
-    pending_operations=[
-        PendingOperation(
-            type="edit",
-            target="src/main.py",
-            state="in_progress",
-            details={"line": 42}
-        )
-    ],
-    checksum="sha256:abc123..."
+  checkpoint_id="abc-123",
+  parent_checkpoint_id=None,
+  chain_id="chain-456",
+  created_at="2025-02-17T12:00:00Z",
+  transcript_offset=12345,
+  transcript_entry_count=42,
+  task_name="implement-feature-x",
+  task_type="feature",
+  progress_percent=50,
+  blocker=None,
+  next_steps="Complete the work",
+  git_branch="main",
+  active_files=["src/main.py"],
+  recent_tools=[],
+  transcript_path="/transcript.json",
+  handover=None,
+  open_conversation_context=None,
+  visual_context=None,
+  resolved_issues=[],
+  modifications=[],
+  original_user_request="Add feature X",
+  first_user_request="Add feature X",
+  saved_at="2025-02-17T12:00:00Z",
+  version=1,
+  implementation_status=None,
+  pending_operations=[
+    PendingOperation(
+      type="edit",
+      target="src/main.py",
+      state="in_progress",
+      details={"line": 42}
+    )
+  ],
+  checksum="sha256:abc123..."
 )
 
 # Serialize/deserialize
@@ -456,8 +456,8 @@ from handoff.hooks.__lib.bridge_tokens import generate_bridge_token, extract_bri
 
 # Generate a bridge token for a decision
 token = generate_bridge_token(
-    topic="authentication",
-    timestamp="2026-02-12T14:05:30Z"
+  topic="authentication",
+  timestamp="2026-02-12T14:05:30Z"
 )
 # Returns: "BRIDGE_20260212-140530_AUTHENTICATION"
 
@@ -561,42 +561,42 @@ Environment variables:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                      SESSION ACTIVE                             │
+│           SESSION ACTIVE               │
 ├─────────────────────────────────────────────────────────────────┤
-│  User works → Transcript grows → Files modified                │
+│ User works → Transcript grows → Files modified        │
 └────────────────────────────┬────────────────────────────────────┘
-                             │
-                             ▼
+               │
+               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                  COMPACTION TRIGGERED                           │
+│         COMPACTION TRIGGERED              │
 ├─────────────────────────────────────────────────────────────────┤
-│  PreCompact_handoff_capture.py:                                 │
-│  1. Detect task identity                                       │
-│  2. Parse transcript → extract blocker, mods, visual context   │
-│  3. Build handoff with checkpoint_id, chain_id                │
-│  4. Store in task tracker metadata                             │
+│ PreCompact_handoff_capture.py:                 │
+│ 1. Detect task identity                    │
+│ 2. Parse transcript → extract blocker, mods, visual context  │
+│ 3. Build handoff with checkpoint_id, chain_id        │
+│ 4. Store in task tracker metadata               │
 └────────────────────────────┬────────────────────────────────────┘
-                             │
-                             ▼
+               │
+               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                  AFTER COMPACTION                               │
+│         AFTER COMPACTION                │
 ├─────────────────────────────────────────────────────────────────┤
-│  SessionStart_handoff_restore.py:                               │
-│  1. Load active_session task                                    │
-│  2. Validate checksum                                           │
-│  3. Build restoration prompt:                                   │
-│     - Full original_user_request (NOT truncated)                │
-│     - Pending operations                                        │
-│     - Visual context                                            │
-│     - Handover decisions/patterns                               │
-│  4. Inject into conversation                                    │
+│ SessionStart_handoff_restore.py:                │
+│ 1. Load active_session task                  │
+│ 2. Validate checksum                      │
+│ 3. Build restoration prompt:                  │
+│   - Full original_user_request (NOT truncated)        │
+│   - Pending operations                    │
+│   - Visual context                      │
+│   - Handover decisions/patterns                │
+│ 4. Inject into conversation                  │
 └────────────────────────────┬────────────────────────────────────┘
-                             │
-                             ▼
+               │
+               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                    SESSION RESUMED                                │
+│          SESSION RESUMED                │
 ├─────────────────────────────────────────────────────────────────┤
-│  LLM has full context of what user was working on              │
+│ LLM has full context of what user was working on       │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -644,7 +644,7 @@ cd packages/handoff
 
 # Create virtual environment
 python -m venv venv
-venv\Scripts\activate  # Windows
+venv\Scripts\activate # Windows
 
 # Install with dev dependencies
 pip install -e ".[dev,test,docs]"
@@ -696,13 +696,13 @@ Handoffs form chains via `checkpoint_id`, `parent_checkpoint_id`, `chain_id`, en
 **Issue: "Handoff not capturing before compaction"**
 - **Cause**: Hooks not installed or not triggered
 - **Fix**:
-  ```bash
-  # Verify hooks are installed
-  ls P:/.claude/hooks/PreCompact_*.py
+ ```bash
+ # Verify hooks are installed
+ ls P:/.claude/hooks/PreCompact_*.py
 
-  # Check hook configuration in CLAUDE.md
-  grep -A5 "PreCompact" P:/.claude/CLAUDE.md
-  ```
+ # Check hook configuration in CLAUDE.md
+ grep -A5 "PreCompact" P:/.claude/CLAUDE.md
+ ```
 
 **Issue: "Restoration creates duplicate state"**
 - **Cause**: Multiple terminals restoring same checkpoint
@@ -711,23 +711,23 @@ Handoffs form chains via `checkpoint_id`, `parent_checkpoint_id`, `chain_id`, en
 **Issue: "Checkpoint file not found on restore"**
 - **Cause**: Checkpoint expired or was cleaned up
 - **Fix**:
-  - Check `.claude/handoffs/` directory for available checkpoints
-  - Use `/hod list` to see available checkpoints
-  - Recent checkpoints are prioritized in restoration
+ - Check `.claude/handoffs/` directory for available checkpoints
+ - Use `/hod list` to see available checkpoints
+ - Recent checkpoints are prioritized in restoration
 
 **Issue: "Images not preserved in handoff"**
 - **Cause**: Image paths not captured or images too large
 - **Fix**:
-  - Verify image analysis is enabled in configuration
-  - Check file size limits for embedded images
-  - Use `--include-visual-context` flag when capturing
+ - Verify image analysis is enabled in configuration
+ - Check file size limits for embedded images
+ - Use `--include-visual-context` flag when capturing
 
 **Issue: "Terminal ID not detected"**
 - **Cause**: Running in environment without terminal identification
 - **Fix**:
-  - Ensure CLAUDE_CODE_TERMINAL_ID environment variable is set
-  - Check session context includes terminal identification
-  - Fall back to session-based handoff if terminal ID unavailable
+ - Ensure CLAUDE_CODE_TERMINAL_ID environment variable is set
+ - Check session context includes terminal identification
+ - Fall back to session-based handoff if terminal ID unavailable
 
 ### Debug Mode
 
