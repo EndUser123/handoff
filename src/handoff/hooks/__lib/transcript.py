@@ -1232,6 +1232,35 @@ class TranscriptParser:
 
         return None
 
+    def get_transcript_timestamp(self) -> str | None:
+        """Extract timestamp from the last user message in transcript.
+
+        Returns:
+            ISO 8601 timestamp string from last user message, or None if:
+            - Transcript unavailable
+            - No user messages found
+            - Timestamp field missing
+        """
+        entries = self._get_parsed_entries()
+        if not entries:
+            return None
+
+        try:
+            # Read backwards to find the last user message with timestamp
+            for i in range(len(entries) - 1, -1, -1):
+                entry = entries[i]
+                if entry.get("type") == "user":
+                    # Extract timestamp field if present
+                    timestamp: str | None = entry.get("timestamp")
+                    if timestamp and isinstance(timestamp, str):
+                        return timestamp
+                    # If no timestamp on this user message, continue searching
+                    # (older user messages might have timestamps)
+        except Exception as e:
+            logger.error(f"[TranscriptParser] Could not extract timestamp: {e}")
+
+        return None
+
     def get_transcript_offset(self) -> int:
         """Get the character offset (position) in the transcript file.
 

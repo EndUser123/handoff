@@ -15,6 +15,7 @@ Renamed from checkpoint package to handoff package.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import os
@@ -1027,6 +1028,10 @@ class PreCompactHandoffCapture:
             "modifications": handoff_data.get("modifications", []),
             "pending_operations": handoff_data.get("pending_operations", []),
             "original_user_request": original_user_request,
+            "original_user_request_hash": hashlib.sha256(
+                original_user_request.encode('utf-8')
+            ).hexdigest()[:16] if original_user_request else None,
+            "original_user_request_timestamp": self.parser.get_transcript_timestamp(),
             "first_user_request": first_user_request,
             "saved_at": utcnow_iso(),
             "version": 1,
@@ -1221,11 +1226,11 @@ class PreCompactHandoffCapture:
 
             # For planning sessions, override blocker with awaiting_approval
             # This prevents AI from implementing plans before user review
-            invoked_command = None
-            if session_type == "planning":
-                # Capture the invoked command from the message
-                invoked_command = self._extract_invoked_command(last_user_message)
+            # Capture invoked command for ALL sessions (not just planning)
+            # This ensures /s, /r, and other slash commands are preserved in handoff
+            invoked_command = self._extract_invoked_command(last_user_message)
 
+            if session_type == "planning":
                 # Create awaiting_approval blocker
                 blocker_description = {
                     "type": "awaiting_approval",

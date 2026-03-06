@@ -119,6 +119,32 @@ def _verify_handoff_checksum(handoff_data: dict[str, Any]) -> tuple[bool, str | 
     return True, None
 
 
+def _migrate_handoff_hash(handoff_data: dict[str, Any]) -> None:
+    """Migrate handoff data to include hash verification fields.
+
+    Detects handoffs without original_user_request_hash and logs migration event.
+    Existing handoffs continue to work with checksum verification only.
+
+    Args:
+        handoff_data: Handoff data dict (modified in place if migration needed)
+    """
+    original_request = handoff_data.get("original_user_request")
+    request_hash = handoff_data.get("original_user_request_hash")
+
+    # Migration: Detect missing hash field
+    if original_request and not request_hash:
+        logger.info(
+            "[SessionStart] Legacy handoff detected (no hash field). "
+            "Relying on full metadata checksum for integrity verification. "
+            "Handoff will be upgraded on next compaction."
+        )
+        # Note: We don't add the hash here because:
+        # 1. Computing hash requires hashlib import
+        # 2. We don't want to modify handoff data during restore (read-only)
+        # 3. Next compaction will automatically add the hash
+        # 4. Full checksum verification provides integrity protection
+
+
 def _build_last_command_section(handoff_data: dict[str, Any]) -> list[str]:
     """Build the last command section from original_user_request.
 
@@ -129,12 +155,32 @@ def _build_last_command_section(handoff_data: dict[str, Any]) -> list[str]:
         List of formatted lines
     """
     original_request = handoff_data.get("original_user_request")
+    request_hash = handoff_data.get("original_user_request_hash")
+    request_timestamp = handoff_data.get("original_user_request_timestamp")
     last_command_section = []
 
     if original_request:
+        # Build verification header if hash available
+        verification_header = []
+        if request_hash:
+            verification_header = [
+                f"**Verification Token:** `{request_hash}`",
+            ]
+            if request_timestamp:
+                verification_header.append(
+                    f"**Timestamp:** {request_timestamp}"
+                )
+            verification_header.extend([
+                "",
+                "**⚠️ VERIFY:** If this command seems wrong, the handoff data may be corrupted.",
+                "",
+                "",
+            ])
+
         last_command_section = [
             "## ⚠️  THE USER'S LAST COMMAND (AUTHENTIC - READ THIS FIRST)",
             "",
+            *verification_header,
             original_request,  # FULL content, no truncation
             "",
             "",
@@ -926,6 +972,9 @@ def main() -> int:
             _cleanup_active_session_task(source_terminal)
         # Still return 0 to allow session start
         return 0
+
+    # Migration: Detect legacy handoffs without hash verification
+    _migrate_handoff_hash(handoff_data)
 
     # Verify checksum
     is_valid, error = _verify_handoff_checksum(handoff_data)
