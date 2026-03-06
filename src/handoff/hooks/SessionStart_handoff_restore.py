@@ -35,7 +35,8 @@ HOOKS_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = HOOKS_DIR.parent
 
 # Add handoff package to path
-HANDOFF_PACKAGE = HOOKS_DIR.parent / "src"
+# Handoff package is in P:/packages/handoff/src/, not P:/.claude/src/
+HANDOFF_PACKAGE = PROJECT_ROOT / "packages" / "handoff" / "src"
 if str(HANDOFF_PACKAGE) not in sys.path:
     sys.path.insert(0, str(HANDOFF_PACKAGE))
 
