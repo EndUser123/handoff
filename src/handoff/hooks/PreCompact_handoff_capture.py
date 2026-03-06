@@ -53,7 +53,8 @@ from handoff.migrate import compute_metadata_checksum, validate_handoff_size
 
 # Import handoff hooks library
 # Add handoff package to path
-HANDOFF_PACKAGE = HOOKS_DIR.parent / "src"
+# Handoff package is in P:/packages/handoff/src/, not P:/.claude/src/
+HANDOFF_PACKAGE = PROJECT_ROOT / "packages" / "handoff" / "src"
 if str(HANDOFF_PACKAGE) not in sys.path:
     sys.path.insert(0, str(HANDOFF_PACKAGE))
 
