@@ -1119,6 +1119,55 @@ def _load_active_session_task(terminal_id: str) -> tuple[dict[str, Any] | None, 
         if session_data:
             return session_data, terminal_id
 
+    # MIGRATION-001: Migrate old non-scoped manifest to terminal-scoped format
+    # Backward compatibility: Detect and migrate old active_session_manifest.json
+    old_manifest_path = task_tracker_dir / "active_session_manifest.json"
+    if old_manifest_path.exists():
+        try:
+            logger.info(f"[SessionStart] Migrating old manifest file: {old_manifest_path.name}")
+            with open(old_manifest_path, encoding="utf-8") as f:
+                old_manifest = json.load(f)
+
+            source_terminal = old_manifest.get("terminal_id")
+            if source_terminal:
+                # Migrate to new terminal-scoped filename
+                new_manifest_path = task_tracker_dir / f"active_session_manifest_{source_terminal}.json"
+                try:
+                    # Write to new location with atomic rename
+                    import tempfile
+                    fd, temp_path = tempfile.mkstemp(
+                        suffix=".tmp", dir=str(task_tracker_dir), prefix=f"migrate_manifest_{source_terminal}_"
+                    )
+                    try:
+                        with os.fdopen(fd, "w", encoding="utf-8") as f:
+                            json.dump(old_manifest, f, indent=2)
+                        os.replace(temp_path, str(new_manifest_path))
+                        logger.info(f"[SessionStart] Migrated to terminal-scoped manifest: {new_manifest_path.name}")
+
+                        # Delete old manifest after successful migration
+                        old_manifest_path.unlink(missing_ok=True)
+                        logger.info(f"[SessionStart] Deleted old manifest after migration: {old_manifest_path.name}")
+                    except OSError as write_error:
+                        logger.error(f"[SessionStart] Failed to write migrated manifest: {write_error}")
+                        try:
+                            os.unlink(temp_path)
+                        except OSError:
+                            pass
+                except OSError as migrate_error:
+                    logger.error(f"[SessionStart] Failed to migrate manifest: {migrate_error}")
+
+            # If migration failed or no terminal_id, delete old manifest to prevent repeat attempts
+            if old_manifest_path.exists():
+                old_manifest_path.unlink(missing_ok=True)
+                logger.warning("[SessionStart] Deleted old manifest after failed migration attempt")
+
+        except (json.JSONDecodeError, OSError) as e:
+            logger.error(f"[SessionStart] CORRUPTED old manifest file {old_manifest_path}: {e}")
+            try:
+                old_manifest_path.unlink(missing_ok=True)
+            except OSError:
+                pass
+
     # PERF-001: Fast path using terminal-scoped manifest file (O(1) lookup)
     # Multi-terminal fix: Check terminal-specific manifest first, then fall back to search
     manifest_path = task_tracker_dir / f"active_session_manifest_{terminal_id}.json"
