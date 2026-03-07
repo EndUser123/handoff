@@ -1401,11 +1401,14 @@ class PreCompactHandoffCapture:
                 handoff_metadata = self._build_handoff_metadata(
                     task_name, task_id, handoff_data, handoff_payload, final_user_message
                 )
+                logger.info(f"[PreCompact] About to create continue_session task: task_name={task_name}, task_id={task_id}")
                 self.handoff_store.create_continue_session_task(
                     task_name, task_id, handoff_metadata
                 )
+                logger.info("[PreCompact] Successfully called create_continue_session_task")
             except Exception as e:
-                logger.info(f"[PreCompact] Warning: Failed to create continue_session task: {e}")
+                logger.error(f"[PreCompact] FAILED to create continue_session task: {e}")
+                logger.error(f"[PreCompact] Traceback: {traceback.format_exc()}")
 
         logger.info("[PreCompact] Handoff complete. Ready for compaction.")
 
