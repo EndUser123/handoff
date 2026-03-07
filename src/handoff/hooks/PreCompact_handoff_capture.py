@@ -112,10 +112,15 @@ for level in range(6):  # Look up up to 6 levels
 # Explicit error instead of silent fallback
 if not PROJECT_ROOT:
     error_msg = (
-        f"PreCompact: Failed to detect valid PROJECT_ROOT after 6 levels of traversal. "
-        f"Hook location: {_hooks_file}. "
-        f"Searched up 6 levels for .claude directory with state/ or hooks/ subdirectories. "
-        f"Please ensure .claude directory exists in project root."
+        f"PreCompact: Failed to detect valid PROJECT_ROOT after 6 levels of traversal.\n"
+        f"Hook location: {_hooks_file}\n"
+        f"Searched up 6 levels for .claude directory.\n\n"
+        f"TROUBLESHOOTING:\n"
+        f"1. Ensure .claude directory exists in your project root\n"
+        f"2. Check that .claude directory is readable (not permission denied)\n"
+        f"3. If using a custom setup, set HANDOFF_SKIP_VALIDATION=1 to bypass validation\n"
+        f"4. Run: ls -la {Path.cwd()} / '.claude' to check if directory exists\n"
+        f"5. See: P:/packages/handoff/HANDOFF_IMPROVEMENTS_SUMMARY.md for details"
     )
     logger.error(error_msg)
     raise RuntimeError(error_msg)
