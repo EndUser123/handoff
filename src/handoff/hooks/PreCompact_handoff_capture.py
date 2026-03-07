@@ -39,10 +39,25 @@ if not logger.handlers:
     logger.setLevel(logging.INFO)
 
 # Modern path resolution
-HOOKS_DIR = Path(__file__).resolve().parent
-# PROJECT_ROOT should be P:/ (the actual project root), not the package directory
-# This ensures handoff data is stored in P:/.claude/state/ not in the package directory
-PROJECT_ROOT = Path("P:/")
+# Resolve project root dynamically by traversing up from the hook location
+# This works whether the hook is symlinked to .claude/hooks/ or running from package source
+_hooks_file = Path(__file__).resolve()
+HOOKS_DIR = _hooks_file.parent
+
+# Find project root by traversing up to find the .claude directory
+# Works for: P:/.claude/hooks/* or P:/packages/*/src/handoff/hooks/*
+_current = _hooks_file
+PROJECT_ROOT = None
+for _ in range(6):  # Look up up to 6 levels
+    _parent = _current.parent
+    if (_parent / ".claude").exists():
+        PROJECT_ROOT = _parent
+        break
+    _current = _parent
+
+# Fallback to hardcoded P:/ if not found (shouldn't happen in normal setup)
+if not PROJECT_ROOT:
+    PROJECT_ROOT = Path("P:/")
 
 # Add session management module path
 SESSION_MODULE_PATH = PROJECT_ROOT / "__csf" / "src"
