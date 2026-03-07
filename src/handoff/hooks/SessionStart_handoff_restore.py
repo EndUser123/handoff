@@ -814,6 +814,12 @@ def _load_active_session_task(terminal_id: str) -> tuple[dict[str, Any] | None, 
         if session_data:
             return session_data, source_terminal
 
+    # Synthesize informal task from file changes when no formal task exists
+    # File changes represent actual work, even without formal /task entries
+    synthesized_task, source_terminal = _synthesize_informal_task_from_files(terminal_id)
+    if synthesized_task:
+        return synthesized_task, source_terminal
+
     return None, None
 
 
