@@ -1119,8 +1119,9 @@ def _load_active_session_task(terminal_id: str) -> tuple[dict[str, Any] | None, 
         if session_data:
             return session_data, terminal_id
 
-    # PERF-001: Fast path using manifest file (O(1) lookup)
-    manifest_path = task_tracker_dir / "active_session_manifest.json"
+    # PERF-001: Fast path using terminal-scoped manifest file (O(1) lookup)
+    # Multi-terminal fix: Check terminal-specific manifest first, then fall back to search
+    manifest_path = task_tracker_dir / f"active_session_manifest_{terminal_id}.json"
     if manifest_path.exists():
         try:
             with open(manifest_path, encoding="utf-8") as f:
