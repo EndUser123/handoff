@@ -680,6 +680,9 @@ def _build_restoration_prompt(handoff_data: dict[str, Any]) -> str:
         ]
     )
 
+    # NEW: Prominent ACTIVE WORK section at the very top
+    lines.extend(_build_active_work_section(handoff_data))
+
     # Build sections using helper functions
     lines.extend(_build_quick_reference_section(handoff_data))
     lines.extend(_build_last_command_section(handoff_data))
