@@ -758,6 +758,95 @@ def _load_session_from_task_file(
         return None, None
 
 
+def _synthesize_informal_task_from_files(terminal_id: str) -> tuple[dict[str, Any] | None, str | None]:
+    """Synthesize informal task from file changes when no formal task exists.
+
+    File changes represent actual work - this synthesizes handoff context from
+    recent_files and changed_files arrays when user didn't create formal /task entries.
+
+    Args:
+        terminal_id: Terminal identifier for task file lookup
+
+    Returns:
+        Tuple of (synthesized task dict with handoff in metadata, or None; terminal_id)
+    """
+    task_tracker_dir = PROJECT_ROOT / ".claude" / "state" / "task_tracker"
+    task_file_path = task_tracker_dir / f"{terminal_id}_tasks.json"
+
+    if not task_file_path.exists():
+        logger.debug(f"[SessionStart] No task file for informal synthesis: {task_file_path}")
+        return None, None
+
+    try:
+        with open(task_file_path, encoding="utf-8") as f:
+            task_data = json.load(f)
+
+        recent_files = task_data.get("recent_files", [])
+        changed_files = task_data.get("changed_files", [])
+
+        if not recent_files and not changed_files:
+            logger.debug("[SessionStart] No file data in task file for synthesis")
+            return None, None
+
+        # Build synthesized handoff from file change reality
+        last_update = task_data.get("last_update")
+        timestamp_str = datetime.fromtimestamp(last_update).strftime("%Y-%m-%d %H:%M:%S") if last_update else "unknown"
+
+        # Get most recent files (what user was actually working on)
+        active_files = recent_files[:10] if recent_files else changed_files[:10]
+
+        # Build file summary
+        file_count = len(changed_files)
+        recent_count = len(recent_files)
+
+        # Synthesize task description from file patterns
+        if file_count > 50:
+            task_description = f"Extensive session work: {file_count} file modifications across multiple areas"
+        elif file_count > 20:
+            task_description = f"Active development: {file_count} files modified"
+        elif file_count > 5:
+            task_description = f"Focused work: {file_count} files modified"
+        else:
+            task_description = f"Quick updates: {file_count} files modified"
+
+        # Create synthesized handoff data
+        synthesized_handoff = {
+            "task_name": "informal_status_update",
+            "task_description": task_description,
+            "progress_percent": 100,
+            "blocker": None,
+            "next_steps": "Review recent file changes to determine next action",
+            "transcript_path": None,
+            "active_task": {
+                "task_name": "Session Status Update (Informal)",
+                "last_user_message": f"Session ended with {file_count} file changes - synthesizing context from recent work",
+                "active_files": active_files,
+                "next_steps": "Review changes in recent files to continue work",
+                "progress_pct": 100,
+                "session_type": "informal",
+                "file_count": file_count,
+                "recent_count": recent_count,
+                "last_update": timestamp_str
+            }
+        }
+
+        # Wrap in task structure with metadata
+        synthesized_task = {
+            "metadata": {
+                "handoff": synthesized_handoff
+            }
+        }
+
+        logger.info(f"[SessionStart] Synthesized informal task from {file_count} changed files, {recent_count} recent files")
+        logger.info(f"[SessionStart] Active files: {active_files[:3]}...")
+
+        return synthesized_task, terminal_id
+
+    except (json.JSONDecodeError, OSError) as e:
+        logger.warning(f"[SessionStart] Cannot synthesize informal task from {task_file_path}: {e}")
+        return None, None
+
+
 def _load_active_session_task(terminal_id: str) -> tuple[dict[str, Any] | None, str | None]:
     """Load active_session or continue_session task from task tracker.
 
