@@ -1008,10 +1008,15 @@ def main() -> int:
     import json
 
     # Output JSON for SessionStart router to capture as additionalContext
-    print(json.dumps({"hookEvent": "SessionStart", "additionalContext": restoration_prompt}))
+    output_data = {"hookEvent": "SessionStart", "additionalContext": restoration_prompt}
+    output_json = json.dumps(output_data)
+    logger.info(f"[SessionStart] Outputting restoration prompt ({len(restoration_prompt)} chars) to SessionStart router")
+    logger.debug(f"[SessionStart] Restoration prompt preview: {restoration_prompt[:200]}...")
+    print(output_json)
 
     # Clean up the task from the source terminal where it was found
     if source_terminal:
+        logger.info(f"[SessionStart] Cleaning up active_session task from {source_terminal}")
         _cleanup_active_session_task(source_terminal)
 
     # NOTE: Removed diagnostic print() - router only needs JSON output
