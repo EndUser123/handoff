@@ -43,17 +43,25 @@ if not logger.handlers:
 # This works whether the hook is symlinked to .claude/hooks/ or running from package source
 
 def validate_project_root(candidate: Path) -> bool:
-    """Validate that a .claude directory is actually the project root.
+    """Validate that a .claude directory is likely the project root.
 
-    Checks for expected structure to avoid detecting nested .claude directories
-    in dependencies, node_modules, or subdirectories.
+    Uses minimal viable criteria to avoid false positives while accepting
+    legitimate edge cases (monorepos, custom setups, minimal installations).
+
+    Validation can be bypassed with HANDOFF_SKIP_VALIDATION=1 environment variable
+    for custom setups or emergency recovery.
 
     Args:
         candidate: Path to directory containing .claude subdirectory
 
     Returns:
-        True if this appears to be the actual project root
+        True if this appears to be the actual project root, False otherwise
     """
+    # Bypass validation if explicitly requested (for custom setups or emergency recovery)
+    if os.environ.get("HANDOFF_SKIP_VALIDATION") == "1":
+        logger.warning("PROJECT_ROOT validation bypassed via HANDOFF_SKIP_VALIDATION=1")
+        return True
+
     claude_dir = candidate / ".claude"
 
     # Must exist
@@ -65,24 +73,9 @@ def validate_project_root(candidate: Path) -> bool:
         logger.warning(f"PROJECT_ROOT validation: {claude_dir} exists but not readable")
         return False
 
-    # Check for expected project root structure
-    # At minimum: state/ directory for task storage
-    # Common directories: hooks/, skills/, settings.json or CLAUDE.md
-    expected_indicators = [
-        claude_dir / "state",           # Task storage (required)
-        claude_dir / "hooks",           # Hook definitions (common)
-        claude_dir / "settings.json",   # Settings (common)
-        claude_dir / "CLAUDE.md",       # Constitution (common)
-    ]
-
-    # At least one of state/ or hooks/ must exist
-    has_state = (claude_dir / "state").exists()
-    has_hooks = (claude_dir / "hooks").exists()
-
-    if not (has_state or has_hooks):
-        logger.warning(f"PROJECT_ROOT validation: {claude_dir} lacks state/ or hooks/ directories")
-        return False
-
+    # Minimal viable criteria: .claude directory exists and is readable
+    # This accepts custom setups, monorepos, and minimal installations
+    # Previous strict criteria (requiring state/ or hooks/) rejected too many valid setups
     return True
 
 
