@@ -655,6 +655,161 @@ def _build_visual_context_section(handoff_data: dict[str, Any]) -> list[str]:
     return lines
 
 
+def _build_active_work_section(handoff_data: dict[str, Any]) -> list[str]:
+    """Build the prominent ACTIVE WORK section with continuation directive.
+
+    This is the FIRST section after the header to ensure immediate visibility.
+
+    Args:
+        handoff_data: Validated handoff data
+
+    Returns:
+        List of formatted lines
+    """
+    lines = []
+
+    # Extract work state from recent work section
+    recent_exchanges = handoff_data.get("recent_exchanges", [])
+    todo_list = handoff_data.get("todo_list", [])
+    recent_edits = handoff_data.get("recent_edits", [])
+
+    # Determine work state
+    in_progress_todos = [t for t in todo_list if t.get("status") == "in_progress"]
+    pending_todos = [t for t in todo_list if t.get("status") == "pending"]
+    has_recent_work = bool(recent_edits) or bool(recent_exchanges)
+
+    # Build directive based on work state
+    if in_progress_todos:
+        # Active in-progress work
+        todo = in_progress_todos[0]
+        task_content = todo.get("content", "unknown task")
+        lines.extend(
+            [
+                "## 🔄 **ACTIVE WORK - CONTINUE THIS**",
+                "",
+                "**DO NOT start new work. Continue this in-progress task:**",
+                "",
+                f"→ **{task_content}**",
+                "",
+            ]
+        )
+
+        # Add context from recent work
+        if recent_exchanges:
+            last_exchange = recent_exchanges[-1]
+            if last_exchange.get("role") == "assistant":
+                lines.extend(
+                    [
+                        "**Last action before compaction:**",
+                        f" {last_exchange.get('text', '')[:200]}...",
+                        "",
+                    ]
+                )
+
+        lines.extend(
+            [
+                "**Status**: In progress, awaiting completion",
+                "",
+                "**Next steps:**",
+                "1. Review the context sections below for details",
+                "2. Continue from where the work left off",
+                "3. Complete the in-progress task before starting new work",
+                "",
+                "---",
+                "",
+            ]
+        )
+
+    elif pending_todos and has_recent_work:
+        # Work was in progress but not explicitly tracked
+        lines.extend(
+            [
+                "## 🔄 **ACTIVE WORK - CONTINUE THIS**",
+                "",
+                "**You were actively working on this session before compaction.**",
+                "",
+                "**DO NOT start new work. Review and continue:**",
+                "",
+            ]
+        )
+
+        # Show most recent edit or conversation
+        if recent_edits:
+            last_edit = recent_edits[-1]
+            file_path = last_edit.get("file", "")
+            snippet = last_edit.get("snippet", "")
+            lines.extend(
+                [
+                    "**Most recent edit:**",
+                    f"→ `{file_path}`",
+                    f"  `{snippet[:150] if snippet else 'no snippet'}...`",
+                    "",
+                ]
+            )
+
+        if recent_exchanges:
+            last_exchange = recent_exchanges[-1]
+            role = last_exchange.get("role", "")
+            text = last_exchange.get("text", "")
+            lines.extend(
+                [
+                    "**Last exchange:**",
+                    f"**{role.capitalize()}:** {text[:200]}...",
+                    "",
+                ]
+            )
+
+        lines.extend(
+            [
+                "**Status**: Work was in progress, needs continuation",
+                "",
+                "**Next steps:**",
+                "1. Review 'RECENT CONVERSATION' section below for full context",
+                "2. Review 'Todo List' for pending tasks",
+                "3. Continue the work from where it left off",
+                "",
+                "---",
+                "",
+            ]
+        )
+
+    elif pending_todos:
+        # Only pending todos, no active work
+        todo = pending_todos[0]
+        task_content = todo.get("content", "unknown task")
+        lines.extend(
+            [
+                "## 📋 **PENDING WORK - NEXT TASK**",
+                "",
+                "**Ready to start:**",
+                "",
+                f"→ **{task_content}**",
+                "",
+                "**Note**: Review context below before starting",
+                "",
+                "---",
+                "",
+            ]
+        )
+
+    else:
+        # No clear work state - informational handoff
+        lines.extend(
+            [
+                "## ℹ️  **SESSION CONTEXT**",
+                "",
+                "**This handoff contains context from the previous session.**",
+                "",
+                "Review the sections below for details on prior work, decisions, and patterns.",
+                "",
+                "---",
+                "",
+            ]
+        )
+
+    return lines
+
+
 def _build_restoration_prompt(handoff_data: dict[str, Any]) -> str:
     """Build restoration prompt from handoff data.
 
