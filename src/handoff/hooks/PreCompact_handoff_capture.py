@@ -29,6 +29,15 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+# Configure logging to output to stderr so diagnostic messages are visible
+if not logger.handlers:
+    handler = logging.StreamHandler()
+    handler.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
+
 # Modern path resolution
 HOOKS_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = HOOKS_DIR.parent
