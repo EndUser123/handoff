@@ -38,26 +38,103 @@ if not logger.handlers:
     logger.addHandler(handler)
     logger.setLevel(logging.INFO)
 
-# Modern path resolution
+# Modern path resolution with validation and logging
 # Resolve project root dynamically by traversing up from the hook location
 # This works whether the hook is symlinked to .claude/hooks/ or running from package source
+
+def validate_project_root(candidate: Path) -> bool:
+    """Validate that a .claude directory is actually the project root.
+
+    Checks for expected structure to avoid detecting nested .claude directories
+    in dependencies, node_modules, or subdirectories.
+
+    Args:
+        candidate: Path to directory containing .claude subdirectory
+
+    Returns:
+        True if this appears to be the actual project root
+    """
+    claude_dir = candidate / ".claude"
+
+    # Must exist
+    if not claude_dir.exists():
+        return False
+
+    # Must be readable
+    if not os.access(claude_dir, os.R_OK):
+        logger.warning(f"PROJECT_ROOT validation: {claude_dir} exists but not readable")
+        return False
+
+    # Check for expected project root structure
+    # At minimum: state/ directory for task storage
+    # Common directories: hooks/, skills/, settings.json or CLAUDE.md
+    expected_indicators = [
+        claude_dir / "state",           # Task storage (required)
+        claude_dir / "hooks",           # Hook definitions (common)
+        claude_dir / "settings.json",   # Settings (common)
+        claude_dir / "CLAUDE.md",       # Constitution (common)
+    ]
+
+    # At least one of state/ or hooks/ must exist
+    has_state = (claude_dir / "state").exists()
+    has_hooks = (claude_dir / "hooks").exists()
+
+    if not (has_state or has_hooks):
+        logger.warning(f"PROJECT_ROOT validation: {claude_dir} lacks state/ or hooks/ directories")
+        return False
+
+    return True
+
+
 _hooks_file = Path(__file__).resolve()
 HOOKS_DIR = _hooks_file.parent
+logger.info(f"PreCompact: Hook file resolved to: {_hooks_file}")
 
 # Find project root by traversing up to find the .claude directory
 # Works for: P:/.claude/hooks/* or P:/packages/*/src/handoff/hooks/*
 _current = _hooks_file
 PROJECT_ROOT = None
-for _ in range(6):  # Look up up to 6 levels
+detection_method = "unknown"
+
+for level in range(6):  # Look up up to 6 levels
     _parent = _current.parent
-    if (_parent / ".claude").exists():
-        PROJECT_ROOT = _parent
-        break
+    _candidate_claude = _parent / ".claude"
+
+    if _candidate_claude.exists():
+        logger.info(f"PreCompact: Found .claude at level {level}: {_candidate_claude}")
+
+        # Validate this is the actual project root, not a nested .claude
+        if validate_project_root(_parent):
+            PROJECT_ROOT = _parent
+            detection_method = f"directory_traversal_level_{level}"
+            logger.info(f"PreCompact: PROJECT_ROOT validated: {PROJECT_ROOT}")
+            break
+        else:
+            logger.warning(f"PreCompact: .claude at {_candidate_claude} failed validation, continuing...")
+    else:
+        logger.debug(f"PreCompact: No .claude found at level {level}: {_parent}")
+
     _current = _parent
 
-# Fallback to hardcoded P:/ if not found (shouldn't happen in normal setup)
+# Explicit error instead of silent fallback
 if not PROJECT_ROOT:
-    PROJECT_ROOT = Path("P:/")
+    error_msg = (
+        f"PreCompact: Failed to detect valid PROJECT_ROOT after 6 levels of traversal. "
+        f"Hook location: {_hooks_file}. "
+        f"Searched up 6 levels for .claude directory with state/ or hooks/ subdirectories. "
+        f"Please ensure .claude directory exists in project root."
+    )
+    logger.error(error_msg)
+    raise RuntimeError(error_msg)
+
+logger.info(f"PreCompact: PROJECT_ROOT detection method: {detection_method}")
+logger.info(f"PreCompact: Final PROJECT_ROOT: {PROJECT_ROOT}")
+
+# KNOWN LIMITATION: Multi-terminal race condition
+# If multiple terminals run compaction concurrently, handoff read/write may race.
+# Current implementation does NOT use file locking. Documenting as known limitation.
+# Mitigation: Users should avoid concurrent compaction in multiple terminals.
+logger.debug("PreCompact: Known limitation: No file locking for concurrent handoff access")
 
 # Add session management module path
 SESSION_MODULE_PATH = PROJECT_ROOT / "__csf" / "src"
