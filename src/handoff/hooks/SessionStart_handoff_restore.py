@@ -1054,7 +1054,13 @@ def main() -> int:
     # Load active_session or continue_session task (returns tuple)
     active_task, source_terminal = _load_active_session_task(terminal_id)
 
-    logger.info(f"[SessionStart] _load_active_session_task returned: active_task={bool(active_task)}, source_terminal={source_terminal}")
+    # Distinguish formal vs synthesized tasks
+    if active_task:
+        handoff_data = active_task.get("metadata", {}).get("handoff", {})
+        task_type = "INFORMAL (synthesized from files)" if handoff_data.get("task_name") == "informal_status_update" else "FORMAL"
+        logger.info(f"[SessionStart] Loaded {task_type} task from terminal '{source_terminal}'")
+    else:
+        logger.info(f"[SessionStart] _load_active_session_task returned: active_task={bool(active_task)}, source_terminal={source_terminal}")
 
     if not active_task:
         # NOTE: Silently return - no active handoff is normal, not an error
