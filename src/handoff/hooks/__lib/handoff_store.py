@@ -1024,9 +1024,9 @@ class HandoffStore:
                     f"[HandoffStore] continue_session task added to {task_file_path.name} [no lock]"
                 )
 
-                # Write manifest file atomically (even without lock)
+                # Write terminal-scoped manifest file atomically (even without lock)
                 fd_manifest, temp_manifest_path = tempfile.mkstemp(
-                    suffix=".tmp", dir=str(task_tracker_dir), prefix="active_session_manifest_"
+                    suffix=".tmp", dir=str(task_tracker_dir), prefix=f"active_session_manifest_{self.terminal_id}_"
                 )
                 try:
                     with os.fdopen(fd_manifest, "w", encoding="utf-8") as f:
