@@ -41,7 +41,8 @@ if not logger.handlers:
 
 # Hook directory resolution
 HOOKS_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = HOOKS_DIR.parent
+# PROJECT_ROOT should be P:/ drive root, not relative to hook package location
+PROJECT_ROOT = Path("P:/")
 
 # Add handoff package to path
 # Handoff package is in P:/packages/handoff/src/, not P:/.claude/src/
