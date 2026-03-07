@@ -940,8 +940,9 @@ def main() -> int:
     # Only restore handoff when source='compact' (post-compaction restoration)
     # For other sources (startup, resume), skip restoration even if active_session task exists
     source = hook_input.get("source", "")
+    logger.info(f"[SessionStart] Hook input source: '{source}', hook_input keys: {list(hook_input.keys())}")
     if source != "compact":
-        logger.debug(f"[SessionStart] Skipping handoff restoration - source is '{source}', not 'compact'")
+        logger.info(f"[SessionStart] Skipping handoff restoration - source is '{source}', not 'compact'")
         return 0
 
     terminal_id = detect_terminal_id()  # Used in _load_active_session_task() and _cleanup_active_session_task()
