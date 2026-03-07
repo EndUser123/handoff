@@ -950,16 +950,22 @@ def main() -> int:
     # Load active_session or continue_session task (returns tuple)
     active_task, source_terminal = _load_active_session_task(terminal_id)
 
+    logger.info(f"[SessionStart] _load_active_session_task returned: active_task={bool(active_task)}, source_terminal={source_terminal}")
+
     if not active_task:
         # NOTE: Silently return - no active handoff is normal, not an error
+        logger.info("[SessionStart] No active_session task found - skipping handoff restoration (this is normal if no compaction occurred)")
         return 0
 
     # Extract handoff from metadata
     metadata = active_task.get("metadata", {})
     handoff_data = metadata.get("handoff")
 
+    logger.info(f"[SessionStart] Extracted handoff_data: {bool(handoff_data)}, task_name={handoff_data.get('task_name') if handoff_data else 'N/A'}")
+
     if not handoff_data:
         # NOTE: No handoff data is normal, not an error
+        logger.warning("[SessionStart] active_session task found but no handoff data in metadata")
         return 0
 
     # Validate schema
