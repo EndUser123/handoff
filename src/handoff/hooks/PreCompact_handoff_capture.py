@@ -40,7 +40,9 @@ if not logger.handlers:
 
 # Modern path resolution
 HOOKS_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = HOOKS_DIR.parent
+# PROJECT_ROOT should be P:/ (the actual project root), not the package directory
+# This ensures handoff data is stored in P:/.claude/state/ not in the package directory
+PROJECT_ROOT = Path("P:/")
 
 # Add session management module path
 SESSION_MODULE_PATH = PROJECT_ROOT / "__csf" / "src"
