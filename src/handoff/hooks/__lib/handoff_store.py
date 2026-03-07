@@ -940,8 +940,9 @@ class HandoffStore:
         task_data["tasks"][CONTINUE_SESSION_TASK_ID] = continue_task
         task_data["last_update"] = utcnow_iso()
 
-        # PERF-001: Create manifest file for O(1) lookup
-        manifest_path = task_tracker_dir / "active_session_manifest.json"
+        # PERF-001: Create terminal-scoped manifest file for O(1) lookup
+        # Multi-terminal fix: Each terminal has its own manifest to prevent race condition
+        manifest_path = task_tracker_dir / f"active_session_manifest_{self.terminal_id}.json"
         manifest_data = {
             "terminal_id": self.terminal_id,
             "timestamp": utcnow_iso(),
