@@ -39,10 +39,25 @@ if not logger.handlers:
     logger.addHandler(handler)
     logger.setLevel(logging.INFO)
 
-# Hook directory resolution
-HOOKS_DIR = Path(__file__).resolve().parent
-# PROJECT_ROOT should be P:/ drive root, not relative to hook package location
-PROJECT_ROOT = Path("P:/")
+# Hook directory resolution - resolve project root dynamically
+# This works whether the hook is symlinked or running from package source
+_hooks_file = Path(__file__).resolve()
+HOOKS_DIR = _hooks_file.parent
+
+# Find project root by traversing up to find the .claude directory
+# Works for: P:/.claude/hooks/* or P:/packages/*/src/handoff/hooks/*
+_current = _hooks_file
+PROJECT_ROOT = None
+for _ in range(6):  # Look up up to 6 levels
+    _parent = _current.parent
+    if (_parent / ".claude").exists():
+        PROJECT_ROOT = _parent
+        break
+    _current = _parent
+
+# Fallback: assume parent of hooks directory if not found
+if not PROJECT_ROOT:
+    PROJECT_ROOT = HOOKS_DIR.parent
 
 # Add handoff package to path
 # Handoff package is in P:/packages/handoff/src/, not P:/.claude/src/
