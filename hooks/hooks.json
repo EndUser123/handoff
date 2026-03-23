@@ -1,0 +1,24 @@
+{
+  "PreCompact": [
+    {
+      "matcher": ".*",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/PreCompact_handoff_capture.py\""
+        }
+      ]
+    }
+  ],
+  "SessionStart": [
+    {
+      "matcher": ".*",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/SessionStart_handoff_restore.py\""
+        }
+      ]
+    }
+  ]
+}

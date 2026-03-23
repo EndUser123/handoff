@@ -1,0 +1,19 @@
+Handoff is a Claude Code plugin that preserves terminal state across transcript compactions using per-terminal V2 JSON envelopes. Let me walk you through the complete architecture and implementation.
+
+The system architecture consists of two hooks that run at different points in the Claude Code workflow. PreCompact runs before transcript compaction to capture current state. SessionStart runs when a new session begins to restore previously captured state. These hooks work together to maintain continuity across compaction boundaries.
+
+The capture workflow begins with transcript parsing. The PreCompact hook analyzes the current transcript to extract the canonical goal, which represents the primary objective. It detects pending operations that are in progress, and infers the next step based on context. Session boundary detection identifies when a natural topic shift occurs, using semantic similarity with a threshold of 30 percent to detect topic changes.
+
+The V2 envelope structure is the core data model. The resume snapshot contains current task, progress percentage, blockers array, active files list, pending operations array, and the next step string. The decision register stores explicit decisions as objects, with fields for constraint, settled decision, blocker rule, and anti-goal. The evidence index provides file references, transcripts, tests, logs, and git references for complete context. A SHA256 checksum validates data integrity by hashing the entire envelope except the checksum field itself.
+
+The restore workflow begins with freshness checking. Handoff only restores state from snapshots less than 20 minutes old with status pending. Terminal ID validation ensures the snapshot belongs to the current terminal, preventing cross-terminal contamination. Checksum validation uses SHA256 hashes to verify data integrity before injecting context into the new transcript.
+
+Multi-terminal isolation prevents conflicts. Each terminal gets its own handoff file, with the terminal ID derived from the Claude Code session context. Cross-terminal conflict prevention means multiple terminals can work independently without state interference. State independence guarantees that each terminal maintains its own context.
+
+Per-terminal state files use a specific naming convention. Each terminal gets its own JSON file, named with the terminal identifier. State isolation enforcement prevents one terminal from accessing another terminal's state. Use cases include multiple terminals working on different tasks simultaneously, or isolating experimental work from production workflows.
+
+Error handling and validation ensure reliability. Checksum validation detects SHA256 mismatches that indicate data corruption. Stale snapshot detection enforces the 20-minute freshness window. Schema validation ensures the V2 structure is correct. Status transitions track state from pending through consumed to rejected states.
+
+The typical workflow integrates these components. Compaction triggers capture, then SessionStart triggers restore, then continuation happens with preserved context. Verification steps confirm the system works by checking that handoff files exist and contain valid state. Integration with Claude Code workflows happens through the PreCompact and SessionStart hooks.
+
+The result is compact-resume continuity with V2 envelope architecture, SHA256 validation, per-terminal state isolation, and passing tests ensuring reliability. Handoff provides state preservation across transcript compactions while maintaining strict isolation between terminals.

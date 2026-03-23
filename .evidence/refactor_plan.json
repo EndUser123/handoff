@@ -1,0 +1,258 @@
+{
+  "metadata": {
+    "created_at": "2026-03-21T12:00:00",
+    "target_path": "P:/packages/handoff",
+    "session_id": "handoff_refactor_20260321",
+    "plan_version": 1
+  },
+  "overview": {
+    "total_findings": 18,
+    "priority_breakdown": {
+      "P0": 7,
+      "P1": 5,
+      "P2": 5,
+      "P3": 1
+    },
+    "estimated_effort_hours": 20.5,
+    "risk_level": "high"
+  },
+  "changes_by_priority": {
+    "P0": [
+      {
+        "id": "P0-001",
+        "title": "TOCTOU race condition in FileLock._try_acquire_lock_once()",
+        "file": "scripts/hooks/__lib/handoff_store.py",
+        "lines": "145-176",
+        "description": "File descriptor opened then lock attempted non-atomically. Creates TOCTOU vulnerability where file state can change between open and lock.",
+        "category": "race_condition",
+        "recommendation": "Use O_SHLOCK or flock() flags directly in os.open() for atomic open-and-lock",
+        "risk_analysis": "HIGH: Fixes critical race condition in core locking mechanism, requires thorough testing",
+        "rollback_strategy": "Git revert if tests fail. Characterize current lock acquisition behavior before fixing."
+      },
+      {
+        "id": "P0-002",
+        "title": "Sequential git subprocess calls cause guaranteed timeout under load",
+        "file": "scripts/hooks/__lib/git_state.py",
+        "lines": "158-199",
+        "description": "_get_last_commit() makes 3 sequential subprocess calls (rev-parse, log message, log timestamp). Each has 2s timeout = 6s worst case. Under p99 load (2x slower) = 12s. parallel_capture has 2s timeout = guaranteed failure.",
+        "category": "inefficiency",
+        "recommendation": "Consolidate to single git call: subprocess.run([\"git\", \"log\", \"-1\", \"--format=%H %s %ci\"], ...). Performance: 6s → 0.5s (12x faster)",
+        "risk_analysis": "HIGH: Performance-critical code path, affects all git state operations",
+        "rollback_strategy": "Git revert if tests fail. Characterize current git output format before consolidating."
+      },
+      {
+        "id": "P0-003",
+        "title": "TOCTOU race condition in _check_and_remove_stale_lock()",
+        "file": "scripts/hooks/__lib/handoff_store.py",
+        "lines": "unknown",
+        "description": "File checked, stat'd, then deleted non-atomically. Creates race condition where lock could be acquired by another process between check and delete.",
+        "category": "race_condition",
+        "recommendation": "Use atomic file operations with proper locking",
+        "risk_analysis": "HIGH: Race condition in lock cleanup could cause stale locks",
+        "rollback_strategy": "Git revert if tests fail. Characterize current lock cleanup behavior before fixing."
+      },
+      {
+        "id": "P0-004",
+        "title": "TOCTOU race condition in validate_envelope()",
+        "file": "scripts/hooks/__lib/handoff_v2.py",
+        "lines": "144-200",
+        "description": "Path validation split across multiple checks. Creates TOCTOU vulnerability.",
+        "category": "race_condition",
+        "recommendation": "Consolidate path validation into single atomic check",
+        "risk_analysis": "HIGH: Path validation race condition could accept invalid envelopes",
+        "rollback_strategy": "Git revert if tests fail. Characterize current validation behavior before fixing."
+      },
+      {
+        "id": "P0-005",
+        "title": "TOCTOU race condition in verify_evidence_freshness()",
+        "file": "scripts/hooks/__lib/handoff_v2.py",
+        "lines": "unknown",
+        "description": "Evidence file could be replaced between validation and hash computation.",
+        "category": "race_condition",
+        "recommendation": "Compute hash first, then validate atomically",
+        "risk_analysis": "HIGH: Evidence validation race could accept stale/modified evidence",
+        "rollback_strategy": "Git revert if tests fail. Characterize current evidence validation before fixing."
+      },
+      {
+        "id": "P0-006",
+        "title": "File descriptor leak in terminal_file_registry._save_registry()",
+        "file": "scripts/hooks/__lib/terminal_file_registry.py",
+        "lines": "unknown",
+        "description": "File descriptor not properly closed in error path.",
+        "category": "resource_leak",
+        "recommendation": "Use context manager or try-finally to ensure cleanup",
+        "risk_analysis": "HIGH: Resource leak accumulates over time, could exhaust file descriptors",
+        "rollback_strategy": "Git revert if tests fail. Characterize current file descriptor usage before fixing."
+      },
+      {
+        "id": "P0-007",
+        "title": "Temporary file leak in atomic_write_with_retry()",
+        "file": "scripts/hooks/__lib/handoff_store.py",
+        "lines": "unknown",
+        "description": "Temporary file not cleaned up on exception.",
+        "category": "resource_leak",
+        "recommendation": "Use try-finally or context manager for temp file cleanup",
+        "risk_analysis": "HIGH: Temp file leak accumulates garbage, could fill disk",
+        "rollback_strategy": "Git revert if tests fail. Characterize current temp file cleanup before fixing."
+      }
+    ],
+    "P1": [
+      {
+        "id": "P1-001",
+        "title": "Logic error in FileLock usage - checking if not lock when __enter__ raises TimeoutError",
+        "file": "scripts/hooks/__lib/handoff_store.py",
+        "lines": "unknown",
+        "description": "Code checks 'if not lock:' but FileLock.__enter__ raises TimeoutError on timeout, not returns None.",
+        "category": "error_handling",
+        "recommendation": "Change to try-except for TimeoutError",
+        "risk_analysis": "MEDIUM: Error handling bug causes lock timeout to be mishandled",
+        "rollback_strategy": "Git revert if tests fail. Characterize current timeout behavior before fixing."
+      },
+      {
+        "id": "P1-002",
+        "title": "Dependency state capture fails on medium-to-large projects",
+        "file": "scripts/hooks/__lib/dependency_state.py",
+        "lines": "187-206",
+        "description": "pip list timeout is 2s, but on projects with 500+ packages it takes 3-5s. 100% failure rate on medium projects.",
+        "category": "inefficiency",
+        "recommendation": "Increase PKG_TIMEOUT from 2s to 5s and add graceful degradation",
+        "risk_analysis": "MEDIUM: Timeout value affects all dependency capture operations",
+        "rollback_strategy": "Git revert if tests fail. Characterize current timeout behavior before adjusting."
+      },
+      {
+        "id": "P1-003",
+        "title": "Duplicated subprocess.run pattern across modules",
+        "file": "scripts/hooks/__lib/git_state.py, dependency_state.py",
+        "lines": "multiple",
+        "description": "10+ identical subprocess calls in git_state.py and dependency_state.py. Should extract to run_command_with_timeout() utility.",
+        "category": "duplication",
+        "recommendation": "Extract common subprocess pattern to shared utility function",
+        "risk_analysis": "MEDIUM: Extraction affects multiple call sites, requires careful refactoring",
+        "rollback_strategy": "Keep old code in comments until tests pass. Git revert if issues arise."
+      },
+      {
+        "id": "P1-004",
+        "title": "Duplicated terminal_id validation in 3 classes (consolidated from P1-004 and P2-001)",
+        "file": "HandoffFileStorage, HandoffStore, TerminalFileRegistry",
+        "lines": "multiple",
+        "description": "Same 8-line validation function duplicated across 3 classes. Security risk: inconsistent validation.",
+        "category": "duplication",
+        "recommendation": "Extract to validate_terminal_id() in terminal_detection.py",
+        "risk_analysis": "MEDIUM: Extraction affects 3 classes, security-critical validation",
+        "rollback_strategy": "Keep old code in comments until tests pass. Git revert if issues arise."
+      },
+      {
+        "id": "P1-005",
+        "title": "Incomplete error handling in parallel_capture.capture_all_parallel()",
+        "file": "scripts/hooks/__lib/parallel_capture.py",
+        "lines": "unknown",
+        "description": "Completed futures lost on timeout. Results not collected before exception.",
+        "category": "error_handling",
+        "recommendation": "Use asyncio.gather() with proper exception handling",
+        "risk_analysis": "MEDIUM: Affects concurrent data capture, could lose valid results",
+        "rollback_strategy": "Git revert if tests fail. Characterize current timeout behavior before fixing."
+      }
+    ],
+    "P2": [
+      {
+        "id": "P2-002",
+        "title": "Transcript parsing has redundant file reads",
+        "file": "scripts/hooks/__lib/transcript.py",
+        "lines": "multiple",
+        "description": "Multiple functions (get_recent_context, extract_modifications, etc.) each read full transcript file. For 2MB transcript: 3x2MB = 6MB I/O per capture.",
+        "category": "inefficiency",
+        "recommendation": "Implement caching in TranscriptParser class (3x I/O reduction)",
+        "risk_analysis": "MEDIUM: Performance optimization affects transcript parsing",
+        "rollback_strategy": "Git revert if tests fail. Characterize current I/O patterns before optimizing."
+      },
+      {
+        "id": "P2-003",
+        "title": "Repeated path validation/mkdir patterns",
+        "file": "multiple files",
+        "lines": "7 instances",
+        "description": "Same pattern of checking directory existence and mkdir parents() repeated.",
+        "category": "duplication",
+        "recommendation": "Extract to utility function ensure_directory_exists()",
+        "risk_analysis": "LOW: Simple extraction, well-understood pattern",
+        "rollback_strategy": "Keep old code in comments until tests pass. Git revert if issues arise."
+      },
+      {
+        "id": "P2-004",
+        "title": "Double serialization performance issue in atomic_write_with_validation()",
+        "file": "scripts/hooks/__lib/handoff_store.py",
+        "lines": "unknown",
+        "description": "Content serialized twice for validation.",
+        "category": "inefficiency",
+        "recommendation": "Serialize once and reuse",
+        "risk_analysis": "MEDIUM: Performance optimization in critical write path",
+        "rollback_strategy": "Git revert if tests fail. Characterize current serialization behavior before optimizing."
+      },
+      {
+        "id": "P2-005",
+        "title": "Race condition in update_snapshot_status()",
+        "file": "scripts/hooks/__lib/handoff_files.py",
+        "lines": "270-280",
+        "description": "Load-modify-write pattern without atomicity. Another process could modify file between load and save.",
+        "category": "race_condition",
+        "recommendation": "Use FileLock for atomic read-modify-write",
+        "risk_analysis": "MEDIUM: Race condition in snapshot status updates",
+        "rollback_strategy": "Git revert if tests fail. Characterize current update behavior before fixing."
+      },
+      {
+        "id": "P2-006",
+        "title": "transcript.py is 2534 lines (5x maintainability threshold)",
+        "file": "scripts/hooks/__lib/transcript.py",
+        "lines": "entire file",
+        "description": "File exceeds recommended size threshold (500 lines). 5x larger than guideline.",
+        "category": "complexity",
+        "recommendation": "Split into smaller modules by functionality",
+        "risk_analysis": "LOW: Structural refactoring, no behavior change",
+        "rollback_strategy": "Keep git history for easy revert if needed."
+      }
+    ],
+    "P3": [
+      {
+        "id": "P3-001",
+        "title": "Import references non-existent module architectural_context",
+        "file": "scripts/hooks/__lib/parallel_capture.py",
+        "lines": "173-174",
+        "description": "from scripts.hooks.__lib.architectural_context import should be architecture_capture",
+        "category": "docstring",
+        "recommendation": "Change import to architecture_capture",
+        "risk_analysis": "LOW: Simple typo fix, no behavior change",
+        "rollback_strategy": "Low risk, but keep git history for easy revert if needed."
+      }
+    ]
+  },
+  "execution_order": [
+    {
+      "step": 1,
+      "priority": "P0",
+      "reason": "Fix bugs and race conditions first (highest risk)",
+      "count": 7
+    },
+    {
+      "step": 2,
+      "priority": "P1",
+      "reason": "Improve error handling and performance (prevents future bugs)",
+      "count": 5
+    },
+    {
+      "step": 3,
+      "priority": "P2",
+      "reason": "Remove duplication and improve maintainability",
+      "count": 5
+    },
+    {
+      "step": 4,
+      "priority": "P3",
+      "reason": "Apply conventions (low risk, polish)",
+      "count": 1
+    }
+  ],
+  "validation_strategy": {
+    "test_approach": "Characterization tests for each change before applying fixes",
+    "rollback_trigger": "Test failures or syntax errors",
+    "validation_tools": ["pytest", "py_compile"]
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "resume_snapshot": {
+    "schema_version": 2,
+    "snapshot_id": "1ef70ee6-48f2-45ab-be87-a2ab5d30a4ef",
+    "terminal_id": "console_af86e5b4-6481-484e-bcbc-861dc8a31efe",
+    "source_session_id": "056b6603-ddf4-4be2-a3b8-e6837620aee9",
+    "created_at": "2026-03-22T16:26:43.162091+00:00",
+    "expires_at": "2026-03-22T16:46:43.162091+00:00",
+    "status": "pending",
+    "goal": "That path looked wrong, try again.",
+    "current_task": "That path looked wrong, try again.",
+    "progress_percent": 35,
+    "progress_state": "ready",
+    "blockers": [],
+    "active_files": [
+      "P:\\.claude\\hooks\\SessionStart_handoff_restore.py",
+      "P:\\.claude\\hooks\\UserPromptSubmit_modules\\handoff_context_injector.py",
+      "P:\\packages\\handoff\\scripts\\hooks\\PreCompact_handoff_capture.py",
+      "P:\\.claude\\skills\\checkpoint-restore\\SKILL.md",
+      "P:\\.claude\\skills\\restore\\SKILL.md",
+      "P:\\.claude\\skills\\clear_restore\\SKILL.md",
+      "P:\\packages\\handoff\\scripts\\hooks\\__lib\\handoff_files.py",
+      "P:\\.claude\\hooks\\state\\compaction_marker_console_39bfbc8b-e7f8-498f-9e43-92b52e005b1e.json",
+      "P:\\.claude\\state\\handoff\\console_39bfbc8b-e7f8-498f-9e43-92b52e005b1e_handoff.json",
+      "P:\\packages\\handoff\\scripts\\hooks\\__lib\\transcript.py"
+    ],
+    "pending_operations": [],
+    "next_step": "Now update the ADR to reflect the full scope of what was actually fixed:",
+    "decision_refs": [
+      "dec_fcd70fa79173483a85caa28df1ac069d",
+      "dec_c2594f5468f34f3cbb4274c762ed128d"
+    ],
+    "evidence_refs": [
+      "ev_65b028b11f1a40ed9c68b789336eac5d",
+      "ev_ccb439bf8ac44b73bec57fba16330e7f",
+      "ev_dea14950c4b94066916f1ba194de6261",
+      "ev_1caca2aecfb44d09b21aa9802c95d2bb",
+      "ev_6969d887ff6742fcbdbded71435d3248",
+      "ev_3b3199976cb74579be0bf262ef030c3a"
+    ],
+    "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\056b6603-ddf4-4be2-a3b8-e6837620aee9.jsonl",
+    "message_intent": "instruction",
+    "quality_score": 0.55
+  },
+  "decision_register": [
+    {
+      "id": "dec_fcd70fa79173483a85caa28df1ac069d",
+      "kind": "constraint",
+      "summary": "The `.claude/hooks/` version is missing the marker code entirely — it was never updated with the marker-writing block. Let me check the current terminal ID and verify:",
+      "details": "The `.claude/hooks/` version is missing the marker code entirely — it was never updated with the marker-writing block. Let me check the current terminal ID and verify:",
+      "priority": "high",
+      "applies_when": "Continue the current task after compact.",
+      "source_refs": [
+        "ev_65b028b11f1a40ed9c68b789336eac5d"
+      ],
+      "bridge_token": "BRIDGE_20260322-162643_THE_CLAUDEHOOKS"
+    },
+    {
+      "id": "dec_c2594f5468f34f3cbb4274c762ed128d",
+      "kind": "constraint",
+      "summary": "No marker files exist. The fix was **never actually applied**. Let me verify the actual content of the `.claude/hooks/` file:",
+      "details": "No marker files exist. The fix was **never actually applied**. Let me verify the actual content of the `.claude/hooks/` file:",
+      "priority": "high",
+      "applies_when": "Continue the current task after compact.",
+      "source_refs": [
+        "ev_65b028b11f1a40ed9c68b789336eac5d"
+      ],
+      "bridge_token": "BRIDGE_20260322-162643_NO_MARKER_FILES_EXIS"
+    }
+  ],
+  "evidence_index": [
+    {
+      "id": "ev_65b028b11f1a40ed9c68b789336eac5d",
+      "type": "transcript",
+      "label": "Current compact transcript",
+      "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\056b6603-ddf4-4be2-a3b8-e6837620aee9.jsonl",
+      "content_hash": "sha256:f157ce768c28127d1769af6e423c0700c9343bd37ff5adc383b0c9da53188af9"
+    },
+    {
+      "id": "ev_ccb439bf8ac44b73bec57fba16330e7f",
+      "type": "file",
+      "label": "SessionStart_handoff_restore.py",
+      "path": "P:\\.claude\\hooks\\SessionStart_handoff_restore.py",
+      "content_hash": "sha256:ea686135ac1f0eacdec401bb427f5ca2cd0b07be45491a9b8af45172625cc73d"
+    },
+    {
+      "id": "ev_dea14950c4b94066916f1ba194de6261",
+      "type": "file",
+      "label": "handoff_context_injector.py",
+      "path": "P:\\.claude\\hooks\\UserPromptSubmit_modules\\handoff_context_injector.py",
+      "content_hash": "sha256:6f5f7963c3c2ffc6652640b88e9e25accd1396f31849246f1da4bc0ddd68cced"
+    },
+    {
+      "id": "ev_1caca2aecfb44d09b21aa9802c95d2bb",
+      "type": "file",
+      "label": "PreCompact_handoff_capture.py",
+      "path": "P:\\packages\\handoff\\scripts\\hooks\\PreCompact_handoff_capture.py",
+      "content_hash": "sha256:c14e647305ec73b9261e2b4a3b081972ced7bb44df9af6f28502849dcc88c6c3"
+    },
+    {
+      "id": "ev_6969d887ff6742fcbdbded71435d3248",
+      "type": "file",
+      "label": "SKILL.md",
+      "path": "P:\\.claude\\skills\\checkpoint-restore\\SKILL.md",
+      "content_hash": "sha256:bd221655e8b5611db5b75aab3a9a6e4352ca0210d03a769cc8d328e377f977bf"
+    },
+    {
+      "id": "ev_3b3199976cb74579be0bf262ef030c3a",
+      "type": "file",
+      "label": "SKILL.md",
+      "path": "P:\\.claude\\skills\\restore\\SKILL.md",
+      "content_hash": "sha256:c7c305515c1e9b9a361b6c6dc301e7a7e109e12534ea42a97d4601ebaa3670cd"
+    }
+  ],
+  "checksum": "sha256:49d9e707721a07ff2897e8a8fe459afebb588efc6efd273afef14eab37ee40cf"
+}

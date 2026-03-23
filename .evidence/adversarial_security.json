@@ -1,0 +1,90 @@
+{
+  "findings": [
+    {
+      "id": "SEC-001-RESIDUAL",
+      "severity": "MEDIUM",
+      "title": "Incomplete Path Traversal Protection in verify_evidence_freshness",
+      "description": "While SEC-001 was partially fixed in validate_envelope(), the verify_evidence_freshness() function still has a residual vulnerability. The project_root derivation logic (lines 484-502) could fail if .claude directory doesn't exist within 5 levels, allowing potentially unvalidated paths to proceed to hash computation.",
+      "evidence": {
+        "code_excerpt": "project_root = None\nif isinstance(transcript_path, str) and transcript_path:\n    transcript_file = Path(transcript_path).resolve()\n    current = transcript_file\n    for _ in range(5):  # Check up to 5 levels up\n        if (current / \".claude\").exists():\n            project_root = current\n            break",
+        "file_path": "P:/packages/handoff/scripts/hooks/__lib/handoff_v2.py",
+        "line_number": "490-497",
+        "function_name": "verify_evidence_freshness",
+        "proof": "If project_root remains None after the loop (line 498), the subsequent validation check at line 518-523 is skipped, allowing evidence_file.relative_to(project_root) to be bypassed. An attacker could craft a transcript_path outside the project boundary with a .claude directory >5 levels up, causing project_root to be None and bypassing path validation."
+      },
+      "impact": {
+        "business_consequence": "Attackers could read files outside the project directory by crafting malicious handoff envelopes with evidence_index entries pointing to sensitive files (SSH keys, credentials, other project data).",
+        "customer_visible": false,
+        "regulatory_impact": "Potential data breach notification required if exploited"
+      },
+      "recommendation": {
+        "action": "Add explicit check: if project_root is None after loop, reject the envelope with HandoffValidationError. Do not proceed with evidence freshness verification without validated project root.",
+        "code_fix": "if project_root is None:\n    raise HandoffValidationError(\n        \"verify_evidence_freshness: cannot determine project root from transcript_path\"\n    )"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "SEC-003-LOCK-BYPASS",
+      "severity": "CRITICAL",
+      "title": "FileLock Timeout Fallback Proceeds Without Lock",
+      "description": "In handoff_store.py lines 1070-1123, when FileLock acquisition times out after LOCK_TIMEOUT_SECONDS (5s), the code falls back to proceeding with the write operation WITHOUT any lock. This is a critical race condition vulnerability that can lead to data corruption and atomicity violations.",
+      "evidence": {
+        "code_excerpt": "except TimeoutError:\n    # Lock acquisition timeout - log warning but proceed with write\n    logger.warning(\n        f\"[HandoffStore] Could not acquire lock for {task_file_path.name} after \"\n        f\"{LOCK_TIMEOUT_SECONDS}s timeout - proceeding with write anyway (risk of concurrent writes)\"\n    )\n    # Proceed with write anyway (risky but maintains compatibility)",
+        "file_path": "P:/packages/handoff/scripts/hooks/__lib/handoff_store.py",
+        "line_number": "1070-1076",
+        "function_name": "create_continue_session_task",
+        "proof": "The comment explicitly acknowledges this is risky: '(risk of concurrent writes)'. When two terminals compact simultaneously, both can timeout waiting for the lock, then both proceed to write to the same task file without synchronization. This causes last-write-wins data loss and corrupts the task tracker state."
+      },
+      "impact": {
+        "business_consequence": "Data corruption and loss during concurrent compaction events. User tasks and handoff data can be silently overwritten, causing work to be lost without any error indication.",
+        "customer_visible": true,
+        "regulatory_impact": "Data loss incident - potential regulatory notification if user data is affected"
+      },
+      "recommendation": {
+        "action": "NEVER proceed without lock. On timeout, either: 1) Abort the operation and raise an exception, or 2) Exponentially backoff and retry with longer timeout. The current fallback is fundamentally unsafe.",
+        "code_fix": "except TimeoutError:\n    logger.error(\n        f\"[HandoffStore] Could not acquire lock for {task_file_path.name} after \"\n        f\"{LOCK_TIMEOUT_SECONDS}s timeout - ABORTING to prevent data corruption\"\n    )\n    raise TimeoutError(\n        f\"Concurrent compaction detected - cannot safely write task file. \"\n        f\"Retry in a few moments.\"\n    )"
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "SEC-008-CHECKSUM-BYPASS",
+      "severity": "MEDIUM",
+      "title": "Checksum Validation Includes Mutable Metadata",
+      "description": "In handoff_v2.py, the compute_checksum() function excludes MUTABLE_METADATA_FIELDS from checksum computation. However, 'quality_score' is NOT in this exclusion list, meaning checksums change when quality_score is updated, breaking the immutability guarantee.",
+      "evidence": {
+        "code_excerpt": "MUTABLE_METADATA_FIELDS = {\n    \"consumed_at\",\n    \"consumed_by_session_id\",\n    \"rejected_at\",\n    \"rejected_by_session_id\",\n    \"rejection_reason\",\n    \"message_intent\",  # Excluded from checksum\n}",
+        "file_path": "P:/packages/handoff/scripts/hooks/__lib/handoff_v2.py",
+        "line_number": "54-61",
+        "function_name": "compute_checksum",
+        "proof": "The build_resume_snapshot() function at line 379 adds 'quality_score' to snapshot, but 'quality_score' is NOT in MUTABLE_METADATA_FIELDS. Checksums will change if quality_score is updated, violating the immutability principle."
+      },
+      "impact": {
+        "business_consequence": "Checksum mismatch false positives. Legitimate handoff envelopes may be rejected due to checksum changes caused by metadata updates rather than content tampering.",
+        "customer_visible": true,
+        "regulatory_impact": "Minor - user experience issue"
+      },
+      "recommendation": {
+        "action": "Add 'quality_score' to MUTABLE_METADATA_FIELDS to exclude it from checksum computation.",
+        "code_fix": "MUTABLE_METADATA_FIELDS = {\n    \"consumed_at\",\n    \"consumed_by_session_id\",\n    \"rejected_at\",\n    \"rejected_by_session_id\",\n    \"rejection_reason\",\n    \"message_intent\",\n    \"quality_score\",  # Optional metadata - exclude from checksum\n}"
+      },
+      "confidence": "medium"
+    }
+  ],
+  "summary": {
+    "total_findings": 3,
+    "critical": 1,
+    "high": 0,
+    "medium": 2,
+    "low": 0,
+    "review_date": "2026-03-22",
+    "reviewer": "Adversarial Security Review Agent",
+    "scope": "P:/packages/handoff package"
+  },
+  "testing_recommendations": {
+    "priority_tests": [
+      "Test concurrent compaction with lock timeout to verify SEC-003 fix",
+      "Test path traversal with .claude directory >5 levels up to verify SEC-001-RESIDUAL fix",
+      "Test checksum stability with quality_score updates to verify SEC-008-CHECKSUM-BYPASS fix"
+    ]
+  }
+}

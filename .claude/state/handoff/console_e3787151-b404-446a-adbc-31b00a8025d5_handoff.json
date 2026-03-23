@@ -1,0 +1,102 @@
+{
+  "resume_snapshot": {
+    "schema_version": 2,
+    "snapshot_id": "541d9e41-ab0d-4fe6-a1f1-dd932eace173",
+    "terminal_id": "console_e3787151-b404-446a-adbc-31b00a8025d5",
+    "source_session_id": "3b76a12a-4a64-49c9-9d96-8a773e1331db",
+    "created_at": "2026-03-23T13:13:41.247555+00:00",
+    "expires_at": "2026-03-23T13:33:41.247555+00:00",
+    "status": "pending",
+    "goal": "Another terminal says this: \"\n● Skill(recap)\n  ⎿  Successfully loaded skill\n\n  Searched for 1 pattern, read 3 files, searched memories (ctrl+o to expand)\n\n● Bash(head -1 \"C:/Users/brsth/.claude/projects/P--/68586d58-2da8-46ae-b9cd-e7781c1a0142.jsonl\" | python3 -c \"import\n      sys,json; d=json.load(sys.stdin); print('sessionId…)\n  ⎿  sessionId: 68586d58-2da8-46ae-b9cd-e7781c1a0142\n     sessionChainId:\n     terminalSlug:\n\n● The /recap skill has no executable implementation — it's a design spec with no actual script or CLI to run. The SKILL.md\n  describes the concept (parse JSONL transcripts, detect session boundaries via session_chain_id, aggregate context) but\n  contains no runnable code.\n\n  I can see from the transcript files that the current session is 68586d58-2da8-46ae-b9cd-e7781c1a0142.jsonl (808KB, 07:09\n  today). But the recap skill itself has no actual implementation to parse and summarize it.\n\n  This is the exact problem you described originally — the /recap skill exists as a concept but isn't built. You needed\n  something that could actually read chat history and tell you what's happening per terminal.\"",
+    "current_task": "Another terminal says this: \" ● Skill(recap) ⎿ Successfully loaded skill Searched for 1 pattern, read 3 files, searched ",
+    "progress_percent": 35,
+    "progress_state": "ready",
+    "blockers": [],
+    "active_files": [
+      "P:\\.claude\\arch_decisions\\ADR-20260322-hook-intent-detection.md",
+      "P:\\.claude\\CLAUDE.md",
+      "P:\\.claude\\hooks\\UserPromptSubmit_modules\\cognitive_enhancers.py",
+      "P:\\.claude\\hooks\\cognitive_enhancers_config.json",
+      "P:\\.claude\\arch_decisions\\ADR-20260322-hook-intent-detection-revised.md",
+      "P:\\.claude\\hooks\\UserPromptSubmit_modules\\tag_emission.py",
+      "P:\\.claude\\arch_decisions\\COGNITIVE_ENHANCERS_SECURITY_IMPROVEMENTS.md",
+      "P:\\.claude\\hooks\\UserPromptSubmit_modules\\tests\\test_cognitive_enhancers_acceptance.py",
+      "C:\\Users\\brsth\\.claude\\skills\\handoff\\SKILL.md",
+      "P:/packages/handoff/scripts/cli.py"
+    ],
+    "pending_operations": [],
+    "next_step": "The parsing works! It found 7 sessions. There's a minor bug where some entries don't have `sessionId`. Let me fix that:",
+    "decision_refs": [
+      "dec_02438b9333314e78a2aad34c5f7fee07"
+    ],
+    "evidence_refs": [
+      "ev_31867f181b9a4daf9725fd7fa119c1cb",
+      "ev_0291f5df4e1a42eabb5a508a648c7599",
+      "ev_c11d6341cff14984888159c06ee9ccce",
+      "ev_2c95ffbfcc674918aaa4870b38d2c2d4",
+      "ev_7b3d22f379ef4f01b60f056aa94d163e",
+      "ev_6b0f95e2cfc84dfca1b3c484bde1a5f7"
+    ],
+    "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\3b76a12a-4a64-49c9-9d96-8a773e1331db.jsonl",
+    "message_intent": "unsupported_language"
+  },
+  "decision_register": [
+    {
+      "id": "dec_02438b9333314e78a2aad34c5f7fee07",
+      "kind": "constraint",
+      "summary": "The parsing works! It found 7 sessions. There's a minor bug where some entries don't have `sessionId`. Let me fix that:",
+      "details": "The parsing works! It found 7 sessions. There's a minor bug where some entries don't have `sessionId`. Let me fix that:",
+      "priority": "high",
+      "applies_when": "Continue the current task after compact.",
+      "source_refs": [
+        "ev_31867f181b9a4daf9725fd7fa119c1cb"
+      ],
+      "bridge_token": "BRIDGE_20260323-131341_THE_PARSING_WORKS_I"
+    }
+  ],
+  "evidence_index": [
+    {
+      "id": "ev_31867f181b9a4daf9725fd7fa119c1cb",
+      "type": "transcript",
+      "label": "Current compact transcript",
+      "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\3b76a12a-4a64-49c9-9d96-8a773e1331db.jsonl",
+      "content_hash": "sha256:ed2b3d887cd875aeb7ca1a67da468235a61b22ecc042e4dbcd9bb2bbc13ba8d6"
+    },
+    {
+      "id": "ev_0291f5df4e1a42eabb5a508a648c7599",
+      "type": "file",
+      "label": "ADR-20260322-hook-intent-detection.md",
+      "path": "P:\\.claude\\arch_decisions\\ADR-20260322-hook-intent-detection.md",
+      "content_hash": "sha256:c26cf77e4fea7f7af2d3ebb91922ca9f63957e21ba085f42ac4063f6d6080eee"
+    },
+    {
+      "id": "ev_c11d6341cff14984888159c06ee9ccce",
+      "type": "file",
+      "label": "CLAUDE.md",
+      "path": "P:\\.claude\\CLAUDE.md",
+      "content_hash": "sha256:772d97ae9ea59abb8bcb00f4c0016b7f39c4b018431c3bb07d3af13db23b181b"
+    },
+    {
+      "id": "ev_2c95ffbfcc674918aaa4870b38d2c2d4",
+      "type": "file",
+      "label": "cognitive_enhancers.py",
+      "path": "P:\\.claude\\hooks\\UserPromptSubmit_modules\\cognitive_enhancers.py",
+      "content_hash": "sha256:e7ee35b3dd45764f38e88a78f1a8c5553df89a47155f8fa627e725ee3e881c6a"
+    },
+    {
+      "id": "ev_7b3d22f379ef4f01b60f056aa94d163e",
+      "type": "file",
+      "label": "cognitive_enhancers_config.json",
+      "path": "P:\\.claude\\hooks\\cognitive_enhancers_config.json",
+      "content_hash": "sha256:236b78109c2a770e522ceeb105e8ac6fcd4833b817349ce8153bbe3331d39c1f"
+    },
+    {
+      "id": "ev_6b0f95e2cfc84dfca1b3c484bde1a5f7",
+      "type": "file",
+      "label": "ADR-20260322-hook-intent-detection-revised.md",
+      "path": "P:\\.claude\\arch_decisions\\ADR-20260322-hook-intent-detection-revised.md",
+      "content_hash": "sha256:2d32fe1cedbf53df09f56f1f7b2d49b91b991cae870e758c47ad9c6666b3ff6e"
+    }
+  ],
+  "checksum": "sha256:7f9967b67a8e8307d1cdc2c4b0e1fdd40e332ef2d3fcba81fb8019be59585d3c"
+}

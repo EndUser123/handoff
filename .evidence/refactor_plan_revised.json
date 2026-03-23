@@ -1,0 +1,105 @@
+{
+  "metadata": {
+    "created_at": "2026-03-21T12:15:00",
+    "target_path": "P:/packages/handoff",
+    "session_id": "handoff_refactor_20260321_session1",
+    "plan_version": 2,
+    "note": "Revised after adversarial review - split into Session 1 (P0 only)"
+    "parent_plan": "refactor_plan.json"
+  },
+  "overview": {
+    "total_findings": 7,
+    "priority_breakdown": {
+      "P0": 7,
+      "P1": 0,
+      "P2": 0,
+      "P3": 0
+    },
+    "estimated_effort_hours": 4.0,
+    "risk_level": "high",
+    "session_focus": "P0: Race conditions and resource leaks only"
+  },
+  "changes": [
+    {
+      "id": "P0-001",
+      "title": "TOCTOU race condition in FileLock._try_acquire_lock_once()",
+      "file": "scripts/hooks/__lib/handoff_store.py",
+      "lines": "145-176",
+      "description": "File descriptor opened then lock attempted non-atomically.",
+      "recommendation": "Use O_SHLOCK or flock() flags directly in os.open() for atomic open-and-lock",
+      "rollback": "Git revert if tests fail. Characterize current lock acquisition behavior before fixing."
+    },
+    {
+      "id": "P0-002",
+      "title": "Sequential git subprocess calls cause guaranteed timeout under load",
+      "file": "scripts/hooks/__lib/git_state.py",
+      "lines": "158-199",
+      "description": "3 sequential subprocess calls, each 2s timeout = 6s worst case.",
+      "recommendation": "Consolidate to single git call with --format flag (6s → 0.5s)",
+      "rollback": "Git revert if tests fail. Characterize current git output format before consolidating."
+    },
+    {
+      "id": "P0-003",
+      "title": "TOCTOU race condition in _check_and_remove_stale_lock()",
+      "file": "scripts/hooks/__lib/handoff_store.py",
+      "description": "File checked, stat'd, then deleted non-atomically.",
+      "recommendation": "Use atomic file operations with proper locking",
+      "rollback": "Git revert if tests fail. Characterize current lock cleanup behavior before fixing."
+    },
+    {
+      "id": "P0-004",
+      "title": "TOCTOU race condition in validate_envelope()",
+      "file": "scripts/hooks/__lib/handoff_v2.py",
+      "lines": "144-200",
+      "description": "Path validation split across multiple checks.",
+      "recommendation": "Consolidate path validation into single atomic check",
+      "rollback": "Git revert if tests fail. Characterize current validation behavior before fixing."
+    },
+    {
+      "id": "P0-005",
+      "title": "TOCTOU race condition in verify_evidence_freshness()",
+      "file": "scripts/hooks/__lib/handoff_v2.py",
+      "description": "Evidence file could be replaced between validation and hash computation.",
+      "recommendation": "Compute hash first, then validate atomically",
+      "rollback": "Git revert if tests fail. Characterize current evidence validation before fixing."
+    },
+    {
+      "id": "P0-006",
+      "title": "File descriptor leak in terminal_file_registry._save_registry()",
+      "file": "scripts/hooks/__lib/terminal_file_registry.py",
+      "description": "File descriptor not properly closed in error path.",
+      "recommendation": "Use context manager or try-finally to ensure cleanup",
+      "rollback": "Git revert if tests fail. Characterize current file descriptor usage before fixing."
+    },
+    {
+      "id": "P0-007",
+      "title": "Temporary file leak in atomic_write_with_retry()",
+      "file": "scripts/hooks/__lib/handoff_store.py",
+      "description": "Temporary file not cleaned up on exception.",
+      "recommendation": "Use try-finally or context manager for temp file cleanup",
+      "rollback": "Git revert if tests fail. Characterize current temp file cleanup before fixing."
+    }
+  ],
+  "validation_strategy": {
+    "test_approach": "Characterization tests for each change before applying fixes (RED phase)",
+    "rollback_trigger": "Test failures or syntax errors",
+    "validation_tools": ["pytest", "py_compile"]
+  },
+  "next_sessions": [
+    {
+      "session": 2,
+      "focus": "P1: Error handling and performance (5 issues)",
+      "estimated_effort_hours": 4.0
+    },
+    {
+      "session": 3,
+      "focus": "P2: DRY violations (5 issues)",
+      "estimated_effort_hours": 3.0
+    },
+    {
+      "session": 4,
+      "focus": "P3: Conventions (1 issue)",
+      "estimated_effort_hours": 0.5
+    }
+  ]
+}

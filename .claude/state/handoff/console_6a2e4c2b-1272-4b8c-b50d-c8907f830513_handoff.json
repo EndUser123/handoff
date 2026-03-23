@@ -1,0 +1,99 @@
+{
+  "resume_snapshot": {
+    "schema_version": 2,
+    "snapshot_id": "0484663d-c1d3-4927-b259-6ed3cd1b8d5a",
+    "terminal_id": "console_6a2e4c2b-1272-4b8c-b50d-c8907f830513",
+    "source_session_id": "03d3fe42-01b4-4854-a18f-87554b6c7edd",
+    "created_at": "2026-03-23T16:01:22.842678+00:00",
+    "expires_at": "2026-03-23T16:21:22.842678+00:00",
+    "status": "pending",
+    "goal": "There's no commonality between them, other than they are hooks?",
+    "current_task": "There's no commonality between them, other than they are hooks?",
+    "progress_percent": 35,
+    "progress_state": "ready",
+    "blockers": [],
+    "active_files": [
+      "P:\\.claude\\skills\\arch\\resources\\fast.md",
+      "C:\\Users\\brsth\\Downloads\\✳ Claude Code.txt",
+      "P:\\.claude\\hooks\\StopHook_skill_execution_gate.py",
+      "P:\\.claude\\hooks\\CLAUDE.md",
+      "C:\\Users\\brsth\\.claude\\projects\\P--\\memory\\hook_architecture.md",
+      "C:\\Users\\brsth\\.claude\\projects\\P--\\memory\\feedback_skill_first_slash_commands.md",
+      "P:\\.claude\\arch_decisions\\ADR-20260323-hook-friction-reduction.md"
+    ],
+    "pending_operations": [],
+    "next_step": "You're correct. I claimed \"truly independent\" without verifying. I can see now they share **structural commonality**:",
+    "decision_refs": [
+      "dec_537d578fac114d76ab5970ef6ee6ae8c"
+    ],
+    "evidence_refs": [
+      "ev_5227f54e53a74242a2df82764d39267b",
+      "ev_a7755bb76fe54a1c932ad8ad23af2f0d",
+      "ev_114f3b761ae34e1f9e8301e62020acb8",
+      "ev_247b91a04ace416e8d75e0484e56806d",
+      "ev_72f8545c640048c4bf380636662e743f",
+      "ev_3f691e44b6da4e31bd8c40589656a25e"
+    ],
+    "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\03d3fe42-01b4-4854-a18f-87554b6c7edd.jsonl",
+    "message_intent": "question"
+  },
+  "decision_register": [
+    {
+      "id": "dec_537d578fac114d76ab5970ef6ee6ae8c",
+      "kind": "constraint",
+      "summary": "Will your solution address issues like: \" ⎿ Stop says: ⚠️ Lazy closure pattern detected: **lazy_fix** Matched: `bypass ` Lazy fix detected. Does this address root cause or just patch symptoms?\" \" ● Ran 2 stop hooks (ctrl+o to expand) ⎿ Stop hook error: **Unverified Negative Existence Claim Detected** The response claims file(s)/resource(s) don't exist without evidence of verification tools used this turn. - Claimed: \"there's no separate\" (file_claim) Before claiming something doesn't exist, verify it: use Read, Glob, Grep, or Bash (ls/find/git ls-files) first. Searched for 1 pattern, read 1 file (ctrl+o to expand)\"",
+      "details": "Will your solution address issues like: \" ⎿ Stop says: ⚠️ Lazy closure pattern detected: **lazy_fix** Matched: `bypass ` Lazy fix detected. Does this address root cause or just patch symptoms?\" \" ● Ran 2 stop hooks (ctrl+o to expand) ⎿ Stop hook error: **Unverified Negative Existence Claim Detected** The response claims file(s)/resource(s) don't exist without evidence of verification tools used this turn. - Claimed: \"there's no separate\" (file_claim) Before claiming something doesn't exist, verify it: use Read, Glob, Grep, or Bash (ls/find/git ls-files) first. Searched for 1 pattern, read 1 file (ctrl+o to expand)\"",
+      "priority": "high",
+      "applies_when": "Continue the current task after compact.",
+      "source_refs": [
+        "ev_5227f54e53a74242a2df82764d39267b"
+      ],
+      "bridge_token": "BRIDGE_20260323-160122_WILL_YOUR_SOLUTION_A"
+    }
+  ],
+  "evidence_index": [
+    {
+      "id": "ev_5227f54e53a74242a2df82764d39267b",
+      "type": "transcript",
+      "label": "Current compact transcript",
+      "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\03d3fe42-01b4-4854-a18f-87554b6c7edd.jsonl",
+      "content_hash": "sha256:1b71540396139925b2b364ea6def7dd2d723683f0214c8b721d705e416b0dafc"
+    },
+    {
+      "id": "ev_a7755bb76fe54a1c932ad8ad23af2f0d",
+      "type": "file",
+      "label": "fast.md",
+      "path": "P:\\.claude\\skills\\arch\\resources\\fast.md",
+      "content_hash": "sha256:728cff94ce5396b31b551d22cbd522db15ebf85fd6da44775f3fd9745be10549"
+    },
+    {
+      "id": "ev_114f3b761ae34e1f9e8301e62020acb8",
+      "type": "file",
+      "label": "✳ Claude Code.txt",
+      "path": "C:\\Users\\brsth\\Downloads\\✳ Claude Code.txt",
+      "content_hash": "sha256:714da53a873ad8fd79c0e5094da43ec70cb0d5152b587f22848ad380dbd26150"
+    },
+    {
+      "id": "ev_247b91a04ace416e8d75e0484e56806d",
+      "type": "file",
+      "label": "StopHook_skill_execution_gate.py",
+      "path": "P:\\.claude\\hooks\\StopHook_skill_execution_gate.py",
+      "content_hash": "sha256:d714457a3cc6c3c509e16d74115b2b25bd8896f1c8453be926bb8301b1164811"
+    },
+    {
+      "id": "ev_72f8545c640048c4bf380636662e743f",
+      "type": "file",
+      "label": "CLAUDE.md",
+      "path": "P:\\.claude\\hooks\\CLAUDE.md",
+      "content_hash": "sha256:f0364d3c49a0eb8955da84b734ac94842f5a33f74f998e8040a7c84c4c917aba"
+    },
+    {
+      "id": "ev_3f691e44b6da4e31bd8c40589656a25e",
+      "type": "file",
+      "label": "hook_architecture.md",
+      "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\memory\\hook_architecture.md",
+      "content_hash": "sha256:38ca773a9ba6fc26c2dcd385083fb30f534ad3e8e7a102600cee6bac6ff8c45f"
+    }
+  ],
+  "checksum": "sha256:0f16ffc5443b8ccc2dfb9a5839748c710ad7cf3db23d09ee38ab950536ef6bf8"
+}

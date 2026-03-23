@@ -1,0 +1,39 @@
+{
+  "handoff": {
+    "agent_name": "adversarial-qa",
+    "workflow": "/adversarial-review",
+    "status": "SUCCESS",
+    "timestamp": "2025-03-22T12:00:00Z",
+    "session_id": "handoff-qa-review-20260322",
+    "terminal_id": "adversarial-qa-review"
+  },
+  "summary": {
+    "overall_assessment": "The handoff package has strong test coverage for happy paths (103 tests passing) but critical gaps in adversarial scenarios: restore policy edge cases, multi-terminal race conditions, error recovery paths, and checksum validation failure modes lack comprehensive testing. Several P0 TOCTOU issues are documented but only characterized, not verified fixed. Evidence freshness validation lacks unit tests for boundary conditions.",
+    "systemic_issues": true,
+    "confidence_level": "high"
+  },
+  "findings": [
+    {
+      "id": "QA-001",
+      "severity": "high",
+      "location": "P:/packages/handoff/scripts/hooks/__lib/handoff_v2.py:446-479",
+      "problem": "restore policy testability gaps - evaluate_for_restore() lacks unit tests for boundary conditions and edge cases",
+      "adversarial_scenario": "Scenario 1: Snapshot expires exactly at freshness window boundary (expires_at == now). Code uses <= comparison at line 472, but no test verifies this boundary behavior. Scenario 2: Non-compact source (e.g., startup, resume) bypasses restore - only one integration test (line 123-143) covers this. Scenario 3: Missing source field defaults to None, causing restore rejection - no test for this implicit rejection path.",
+      "impact": "Untested restore policy edge cases could allow incorrect restoration (stale data) or incorrect rejection (fresh data) in production, leading to data loss or security issues.",
+      "recommendation": "Add unit tests for evaluate_for_restore(): 1) Test expires_at == now boundary (should reject), 2) Test all non-compact source values, 3) Test missing/None source field, 4) Test terminal_id mismatch rejection, 5) Test status != pending rejection paths."
+    },
+    {
+      "id": "QA-002",
+      "severity": "high",
+      "location": "P:/packages/handoff/scripts/hooks/__lib/handoff_v2.py:482-534",
+      "problem": "Evidence freshness validation lacks comprehensive unit tests - verify_evidence_freshness() has no dedicated test file",
+      "adversarial_scenario": "Scenario 1: Evidence file deleted after capture - verify_evidence_freshness returns snapshot evidence missing but no test verifies this path. Scenario 2: Evidence file modified (hash mismatch) - returns snapshot evidence changed but only integration test at line 211-236 covers this. Scenario 3: Evidence path outside project root (path traversal attack) - line 516-523 validates this but no unit test for the security check. Scenario 4: Concurrent modification during hash computation (TOCTOU P0-005) - documented in test_p0_characterization.py but fix verification is missing.",
+      "impact": "Missing test coverage for evidence freshness validation means security fixes (SEC-001 path traversal, P0-005 TOCTOU) are not verified working. Adversaries could exploit stale or tampered evidence if validation fails silently.",
+      "recommendation": "Create test_evidence_freshness.py with unit tests: 1) Test missing evidence file rejection, 2) Test modified evidence hash mismatch, 3) Test path traversal rejection (SEC-001), 4) Test resolved path hashing (P0-005 fix), 5) Test non-evidence types (log, git) are skipped, 6) Test project_root=None graceful handling."
+    }
+  ],
+  "open_questions": [
+    "Are the P0 TOCTOU fixes (P0-001, P0-003, P0-005) actually implemented in production code?",
+    "Why does test_p0_characterization.py exist as a separate file instead of converting to fix verification tests?"
+  ]
+}

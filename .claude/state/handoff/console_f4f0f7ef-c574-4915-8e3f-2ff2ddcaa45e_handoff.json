@@ -1,0 +1,103 @@
+{
+  "resume_snapshot": {
+    "schema_version": 2,
+    "snapshot_id": "6a1b0094-0c29-4a24-9961-49ce30c3281d",
+    "terminal_id": "console_f4f0f7ef-c574-4915-8e3f-2ff2ddcaa45e",
+    "source_session_id": "c372d0e1-8ab3-472a-b4a6-a9ad91ff5171",
+    "created_at": "2026-03-21T21:42:50.320769+00:00",
+    "expires_at": "2026-03-21T22:02:50.320769+00:00",
+    "status": "pending",
+    "goal": "But you didn't do it. It didn't work.  How do you make it work reliably?",
+    "current_task": "But you didn't do it. It didn't work. How do you make it work reliably?",
+    "progress_percent": 35,
+    "progress_state": "ready",
+    "blockers": [],
+    "active_files": [
+      "P:/.claude/skills/s/scripts/cli_models.py",
+      "P:/.claude/skills/s/scripts/run_heavy.py",
+      "P:/.claude/skills/s/scripts/display.py",
+      "P:/.claude/skills/s/scripts/leaderboard_registry.py",
+      "C:\\Users\\brsth\\.claude\\projects\\P--\\c372d0e1-8ab3-472a-b4a6-a9ad91ff5171\\tool-results\\bcjipwb2z.txt",
+      "P:\\.claude\\skills\\s\\scripts\\leaderboard_registry.py",
+      "P:\\.claude\\skills\\s\\scripts\\test_arena_scrape.py",
+      "P:\\.claude\\skills\\s\\scripts\\test_arena_integration.py",
+      "P:\\.claude\\skills\\s\\scripts\\display.py",
+      "C:\\Users\\brsth\\AppData\\Local\\Temp\\claude\\P--\\5d7a22ff-0f06-49b7-a66f-157d0b005f90\\tasks\\bcrt0ddgp.output"
+    ],
+    "pending_operations": [],
+    "next_step": "Now the model selection display always shows, even when no models match the leaderboard. Let me verify:",
+    "decision_refs": [
+      "dec_a7682ffaca634e858ecdbc30da9c085b"
+    ],
+    "evidence_refs": [
+      "ev_956716f19137464cb368a146139df7f6",
+      "ev_040950bc044440979a0a16496ea0c73c",
+      "ev_db5199eb752b4788b51529651ef9f336",
+      "ev_77eed6d4755541a5a5a9892526ec31e6",
+      "ev_0c6edeb96cc04183ad12b2827a2071ad",
+      "ev_989a46726b524a50a502f01c9d69a305"
+    ],
+    "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\c372d0e1-8ab3-472a-b4a6-a9ad91ff5171.jsonl",
+    "message_intent": "question",
+    "quality_score": 0.55
+  },
+  "decision_register": [
+    {
+      "id": "dec_a7682ffaca634e858ecdbc30da9c085b",
+      "kind": "constraint",
+      "summary": "Found the bug. When `ranked_models` is empty (no models matched the leaderboard), the code returns early at line 820, so you never see \"0 – Use the Recommended models.\" Let me fix this:",
+      "details": "Found the bug. When `ranked_models` is empty (no models matched the leaderboard), the code returns early at line 820, so you never see \"0 – Use the Recommended models.\" Let me fix this:",
+      "priority": "high",
+      "applies_when": "Continue the current task after compact.",
+      "source_refs": [
+        "ev_956716f19137464cb368a146139df7f6"
+      ],
+      "bridge_token": "BRIDGE_20260321-214250_FOUND_THE_BUG_WHEN_"
+    }
+  ],
+  "evidence_index": [
+    {
+      "id": "ev_956716f19137464cb368a146139df7f6",
+      "type": "transcript",
+      "label": "Current compact transcript",
+      "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\c372d0e1-8ab3-472a-b4a6-a9ad91ff5171.jsonl",
+      "content_hash": "sha256:a4df5a95e2358bbbe2e4c48105b88bf4adedaff26585207ffcdf0ebb9aef70eb"
+    },
+    {
+      "id": "ev_040950bc044440979a0a16496ea0c73c",
+      "type": "file",
+      "label": "cli_models.py",
+      "path": "P:\\.claude\\skills\\s\\scripts\\cli_models.py",
+      "content_hash": "sha256:5b23d04031d2fc301bfc12ecddec18d1a5ef4d372cf5e270324beeabc2ea162d"
+    },
+    {
+      "id": "ev_db5199eb752b4788b51529651ef9f336",
+      "type": "file",
+      "label": "run_heavy.py",
+      "path": "P:\\.claude\\skills\\s\\scripts\\run_heavy.py",
+      "content_hash": "sha256:aa62d6ae3e042a4f168275eb3f6afd70bdfbd58e25094f43f627c3fe9448c6ac"
+    },
+    {
+      "id": "ev_77eed6d4755541a5a5a9892526ec31e6",
+      "type": "file",
+      "label": "display.py",
+      "path": "P:\\.claude\\skills\\s\\scripts\\display.py",
+      "content_hash": "sha256:ebec34009ce14090af278327b63ca2cdbaa1dc1ac31301089002c814d01bf845"
+    },
+    {
+      "id": "ev_0c6edeb96cc04183ad12b2827a2071ad",
+      "type": "file",
+      "label": "leaderboard_registry.py",
+      "path": "P:\\.claude\\skills\\s\\scripts\\leaderboard_registry.py",
+      "content_hash": "sha256:1a077196d98b8ef6203bd3b29c8bf82158114f1df052afd8057bedbc4e63f7e1"
+    },
+    {
+      "id": "ev_989a46726b524a50a502f01c9d69a305",
+      "type": "file",
+      "label": "bcjipwb2z.txt",
+      "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\c372d0e1-8ab3-472a-b4a6-a9ad91ff5171\\tool-results\\bcjipwb2z.txt",
+      "content_hash": "sha256:7c9fce8c08b442ad716c5f254d82c53ac6c7b0582873b6faa87505a67a0de737"
+    }
+  ],
+  "checksum": "sha256:a7b58cb3612162f2c278fd83b985a1452999bbc9d120ceaa9e003226032bd49e"
+}

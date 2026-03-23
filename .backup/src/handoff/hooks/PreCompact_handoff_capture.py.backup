@@ -1,0 +1,985 @@
+#!/usr/bin/env python3
+"""
+PreCompact Handoff Capture - Full Implementation
+===============================================
+
+Captures complete session state before transcript compaction.
+Preserves user intent, visual context, incomplete operations, and workflow state.
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+import re
+import sys
+from datetime import UTC, datetime
+from pathlib import Path
+
+# Configure logging for handoff capture
+logger = logging.getLogger(__name__)
+
+# Add handoff package to path
+HANDOFF_PACKAGE = Path("P:/packages/handoff/src")
+if HANDOFF_PACKAGE.exists() and str(HANDOFF_PACKAGE) not in sys.path:
+    sys.path.insert(0, str(HANDOFF_PACKAGE))
+
+from handoff.hooks.__lib.transcript import (
+    TranscriptParser,
+    extract_last_substantive_user_message,
+)
+
+# Session type detection patterns
+SESSION_PATTERNS = {
+    "planning": {
+        "keywords": [r"/plan-workflow", r"/arch", r"/breakdown", r"/design", r"\bplan\b", r"\barchitecture\b"],
+        "files": [r"plan-.*\.md", r"docs/plans/", r"\.claude/hooks/plans/"],
+        "emoji": "📋"
+    },
+    "debug": {
+        "keywords": [r"\bfix\b", r"\bbug\b", r"\berror\b", r"\bbroken\b", r"\bfails\b", r"\bcrash\b"],
+        "files": [r"error\.log", r"traceback\.txt", r".*\.err"],
+        "emoji": "🐛"
+    },
+    "feature": {
+        "keywords": [r"\badd\b", r"\bimplement\b", r"\bcreate\b", r"\bbuild\b", r"\bnew\b"],
+        "files": [r"src/.*", r"lib/.*"],
+        "emoji": "✨"
+    },
+    "refactor": {
+        "keywords": [r"\brefactor\b", r"\bclean up\b", r"\bsimplify\b", r"\boptimize\b"],
+        "files": [r".*\.py"],  # Existing Python files
+        "emoji": "🔧"
+    },
+    "test": {
+        "keywords": [r"\btest\b", r"\bverify\b", r"\bcoverage\b", r"\bassert\b"],
+        "files": [r"test_.*\.py", r".*_test\.py", r"pytest\.ini"],
+        "emoji": "🧪"
+    },
+    "docs": {
+        "keywords": [r"\bdocument\b", r"\breadme\b", r"\bcomment\b", r"\bexplain\b"],
+        "files": [r".*\.md", r"README.*", r"docs/.*"],
+        "emoji": "📝"
+    }
+}
+
+
+def detect_session_type(user_message: str, active_files: list[str]) -> tuple[str, str]:
+    """Detect session type using dual-signal system (message + files).
+
+    Args:
+        user_message: Last user message
+        active_files: List of active file paths
+
+    Returns:
+        Tuple of (session_type, emoji)
+    """
+    message_lower = user_message.lower()
+
+    # Score each session type
+    scores = {}
+    for session_type, patterns in SESSION_PATTERNS.items():
+        score = 0
+
+        # Check keyword patterns in message
+        for keyword_pattern in patterns["keywords"]:
+            if re.search(keyword_pattern, message_lower, re.IGNORECASE):
+                score += 1
+
+        # Check file patterns
+        for file_pattern in patterns["files"]:
+            regex = re.compile(file_pattern)
+            for file_path in active_files:
+                if regex.search(file_path):
+                    score += 1
+                    break  # Only count each file once per pattern
+
+        scores[session_type] = score
+
+    # Find highest score
+    max_score = max(scores.values())
+
+    if max_score == 0:
+        return "unknown", "❓"
+
+    # Check for mixed signals (exact tie or very close scores)
+    sorted_scores = sorted(scores.values(), reverse=True)
+    if len(sorted_scores) >= 2 and sorted_scores[1] == max_score:
+        return "mixed", "🔀"
+
+    # Return session type with highest score
+    for session_type, score in scores.items():
+        if score == max_score:
+            return session_type, SESSION_PATTERNS[session_type]["emoji"]
+
+    return "unknown", "❓"
+
+
+def detect_planning_session(user_message: str, active_files: list[str]) -> dict | None:
+    """Detect if this is a planning session and create blocker.
+
+    Args:
+        user_message: Last user message
+        active_files: List of active file paths
+
+    Returns:
+        Blocker dict if planning session detected, None otherwise
+    """
+    message_lower = user_message.lower()
+
+    # Check for planning commands or keywords
+    planning_commands = ["/plan-workflow", "/arch", "/breakdown", "/design"]
+    planning_keywords = [r"\bplan\b", r"\barchitecture\b", r"\bdesign\b", r"\bbreakdown\b"]
+
+    has_command = any(cmd in user_message for cmd in planning_commands)
+    has_keyword = any(re.search(kw, message_lower) for kw in planning_keywords)
+
+    # Check for plan files
+    has_plan_files = any(
+        re.match(r"plan-.*\.md$", f) or
+        "docs/plans/" in f or
+        ".claude/hooks/plans/" in f
+        for f in active_files
+    )
+
+    if has_command or (has_keyword and has_plan_files):
+        # Extract the invoked command
+        invoked_command = None
+        for cmd in planning_commands:
+            if cmd in user_message:
+                # Extract the full command line
+                match = re.search(re.escape(cmd) + r"[^\n]*", user_message)
+                if match:
+                    invoked_command = match.group(0).strip()
+                break
+
+        if not invoked_command and has_command:
+            # Fallback: use first command found
+            for cmd in planning_commands:
+                if cmd in user_message:
+                    invoked_command = cmd
+                    break
+
+        return {
+            "type": "awaiting_approval",
+            "reason": "Plan has been created but NOT approved. DO NOT proceed with implementation until user reviews.",
+            "invoked_command": invoked_command or user_message[:100],  # Truncate if needed
+            "detected_at": datetime.now(UTC).isoformat()
+        }
+
+    return None
+
+
+def extract_pending_operations(transcript_lines: list[str]) -> list[dict]:
+    """Extract incomplete operations from transcript.
+
+    Args:
+        transcript_lines: Recent transcript lines
+
+    Returns:
+        List of pending operation dicts
+    """
+    pending = []
+
+    # Look for patterns indicating incomplete operations
+    for i, line in enumerate(transcript_lines[-50:]):  # Check last 50 lines
+        line_lower = line.lower()
+
+        # Incomplete edits
+        if re.search(r"edited|modified|updated", line_lower):
+            if not re.search(r"verified|tested|confirmed", line_lower):
+                # Extract file path if present
+                file_match = re.search(r"([a-zA-Z]:\\[^ :]+" + r"|[^:]+" + r"/[^:]+)", line)
+                if file_match:
+                    pending.append({
+                        "type": "edit",
+                        "target": file_match.group(1),
+                        "status": "edited but not verified",
+                        "context": line.strip()[:200]
+                    })
+
+        # Incomplete tests
+        if re.search(r"test.*\.(py|js|ts)", line_lower):
+            if not re.search(r"passed|failed|assert|pytest", line_lower):
+                test_match = re.search(r"(\w+test\.\w+|test_\w+\.\w+)", line_lower)
+                if test_match:
+                    pending.append({
+                        "type": "test",
+                        "target": test_match.group(1),
+                        "status": "mentioned but not run",
+                        "context": line.strip()[:200]
+                    })
+
+        # Incomplete reads (partial investigation)
+        if re.search(r"read|grep|search|find", line_lower):
+            if "..." in line or "continue" in line_lower:
+                pending.append({
+                    "type": "read",
+                    "target": "investigation",
+                    "status": "partial investigation",
+                    "context": line.strip()[:200]
+                })
+
+        # Background commands
+        if re.search(r"background|running|started", line_lower):
+            cmd_match = re.search(r"`([^`]+)`", line)
+            if cmd_match:
+                pending.append({
+                    "type": "command",
+                    "target": cmd_match.group(1),
+                    "status": "still running",
+                    "context": line.strip()[:200]
+                })
+
+    return pending[:10]  # Limit to 10 most recent
+
+
+def extract_visual_context(transcript_lines: list[str]) -> list[dict]:
+    """Extract visual context (images, screenshots) from transcript.
+
+    Args:
+        transcript_lines: Recent transcript lines
+
+    Returns:
+        List of visual context entries
+    """
+    visual_context = []
+
+    for line in transcript_lines[-50:]:
+        # Look for image references or screenshot mentions
+        if re.search(r"!\[.*?\]\(|screenshot|image|\.png|\.jpg", line, re.IGNORECASE):
+            # Extract image path if present
+            img_match = re.search(r"!\[.*?\]\(([^)]+)\)", line)
+            if img_match:
+                visual_context.append({
+                    "type": "image",
+                    "path": img_match.group(1),
+                    "context": line.strip()[:200]
+                })
+            else:
+                # Screenshot mentioned
+                visual_context.append({
+                    "type": "screenshot",
+                    "context": line.strip()[:200]
+                })
+
+    return visual_context[:5]  # Limit to 5 most recent
+
+
+def derive_canonical_goal(user_message: str) -> str:
+    """Derive a canonical goal from the user message.
+
+    Normalizes long or chatty user messages into a single, precise instruction.
+    This improves the Goal section in the restoration message.
+
+    Args:
+        user_message: The raw user message from transcript
+
+    Returns:
+        Canonical goal string (one-line, focused instruction)
+    """
+    if not user_message or user_message == "No recent user message found":
+        return "Unknown task"
+
+    # Remove common meta-chatter prefixes
+    meta_prefixes = [
+        r"^can you\s+",
+        r"^could you\s+",
+        r"^please\s+",
+        r"^i need\s+",
+        r"^i want\s+",
+        r"^help me\s+",
+    ]
+
+    cleaned = user_message.strip()
+    for prefix in meta_prefixes:
+        cleaned = re.sub(prefix, "", cleaned, flags=re.IGNORECASE).strip()
+
+    # Extract the core instruction (first sentence or first 200 chars)
+    # Split on sentence boundaries
+    sentences = re.split(r'[.!?]+', cleaned)
+    if sentences:
+        core = sentences[0].strip()
+    else:
+        core = cleaned[:200]
+
+    # Remove trailing filler words
+    core = re.sub(r'\s+(thanks|thank you|please)$', '', core, flags=re.IGNORECASE).strip()
+
+    # If still too long, truncate at word boundary
+    if len(core) > 220:
+        core = core[:220].rsplit(' ', 1)[0] + '...'
+
+    return core or user_message[:220]  # Fallback to truncated original
+
+
+def select_primary_files(active_files: list[str]) -> list[dict]:
+    """Select primary files and infer their roles.
+
+    Tags files with heuristic roles: entrypoint, tests, config, experiment.
+    This makes the Current Focus section more useful in restoration.
+
+    Args:
+        active_files: List of file paths from tool usage
+
+    Returns:
+        List of dicts with path and role
+    """
+    if not active_files:
+        return []
+
+    primary_with_roles = []
+
+    for file_path in active_files[:10]:  # Limit to top 10
+        role = "code"  # Default role
+
+        # Infer roles from path patterns
+        path_lower = file_path.lower()
+
+        # Test files
+        if re.search(r'test_\w+\.py|_\w+_test\.py|test.*\.py', path_lower):
+            role = "tests"
+        elif re.search(r'\.test\.\w+$|spec\.\w+$', path_lower):
+            role = "tests"
+
+        # Config files
+        elif re.search(r'config|settings|\.env|\.ini|\.toml|\.yaml|\.yml|\.json', path_lower):
+            role = "config"
+
+        # Experiment/temporary files
+        elif re.search(r'_exp\.|exp_|scratch|tmp|temp', path_lower):
+            role = "experiment"
+
+        # Entrypoint files (main, index, __init__)
+        elif re.search(r'__main__|main\.\w+|index\.\w+|__init__\.py', path_lower):
+            role = "entrypoint"
+
+        # Docs
+        elif re.search(r'readme|\.md$|docs/', path_lower):
+            role = "docs"
+
+        primary_with_roles.append({
+            "path": file_path,
+            "role": role
+        })
+
+    return primary_with_roles
+
+
+def extract_session_decisions(transcript: str) -> list[dict]:
+    """Extract session decisions from transcript.
+
+    Looks for:
+    - Explicit decision records
+    - User approval messages ("OK, proceed with X")
+    - Architecture/design decisions
+
+    Args:
+        transcript: Transcript string
+
+    Returns:
+        List of decision dicts with topic and rationale
+    """
+    decisions = []
+
+    if not transcript:
+        return decisions
+
+    lines = transcript.split("\n")
+
+    # Pattern 1: User approval messages ("OK, proceed with X", "Let's do Y")
+    approval_patterns = [
+        r'^(ok|good|yes|let\'s|proceed|go ahead)',
+        r'^(i agree|sounds good|that works)'
+    ]
+
+    for line in lines[-30:]:  # Check last 30 lines
+        line_lower = line.strip().lower()
+
+        # Check for approval
+        for pattern in approval_patterns:
+            if re.search(pattern, line_lower, re.IGNORECASE):
+                # Extract what they're approving
+                match = re.search(r'(proceed|do|go ahead with|implement)\s+(.+)', line, re.IGNORECASE)
+                if match:
+                    topic = "User approval"
+                    rationale = match.group(2).strip()[:200]
+                    if rationale:
+                        decisions.append({
+                            "topic": topic,
+                            "rationale": rationale
+                        })
+                        break
+
+        # Pattern 2: Explicit decision statements
+        if re.search(r'^(decision|we decided|going with|chose)', line_lower, re.IGNORECASE):
+            topic = "Decision"
+            rationale = line.strip()[:200]
+            decisions.append({
+                "topic": topic,
+                "rationale": rationale
+            })
+
+    return decisions[:5]  # Limit to 5 most recent decisions
+
+
+def build_do_not_revisit(decisions: list[dict], transcript: str) -> list[dict]:
+    """Build do_not_revisit list from strong constraints and expensive decisions.
+
+    Selection criteria:
+    - Constraints with strong language ("must", "must not", "never", "always")
+    - Final decisions marked as expensive/architecture-level
+    - Max 8 items (high-signal subset, covers realistic session complexity)
+
+    Args:
+        decisions: List of decision dicts from extract_session_decisions()
+        transcript: Full transcript string for context (currently unused, kept for future enhancement)
+
+    Returns:
+        List of decision dicts with topic, rationale, reason fields
+    """
+    do_not_revisit = []
+    strong_language_patterns = [
+        r"\bmust\b",
+        r"\bmust not\b",
+        r"\bnever\b",
+        r"\balways\b",
+        r"\brequirement\b",
+        r"\bmandatory\b"
+    ]
+
+    # Check most recent 10 decisions for strong constraints or expensive markers
+    for decision in decisions[:10]:
+        # Skip non-dict decisions
+        if not isinstance(decision, dict):
+            continue
+
+        rationale = decision.get("rationale", "")
+        topic = decision.get("topic", "")
+
+        # Skip if missing required fields
+        if not rationale or not topic:
+            continue
+
+        # Check for strong language patterns
+        has_strong_language = any(
+            re.search(pattern, rationale, re.IGNORECASE)
+            for pattern in strong_language_patterns
+        )
+
+        # Check for expensive/architecture markers
+        is_expensive = any(
+            keyword in rationale.lower()
+            for keyword in ["architecture", "design", "expensive", "requires approval"]
+        )
+
+        # Add to do_not_revisit if strong language or expensive marker found
+        if has_strong_language or is_expensive:
+            do_not_revisit.append({
+                "topic": topic,
+                "rationale": rationale,
+                "reason": "strong_constraint" if has_strong_language else "expensive_decision"
+            })
+
+        # Limit to 8 items (high-signal subset)
+        # Covers realistic session complexity while preventing unlimited growth
+        if len(do_not_revisit) >= 8:
+            break
+
+    return do_not_revisit
+
+
+def ensure_meaningful_next_steps(
+    next_steps: list,
+    pending_operations: list[dict],
+    user_message: str
+) -> list[dict]:
+    """Ensure next_steps[0] is always meaningful.
+
+    If no plan exists, synthesize a minimal step from:
+    1. First existing next_step
+    2. Most recent PendingOperation
+    3. Fallback to asking user
+
+    Args:
+        next_steps: Current next_steps list
+        pending_operations: List of pending operations
+        user_message: Original user message for context
+
+    Returns:
+        List of next_step dicts with at least one meaningful entry
+    """
+    # If we already have good next_steps, return them
+    if next_steps:
+        # Ensure they're dicts with description field
+        normalized = []
+        for step in next_steps[:5]:
+            if isinstance(step, dict):
+                normalized.append(step)
+            else:
+                normalized.append({"description": str(step)})
+        return normalized
+
+    # No next_steps - try to synthesize from pending operations
+    if pending_operations:
+        op = pending_operations[0]
+        op_type = op.get("type", "operation")
+        target = op.get("target", "unknown")
+        status = op.get("status", "")
+
+        description = f"Complete the {op_type} on {target}"
+        if status and status != "in_progress":
+            description += f" (currently: {status})"
+
+        return [{"description": description}]
+
+    # No pending ops - derive from user message
+    if user_message and user_message != "No recent user message found":
+        # Extract action verb and object
+        goal = derive_canonical_goal(user_message)
+        return [{"description": f"Work on: {goal}"}]
+
+    # Fallback
+    return [{"description": "Ask the user what the next concrete step should be"}]
+
+
+def extract_skill_invocations(transcript: str, transcript_path: str | None = None) -> list[dict]:
+    """Extract Skill tool invocations from transcript.
+
+    Args:
+        transcript: Transcript string (JSON format)
+        transcript_path: Optional path to transcript file for detailed parsing
+
+    Returns:
+        List of skill invocation dicts with skill_name, args, context
+    """
+    skill_invocations = []
+
+    # Try to use TranscriptParser if we have a file path
+    if transcript_path:
+        try:
+            parser = TranscriptParser(transcript_path)
+            skill_invocations = parser.extract_skill_invocations()
+            if skill_invocations:
+                return skill_invocations
+        except Exception:
+            # Fall back to string parsing if TranscriptParser fails
+            pass
+
+    # Fallback: Parse transcript string directly for Skill tool uses
+    if transcript:
+        try:
+            # Parse JSON transcript
+            import json as json_lib
+            transcript_data = json_lib.loads(transcript)
+
+            # Handle both list and dict formats
+            entries = transcript_data if isinstance(transcript_data, list) else transcript_data.get("conversation", [])
+
+            # Scan for Skill tool uses
+            for entry in entries:
+                if isinstance(entry, dict) and entry.get("type") == "tool_use" and entry.get("name") == "Skill":
+                    input_data = entry.get("input", {})
+                    if not input_data:
+                        continue
+
+                    skill_name = input_data.get("skill")
+                    args = input_data.get("args", "")
+                    timestamp = entry.get("timestamp", "")
+
+                    if skill_name:
+                        # Extract context from surrounding conversation
+                        context = _extract_skill_context_from_entries(entry, entries)
+
+                        skill_invocations.append({
+                            "skill_name": skill_name,
+                            "args": args[:200] if args else "",
+                            "timestamp": timestamp,
+                            "context": context
+                        })
+
+        except (json_lib.JSONDecodeError, KeyError, TypeError):
+            # If JSON parsing fails, return empty list
+            pass
+
+    return skill_invocations[:5]  # Limit to 5 most recent skill invocations
+
+
+def _extract_skill_context_from_entries(skill_entry: dict, all_entries: list) -> str:
+    """Extract context for a skill invocation from surrounding entries.
+
+    Args:
+        skill_entry: The tool_use entry for the Skill invocation
+        all_entries: All transcript entries
+
+    Returns:
+        Context description string (max 150 chars)
+    """
+    try:
+        # Find the position of the skill entry
+        skill_index = -1
+        for i, entry in enumerate(all_entries):
+            if entry == skill_entry:
+                skill_index = i
+                break
+
+        if skill_index == -1:
+            return ""
+
+        # Look backward for the user message that triggered this skill
+        for i in range(skill_index - 1, max(-1, skill_index - 10), -1):
+            entry = all_entries[i]
+            if isinstance(entry, dict) and entry.get("type") == "user":
+                content = entry.get("content", "")
+                if isinstance(content, str) and content:
+                    # Return first 150 chars as context
+                    return content[:150].strip()
+
+                # Handle content as list (message format)
+                if isinstance(content, list):
+                    for item in content:
+                        if isinstance(item, str) and len(item) > 15:
+                            return item[:150].strip()
+
+    except Exception:
+        pass
+
+    return ""
+
+
+def validate_handoff_internal(handoff_internal: dict) -> list[str]:
+    """Validate handoff_internal structure before saving.
+
+    Checks for:
+    - Required top-level keys
+    - Required nested keys
+    - Non-empty critical fields
+    - Type correctness
+
+    Args:
+        handoff_internal: The handoff_internal structure to validate
+
+    Returns:
+        List of validation error messages (empty if valid)
+    """
+    errors = []
+
+    # Check required top-level keys
+    required_keys = ["session_info", "task", "context", "continuation", "transcript_path"]
+    for key in required_keys:
+        if key not in handoff_internal:
+            errors.append(f"Missing required top-level key: {key}")
+
+    # Validate session_info
+    if "session_info" in handoff_internal:
+        session_info = handoff_internal["session_info"]
+        required_session_keys = ["session_id", "terminal_id", "captured_at", "session_type", "emoji"]
+        for key in required_session_keys:
+            if key not in session_info:
+                errors.append(f"Missing session_info.{key}")
+            elif not session_info[key]:
+                errors.append(f"Empty session_info.{key}")
+
+    # Validate task
+    if "task" in handoff_internal:
+        task = handoff_internal["task"]
+        required_task_keys = ["name", "user_message", "progress_pct"]
+        for key in required_task_keys:
+            if key not in task:
+                errors.append(f"Missing task.{key}")
+            elif key == "name" and not task[key]:
+                errors.append("Empty task.name")
+            elif key == "user_message" and not task[key]:
+                errors.append("Empty task.user_message")
+
+    # Validate context
+    if "context" in handoff_internal:
+        context = handoff_internal["context"]
+        required_context_keys = ["active_files", "pending_operations", "visual_context", "skill_invocations"]
+        for key in required_context_keys:
+            if key not in context:
+                errors.append(f"Missing context.{key}")
+            elif not isinstance(context[key], list):
+                errors.append(f"context.{key} is not a list")
+
+    # Validate continuation
+    if "continuation" in handoff_internal:
+        continuation = handoff_internal["continuation"]
+        if "next_steps" not in continuation:
+            errors.append("Missing continuation.next_steps")
+        elif not isinstance(continuation["next_steps"], list):
+            errors.append("continuation.next_steps is not a list")
+
+    return errors
+
+
+def main():
+    """Main capture function."""
+    try:
+        # Read hook input from stdin
+        input_data = json.loads(sys.stdin.read())
+
+        # Extract session information
+        session_id = input_data.get("sessionId", "")
+        terminal_id = input_data.get("terminalId", "unknown")
+
+        # Get transcript
+        transcript = input_data.get("transcript", "")
+        transcript_lines = transcript.split("\n") if transcript else []
+
+        # Get user message from transcript
+        # Transcript is formatted text with "### User:" and "### Assistant:" markers
+        # We want the FIRST user message (the task), not the last (which might be acknowledgment)
+        user_message = "No recent user message found"  # Default fallback
+
+        if transcript:
+            # Look for first line starting with "### User:" to find the initial task
+            lines = transcript.split("\n")
+            for line in lines:
+                if line.startswith("### User:"):
+                    # Extract text after "### User:" marker
+                    user_message = line.replace("### User:", "").strip()
+                    logger.info(
+                        f"[PreCompact] Found user message in transcript: "
+                        f"{user_message[:100]}{'...' if len(user_message) > 100 else ''}"
+                    )
+                    break
+
+        # Get active files from recent tool usage
+        active_files = []
+        tool_uses = input_data.get("toolUses", [])
+        for tool_use in tool_uses[-20:]:  # Last 20 tool uses
+            tool_input = tool_use.get("input", {})
+            if "file_path" in tool_input:
+                active_files.append(tool_input["file_path"])
+            elif "paths" in tool_input:
+                active_files.extend(tool_input["paths"])
+
+        # Remove duplicates and limit
+        active_files = list(dict.fromkeys(active_files))[:20]
+
+        # NEW: Tag primary files with roles (entrypoint, tests, config, experiment)
+        primary_files_with_roles = select_primary_files(active_files)
+        logger.info(
+            f"[PreCompact] Tagged {len(primary_files_with_roles)} primary files with roles"
+        )
+
+        # Detect session type
+        session_type, emoji = detect_session_type(user_message, active_files)
+
+        # Detect planning session (create blocker if needed)
+        blocker = detect_planning_session(user_message, active_files)
+
+        # Extract pending operations
+        pending_operations = extract_pending_operations(transcript_lines)
+
+        # Extract visual context
+        visual_context = extract_visual_context(transcript_lines)
+
+        # Extract session decisions (NEW: always capture at least one decision)
+        session_decisions = extract_session_decisions(transcript)
+        logger.info(
+            f"[PreCompact] Extracted {len(session_decisions)} session decisions"
+        )
+
+        # NEW: Extract do_not_revisit from strong constraints
+        do_not_revisit = build_do_not_revisit(session_decisions, transcript)
+        logger.info(
+            f"[PreCompact] do_not_revisit: {len(do_not_revisit)} items"
+        )
+
+        # Extract skill invocations (with error handling to prevent silent failures)
+        skill_invocations = []
+        try:
+            transcript_path = input_data.get("transcriptPath")
+            skill_invocations = extract_skill_invocations(transcript, transcript_path)
+
+            # Log silent failure risk: empty results when skills were likely used
+            if not skill_invocations and tool_uses:
+                # Check if any tool_uses were Skill tool invocations
+                has_skill_uses = any(
+                    tool_use.get("name") == "Skill"
+                    for tool_use in tool_uses
+                )
+                if has_skill_uses:
+                    logger.warning(
+                        f"[PreCompact] Skill tool uses detected in transcript but "
+                        f"extract_skill_invocations returned empty list. "
+                        f"Possible parsing failure. "
+                        f"Transcript path: {transcript_path}"
+                    )
+        except Exception as e:
+            # Log error but don't fail the hook - skill_invocations is optional
+            logger.error(
+                f"[PreCompact] Failed to extract skill invocations: {e}. "
+                f"Continuing without skill invocation data."
+            )
+            skill_invocations = []
+
+        # Extract task name from user message or use session type
+        # CRITICAL: Keep full user message as task_name for proper restoration
+        # Don't truncate - the restoration message needs the full context
+        task_name = user_message.split("\n")[0] if user_message else f"{session_type}_session"
+        # Only sanitize obviously problematic characters, preserve the content
+        task_name = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]', '', task_name).strip() or f"{session_type}_session"
+
+        # NEW: Derive canonical goal using improved extraction (Phase 2)
+        # Works backwards from transcript end, skips meta-instructions and side-threads
+        transcript_path = input_data.get("transcriptPath")
+        if transcript_path:
+            try:
+                # Use new extraction method that works backwards and skips meta-instructions
+                last_substantive_msg = extract_last_substantive_user_message(transcript_path)
+                # Apply normalization to the extracted message
+                canonical_goal = derive_canonical_goal(last_substantive_msg)
+                logger.info(
+                    f"[PreCompact] Canonical goal (from substantive message): {canonical_goal[:100]}{'...' if len(canonical_goal) > 100 else ''}"
+                )
+            except Exception as e:
+                # Fallback to original user message if extraction fails
+                logger.warning(f"[PreCompact] Failed to extract substantive message, using user_message: {e}")
+                canonical_goal = derive_canonical_goal(user_message)
+        else:
+            # No transcript path available, use original user message
+            canonical_goal = derive_canonical_goal(user_message)
+
+        # Estimate progress
+        progress_pct = 50  # Default
+        if blocker:
+            progress_pct = 100  # Planning complete
+        elif pending_operations:
+            progress_pct = 30  # Work in progress
+        elif session_type == "unknown":
+            progress_pct = 0
+
+        # Build next steps from recent assistant responses
+        next_steps_raw = []
+        for line in transcript_lines[-20:]:
+            if line.strip().startswith(("- ", "*", "•")):
+                step = line.strip().lstrip("-*• ")
+                if step and len(step) > 10:
+                    next_steps_raw.append(step)
+
+        # NEW: Ensure next_steps[0] is always meaningful
+        # Guarantees Immediate Next Action section is never empty
+        next_steps = ensure_meaningful_next_steps(
+            next_steps_raw,
+            pending_operations,
+            user_message
+        )
+        logger.info(
+            f"[PreCompact] Next steps ensured: {next_steps[0].get('description', 'unknown')[:80]}..."
+        )
+
+        # Build handoff data structure for internal use
+        handoff_internal = {
+            "session_info": {
+                "session_id": session_id,
+                "terminal_id": terminal_id,
+                "captured_at": datetime.now(UTC).isoformat(),
+                "session_type": session_type,
+                "emoji": emoji
+            },
+            "task": {
+                "name": task_name,
+                "user_message": user_message,  # NEVER truncate
+                "canonical_goal": canonical_goal,  # NEW: Normalized goal for restoration
+                "progress_pct": progress_pct,
+                "blocker": blocker
+            },
+            "context": {
+                "active_files": active_files,
+                "primary_files_with_roles": primary_files_with_roles,  # NEW: Files tagged with roles
+                "pending_operations": pending_operations,
+                "visual_context": visual_context,
+                "skill_invocations": skill_invocations
+            },
+            "continuation": {
+                "next_steps": next_steps,
+                "decisions": session_decisions,  # NEW: Always capture at least one decision
+                "do_not_revisit": do_not_revisit  # NEW: Settled decisions that should not be reconsidered
+            },
+            "transcript_path": input_data.get("transcriptPath", "")  # Capture transcript path for restoration
+        }
+
+        # CRITICAL: Validate handoff_internal before saving
+        # This prevents silent failures from malformed data structures
+        validation_errors = validate_handoff_internal(handoff_internal)
+
+        # Separate critical errors from warnings
+        critical_errors = [e for e in validation_errors if "Missing required" in e or "Empty critical" in e]
+        warnings = [e for e in validation_errors if e not in critical_errors]
+
+        if critical_errors:
+            # BLOCKING: Critical errors prevent handoff from being saved
+            error_msg = (
+                f"[PreCompact] BLOCKING: handoff_internal has critical validation errors: {critical_errors}. "
+                f"Session: {session_type}, Task: {task_name[:50]}... "
+                f"Handoff will NOT be saved due to data integrity issues."
+            )
+            logger.error(error_msg)
+            # CRITICAL: Do NOT save handoff with critical errors
+            # This prevents corrupted data from being persisted
+            raise ValueError(f"handoff_internal validation failed (critical): {critical_errors}")
+
+        if warnings:
+            # ADVISORY: Non-critical warnings logged but don't block
+            logger.warning(
+                f"[PreCompact] handoff_internal validation warnings: {warnings}. "
+                f"Session: {session_type}, Task: {task_name[:50]}..."
+            )
+            # Add warnings to context for debugging
+            handoff_internal["validation_warnings"] = warnings
+
+        if not critical_errors and not warnings:
+            logger.info(
+                f"[PreCompact] handoff_internal validated successfully. "
+                f"Session: {session_type} {emoji}, Task: {task_name[:50]}..., "
+                f"Files: {len(active_files)}, Next steps: {len(next_steps)}"
+            )
+
+        # Output success
+        output = {
+            "decision": "allow",
+            "reason": f"Captured handoff for {session_type} session: {task_name}",
+            "additionalContext": (
+                f"✅ Handoff captured: {emoji} {session_type} session saved\n"
+                f"   Task: {task_name}\n"
+                f"   Progress: {progress_pct}%\n"
+                f"   Files: {len(active_files)}\n"
+                f"   Pending ops: {len(pending_operations)}\n"
+                f"   Visual context: {len(visual_context)} items"
+            )
+        }
+
+        if blocker:
+            output["additionalContext"] += f"\n   ⚠️ BLOCKER: {blocker['type']} - awaiting user approval"
+
+        print(json.dumps(output, indent=2))
+        sys.exit(0)
+
+    except ValueError as e:
+        # CRITICAL: Validation errors should NOT be caught here
+        # They are raised for data integrity issues and should propagate
+        # This prevents malformed handoff_internal from being saved
+        error_output = {
+            "decision": "allow",  # Don't block compaction itself
+            "reason": f"Handoff validation failed: {str(e)}",
+            "additionalContext": f"🚫 BLOCKING: {str(e)}\n\nHandoff NOT saved due to critical validation errors."
+        }
+        print(json.dumps(error_output, indent=2))
+        sys.exit(0)  # Exit 0 to not block compaction, but handoff not saved
+
+    except Exception as e:
+        # Error handling for non-validation errors
+        error_output = {
+            "decision": "allow",  # Don't block on capture errors
+            "reason": f"Handoff capture failed: {str(e)}",
+            "additionalContext": f"⚠️ Handoff capture error: {str(e)}"
+        }
+        print(json.dumps(error_output, indent=2))
+        sys.exit(0)  # Exit 0 to not block compaction
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,23 @@
+Handoff is a Claude Code plugin that preserves terminal state across transcript compactions using per-terminal V2 JSON envelopes.
+
+The system consists of two hooks: PreCompact captures state before compaction, and SessionStart restores it on startup.
+
+Each envelope contains a resume snapshot with task progress, a decision register with explicit constraints, an evidence index with file references, and a SHA256 checksum for validation. State is stored in .claude/state/handoff/ with independent files per terminal.
+
+The capture workflow parses the transcript to extract the canonical goal, pending operations, and the next step. It detects session boundaries and topic shifts using a 30 percent semantic similarity threshold.
+
+The restore workflow checks freshness within a 20-minute window and validates the terminal ID matches. SHA256 checksums verify data integrity before injecting context into the new transcript.
+
+The V2 envelope structure uses JSON for validation maturity and parsing speed. The resume snapshot captures current task, progress percentage, blockers array, active files list, pending operations array, and the next step string.
+
+The decision register stores explicit decisions as objects with constraint, settled decision, blocker rule, and anti-goal fields. The evidence index provides file references, transcripts, tests, logs, and git references for context.
+
+SHA256 checksums validate data integrity by hashing the entire envelope except the checksum field itself.
+
+Per-terminal handoff files prevent cross-terminal conflicts. Each terminal gets an independent state file, and the terminal ID enforcement ensures state isolation. Use cases include multiple terminals working on different tasks.
+
+Error handling includes checksum validation for SHA256 mismatches, stale snapshot detection with a 20-minute freshness window, and schema validation enforcing the V2 structure. Status transitions track pending through consumed or rejected states.
+
+The typical workflow is compaction triggers capture, then session start triggers restore, then continuation with preserved context. Verification steps confirm the system is working by checking handoff files exist and contain valid state.
+
+Integration with Claude Code workflows happens through the PreCompact and SessionStart hooks. Handoff provides compact-resume continuity with V2 envelope architecture, SHA256 validation, per-terminal state isolation, and passing tests ensuring reliability.

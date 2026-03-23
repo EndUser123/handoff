@@ -1,0 +1,36 @@
+{
+  "findings": [
+    {
+      "id": "QUAL-001",
+      "file": "scripts/hooks/__lib/parallel_capture.py",
+      "lines": "173-174",
+      "severity": "P1",
+      "category": "docstring",
+      "description": "Import references non-existent module architectural_context",
+      "code": "from scripts.hooks.__lib.architectural_context import",
+      "recommendation": "Change to architecture_capture"
+    }
+  ],
+  "summary": {
+    "total_findings": 25,
+    "by_severity": {
+      "P0": 6,
+      "P1": 4,
+      "P2": 8,
+      "P3": 7
+    },
+    "by_category": {
+      "imports": 5,
+      "type_hints": 5,
+      "code_organization": 6,
+      "error_handling": 3,
+      "naming": 3,
+      "docstring": 3
+    },
+    "critical_issues": [
+      "sys.path manipulation",
+      "Non-portable subprocess",
+      "Incorrect import"
+    ]
+  }
+}

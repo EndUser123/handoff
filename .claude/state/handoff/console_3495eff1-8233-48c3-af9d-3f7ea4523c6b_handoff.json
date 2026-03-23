@@ -1,0 +1,92 @@
+{
+  "resume_snapshot": {
+    "schema_version": 2,
+    "snapshot_id": "f9d0460c-784c-451f-a87e-0457c61c444f",
+    "terminal_id": "console_3495eff1-8233-48c3-af9d-3f7ea4523c6b",
+    "source_session_id": "38762de0-9b6a-4639-9a72-1e8c162cf7a5",
+    "created_at": "2026-03-17T15:44:07.859374+00:00",
+    "expires_at": "2026-03-17T16:04:07.859374+00:00",
+    "status": "pending",
+    "goal": "For this time only, can you show the gto output, including next steps, as if you had followed this guidance?  \"# CORE DIRECTIVE: CLI DASHBOARD UI\nYou are operating within a terminal environment. Your output must prioritize vertical scanning, information density, and strict visual hierarchy. Abandon conversational filler, paragraphs, and narrative explanations. Treat every response as a structured CLI dashboard.\n\n## 1. VISUAL LANGUAGE & TYPOGRAPHY\n- Use ALL-CAPS for major section headers.\n- Use tree-drawing characters (`├─`, `└─`, `│`) for lists and nested information to prevent awkward line wrapping.\n- Align key-value pairs vertically for instantaneous scanning.\n- Use sentence fragments. Be ruthless in cutting unnecessary words.\n\n## 2. COMPONENT SCHEMAS\n\n### [COG] COGNITIVE & PLANNING LOGS\n🧠 [PLANNING STAGE]\n   ├─ Scope:      [1-line objective]\n   ├─ Current:    [1-line current state]\n   └─ Intent:     [1-line desired end state]\n🎯 [OUTCOME ANCHOR]\n   └─ Done = [Specific, measurable completion criteria]\n⚠️ [RISK / INVERSION]\n   ├─ Risk:       [Primary failure mode]\n   └─ Mitig:      [1-line mitigation strategy]\n\n### [CMD] TERMINAL COMMAND EXECUTION\n⚡ [EXECUTING SCRIPT/COMMAND]\n   ├─ Target:     [Command or Script name]\n   ├─ Purpose:    [Why this is being run]\n   └─ Expected:   [What success looks like in the stdout]\n(After execution)\n✅ [CMD SUCCESS] / ❌ [CMD FAILED]\n   └─ Output:     [Brief summary of the result, max 2 lines]\n\n### [FILE] FILE SYSTEM OPERATIONS (Read/Write/Edit)\n📂 [FILE OPERATION: READ | WRITE | EDIT]\n   ├─ Path:       [relative/path/to/file.ext]\n   ├─ Action:     [e.g., Extracting function X | Injecting error handling]\n   └─ Status:     [Pending | Success | Failed]\n\n### [CODE] CODE GENERATION & EXPLANATION\n💻 [CODE SYNTHESIS]\n   ├─ Lang:       [e.g., Python / PowerShell]\n   ├─ Focus:      [e.g., Optimization, Bugfix, Feature]\n   └─ Highlights:\n      ├─ [Key change/feature 1]\n      └─ [Key change/feature 2]\"",
+    "current_task": "For this time only, can you show the gto output, including next steps, as if you had followed this guidance? \"# CORE DIR",
+    "progress_percent": 100,
+    "progress_state": "blocked",
+    "blockers": [
+      {
+        "type": "awaiting_approval",
+        "summary": "Plan exists but requires user approval before implementation."
+      }
+    ],
+    "active_files": [
+      "P:\\.claude\\plans\\plan-20260316-verify-enhancements.md",
+      "P:\\.claude\\skills\\verify\\core\\verifier.py",
+      "P:\\.claude\\skills\\verify\\__main__.py",
+      "P:\\.claude\\skills\\verify\\SKILL.md",
+      "P:\\.claude\\skills\\verify\\tiers\\tier0_checklist.py",
+      "P:\\.claude\\skills\\verify\\tiers\\tier2_integration.py",
+      "P:\\.claude\\hooks\\posttooluse\\implementation_verifier.py",
+      "P:\\.claude\\skills\\verify\\tiers\\tests\\test_deep_lens.py",
+      "P:\\.claude\\skills\\verify\\tiers\\deep_lens_verifier.py",
+      "P:\\.claude\\skills\\verify\\tiers\\post_hoc_analyzer.py"
+    ],
+    "pending_operations": [],
+    "next_step": "Direct Python tests pass. Let me verify the integration tests work:",
+    "decision_refs": [],
+    "evidence_refs": [
+      "ev_938db5680fe649448a30a34a88da4b66",
+      "ev_052eebe1b60e4083b44ebd84be1fe9f9",
+      "ev_a4a5138479684e94b0430ae99c175f49",
+      "ev_a40357013e6a4427a143b12381d063f0",
+      "ev_ff9395a15c0a419eb458a6c68198970c",
+      "ev_996bc371f40546ff90b2735c892516f6"
+    ],
+    "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\38762de0-9b6a-4639-9a72-1e8c162cf7a5.jsonl",
+    "quality_score": 0.55
+  },
+  "decision_register": [],
+  "evidence_index": [
+    {
+      "id": "ev_938db5680fe649448a30a34a88da4b66",
+      "type": "transcript",
+      "label": "Current compact transcript",
+      "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\38762de0-9b6a-4639-9a72-1e8c162cf7a5.jsonl",
+      "content_hash": "sha256:efadae93a78f255242a507e385d512fab79ade0449e2a27e1dfed404ea567dfb"
+    },
+    {
+      "id": "ev_052eebe1b60e4083b44ebd84be1fe9f9",
+      "type": "file",
+      "label": "plan-20260316-verify-enhancements.md",
+      "path": "P:\\.claude\\plans\\plan-20260316-verify-enhancements.md",
+      "content_hash": "sha256:fdc4e54dfa32ee58a6bb9064ab347655f423e60a0c83a4dea2ddc4da54033b2f"
+    },
+    {
+      "id": "ev_a4a5138479684e94b0430ae99c175f49",
+      "type": "file",
+      "label": "verifier.py",
+      "path": "P:\\.claude\\skills\\verify\\core\\verifier.py",
+      "content_hash": "sha256:0249b70fb58a87b2913cddc147cbfe8a461205248433389f1e6727cb0ad14d18"
+    },
+    {
+      "id": "ev_a40357013e6a4427a143b12381d063f0",
+      "type": "file",
+      "label": "__main__.py",
+      "path": "P:\\.claude\\skills\\verify\\__main__.py",
+      "content_hash": "sha256:88174ba006370f84207bacb793919e95c8235f3f937d8dcae2e2e13b4284026b"
+    },
+    {
+      "id": "ev_ff9395a15c0a419eb458a6c68198970c",
+      "type": "file",
+      "label": "SKILL.md",
+      "path": "P:\\.claude\\skills\\verify\\SKILL.md",
+      "content_hash": "sha256:11795772c1aad150e79b7570500a397685646153e7636177a13cb67bf06e181d"
+    },
+    {
+      "id": "ev_996bc371f40546ff90b2735c892516f6",
+      "type": "file",
+      "label": "tier0_checklist.py",
+      "path": "P:\\.claude\\skills\\verify\\tiers\\tier0_checklist.py",
+      "content_hash": "sha256:6011fe73e680af9e7b34c67b2c950cafc837b830f5e53572600da3e8213d6f64"
+    }
+  ],
+  "checksum": "sha256:f520169cc04576280861457b2f38ba9d4d45cf779e59ffdeb75379debdb30c53"
+}
