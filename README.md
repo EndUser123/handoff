@@ -42,7 +42,7 @@ The handoff system captures a per-terminal snapshot before transcript compaction
 Each handoff file contains:
 
 - **`resume_snapshot`** - Current task, progress, blockers, active files, pending operations, next step
-- **`decision_register`** - Explicit decisions (constraints, settled decisions, blocker rules, anti-goals) with bridge tokens
+- **`decision_register`** - Explicit decisions (constraints, settled decisions, blocker rules, anti-goals)
 - **`evidence_index`** - Reference-only supporting context (files, transcripts, tests, logs, git)
 - **`checksum`** - SHA256 validation for data integrity
 - **`quality_score`** (optional) - Session completeness rating (0.0-1.0)
@@ -51,7 +51,6 @@ Each handoff file contains:
 
 The V2 schema supports optional fields for advanced features:
 
-- **`bridge_token`** (decision_register) - Cross-session decision continuity token
 - **`quality_score`** (resume_snapshot) - Session quality metric based on completion tracking
 
 ### Active Flow
@@ -182,7 +181,6 @@ The package source in [`scripts/hooks`](scripts/hooks) is authoritative. Key fil
   - [`handoff_v2.py`](scripts/hooks/__lib/handoff_v2.py) - V2 envelope schema and validation
   - [`handoff_files.py`](scripts/hooks/__lib/handoff_files.py) - File I/O and state management
   - [`handoff_store.py`](scripts/hooks/__lib/handoff_store.py) - Quality scoring algorithm
-  - [`bridge_tokens.py`](scripts/hooks/__lib/bridge_tokens.py) - Bridge token generation
   - [`transcript.py`](scripts/hooks/__lib/transcript.py) - Transcript parsing for goal extraction
 
 - **V1 Integration**:
@@ -199,21 +197,6 @@ The package source in [`scripts/hooks`](scripts/hooks) is authoritative. Key fil
 Old handoff files are automatically cleaned up before creating new ones. The `cleanup_old_handoffs()` function removes stale handoffs based on file age and retention policies.
 
 **Configuration**: Configure retention via `HANDOFF_FRESHNESS_MINUTES` (default: 20 minutes).
-
-### Bridge Tokens
-
-Each decision in the decision register includes a `bridge_token` field for cross-session continuity:
-
-```json
-{
-  "id": "dec_abc123",
-  "kind": "constraint",
-  "summary": "Never auto-restore stale snapshots",
-  "bridge_token": "BRIDGE_20260316-142730_stale_snapshot"
-}
-```
-
-Tokens are generated using the format: `BRIDGE_YYYYMMDD-HHMMSS_TOPIC_KEYWORD`
 
 ### Quality Scoring
 

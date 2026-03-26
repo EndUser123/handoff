@@ -163,10 +163,7 @@ def cmd_debug(args: argparse.Namespace) -> int:
     decisions = handoff.get("decision_register", [])
     print(f"\nDecision Register ({len(decisions)} decisions):")
     for decision in decisions[:5]:
-        bridge = decision.get("bridge_token", "N/A")
-        print(
-            f"  [{decision['kind']}] {decision['summary'][:60]}... (bridge: {bridge})"
-        )
+        print(f"  [{decision['kind']}] {decision['summary'][:60]}...")
 
     # Show evidence index
     evidence = handoff.get("evidence_index", [])

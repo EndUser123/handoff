@@ -65,22 +65,6 @@ except ImportError:
         return datetime.now(UTC).isoformat()
 
 
-# Import bridge token utilities
-try:
-    from scripts.hooks.__lib.bridge_tokens import (
-        BRIDGE_TOKEN_PREFIX,
-        generate_bridge_token,
-    )
-except ImportError:
-    # Fallback if bridge_tokens module not available
-    def generate_bridge_token(topic: str, timestamp: str) -> str:
-        """Fallback bridge token generator."""
-        timestamp_str = datetime.fromisoformat(timestamp).strftime("%Y%m%d-%H%M%S")
-        topic_str = topic[:20].upper().replace(" ", "_")
-        return f"BRIDGE_{timestamp_str}_{topic_str}"
-
-    BRIDGE_TOKEN_PREFIX = "BRIDGE_"
-
 # Import utility functions
 
 # Constants for continue_session task creation
@@ -686,40 +670,6 @@ def get_quality_rating(score: float) -> str:
         return "Needs Improvement"
 
 
-def enrich_handoff_with_bridge_tokens(handoff_data: dict[str, Any]) -> dict[str, Any]:
-    """Add bridge tokens to handoff decisions for cross-session continuity.
-
-    Bridge tokens allow tracking specific decisions across compacts.
-    Format: BRIDGE_YYYYMMDD-HHMMSS_TOPIC_KEYWORD
-
-    Args:
-        handoff_data: Handoff metadata dict
-
-    Returns:
-        Enriched handoff data with bridge tokens added to decisions
-    """
-
-    enriched = handoff_data.copy()
-    handover = enriched.get("handover", {}).copy()
-    decisions = handover.get("decisions", []).copy()
-
-    # Add bridge token to each decision
-    for i, decision in enumerate(decisions):
-        if isinstance(decision, dict):
-            decision_copy = decision.copy()
-            # Generate bridge token from topic and timestamp
-            topic = decision_copy.get("topic", "unknown")
-            timestamp = decision_copy.get("timestamp", utcnow_iso())
-            bridge_token = generate_bridge_token(topic, timestamp)
-            decision_copy["bridge_token"] = bridge_token
-            decisions[i] = decision_copy
-
-    handover["decisions"] = decisions
-    enriched["handover"] = handover
-
-    return enriched
-
-
 def compute_handoff_checksum(handoff_internal: dict[str, Any]) -> str:
     """Compute deterministic checksum for handoff data.
 
@@ -825,7 +775,6 @@ class HandoffStore:
         next_steps: list[str],
         handover: dict[str, Any],
         modifications: list[dict[str, Any]],
-        add_bridge_tokens: bool = True,
         calculate_quality: bool = True,
         pending_operations: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
@@ -839,12 +788,11 @@ class HandoffStore:
             next_steps: List of next step descriptions
             handover: Handover data with decisions and patterns
             modifications: List of modification details
-            add_bridge_tokens: Add bridge tokens to decisions (default: True)
             calculate_quality: Calculate and add quality score (default: True)
             pending_operations: List of incomplete operations (default: None)
 
         Returns:
-            Complete handoff data dict with optional quality score and bridge tokens
+            Complete handoff data dict with optional quality score
         """
         # Generate checkpoint chain identifiers
         checkpoint_id = str(uuid4())
@@ -881,10 +829,6 @@ class HandoffStore:
             # NEW: Pending operations for fault tolerance
             "pending_operations": pending_operations or [],
         }
-
-        # Add bridge tokens to decisions for cross-session continuity
-        if add_bridge_tokens:
-            handoff_data = enrich_handoff_with_bridge_tokens(handoff_data)
 
         # Calculate and add quality score
         if calculate_quality:

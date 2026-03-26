@@ -37,7 +37,6 @@ The handoff package uses automatic capture via PreCompact hooks:
 | Automatic capture | PreCompact hook | Before /compact |
 | Handoff storage | JSON files | Automatic |
 | Quality scoring | Built-in algorithm | Automatic |
-| Bridge tokens | Embedded in decisions | Automatic |
 
 **No manual CLI needed** - handoff capture is fully automated.
 
@@ -45,13 +44,13 @@ The handoff package uses automatic capture via PreCompact hooks:
 
 Before compact/handover:
 1. `/handoff detailed` - Document current work
-2. Log critical decisions with bridge tokens
+2. Log critical decisions with ADRs (Architecture Decision Records)
 3. Define next session objectives
 4. `/handoff quality` - Assess completeness
 
 After compact/handover:
 1. `/handoff load` - Restore previous context
-2. Review bridge tokens for continuity
+2. Review decisions for continuity
 3. Check quality score
 4. Continue with prioritized objectives
 
@@ -85,24 +84,8 @@ pip install -e P:/packages/handoff
 # That's it! Handoff capture is fully automatic:
 # - PreCompact hooks capture session state before /compact
 # - Quality scoring is computed automatically
-# - Bridge tokens are embedded in decisions
 # - No manual invocation needed
 ```
-
-## Bridge Token Expansion
-
-For external LLM handoffs (the primary use case for `/handoff`), bridge tokens are **automatically expanded** with full context:
-
-```
-Token: BRIDGE_20260212-202702_HANDOFF
-Expanded: Decision made on 2026-02-12 at 20:27 (handoff):
-
-          Reconciled /handoff skill with handoff package, adding quality scoring...
-
-          [Reference: BRIDGE_20260212-202702_HANDOFF]
-```
-
-This makes handoffs self-contained for platforms that don't have access to local session history (ChatGPT, Claude.ai, etc.).
 
 ## Quality Scoring
 
@@ -121,20 +104,6 @@ The handoff package now implements the /handoff quality scoring algorithm:
 - **0.7-0.8**: Good - Well-documented with minor gaps
 - **0.5-0.6**: Acceptable - Basic documentation with gaps
 - **<0.5**: Needs Improvement
-
-## Bridge Tokens
-
-Bridge tokens enable cross-session continuity for decisions:
-
-```
-Format: BRIDGE_YYYYMMDD-HHMMSS_TOPIC_KEYWORD
-Example: BRIDGE_20260212-140530_AUTH_FLOW
-```
-
-Tokens are automatically added to all decisions in handoff data, allowing you to:
-- Track specific decisions across compacts
-- Reference decisions by stable identifier
-- Maintain continuity in multi-session workflows
 
 ## Retention Policy
 
@@ -162,13 +131,13 @@ export HANDOFF_RETENTION_DAYS=30
 
 ### Work Context Structure
 
-**Session Metadata**: Session ID, quality score (0-1), duration, working directory, bridge tokens
+**Session Metadata**: Session ID, quality score (0-1), duration, working directory
 
 **Core Components**:
 - **Final Actions**: What was completed with evidence and priority
 - **Outcomes**: Success/partial/failed outcomes with status tracking
 - **Active Work**: Current work in progress with priority ranking
-- **Working Decisions**: Key decisions with bridge tokens for continuity
+- **Working Decisions**: Key decisions for continuity
 - **Tasks Snapshot**: Task status with priority and effort estimation
 - **Known Issues**: Problems with resolution hints and priority
 - **Open Questions**: Clarification needs with categorization
@@ -176,7 +145,6 @@ export HANDOFF_RETENTION_DAYS=30
 **Enhanced Context**:
 - **Session Objectives**: Primary goals with priority and status
 - **Knowledge Contributions**: Insights and patterns learned
-- **Bridge Tokens**: Cross-session continuity tokens
 - **Quality Metrics**: Session effectiveness scoring
 
 ### Automated Context Detection
@@ -261,7 +229,6 @@ python -m scripts.cli cleanup    # Clean up old handoffs (dry-run)
 
 ## Working Decisions (Critical for Continuity)
 🧠 **Decision**: Use approach X over Y
-   - **Bridge Token**: DECISION_20251115-143022
    - **Rationale**: Reason here
    - **Impact**: High
 
@@ -286,7 +253,7 @@ python -m scripts.cli cleanup    # Clean up old handoffs (dry-run)
 
 ## Continuation Instructions
 1. **Priority Actions**: Address high-priority tasks first
-2. **Critical Decisions**: Respect bridge-tokened decisions
+2. **Critical Decisions**: Respect documented decisions
 3. **Quality Target**: Maintain >0.8 session quality score
 ```
 
@@ -309,13 +276,13 @@ python -m scripts.cli cleanup    # Clean up old handoffs (dry-run)
 
 ### Before Compact/Handover
 1. `/handoff detailed` - Document current work
-2. Log critical decisions with bridge tokens
+2. Log critical decisions with ADRs
 3. Define next session objectives
 4. `/handoff quality` - Assess completeness
 
 ### After Compact/Handover
 1. `/handoff load` - Restore previous context
-2. Review bridge tokens for continuity
+2. Review decisions for continuity
 3. Check quality score
 4. Continue with prioritized objectives
 

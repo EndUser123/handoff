@@ -49,7 +49,7 @@ VALID_MESSAGE_INTENTS = {
     "meta",
     "unsupported_language",
 }
-OPTIONAL_DECISION_FIELDS = {"bridge_token"}  # Optional fields allowed in decisions
+OPTIONAL_DECISION_FIELDS = set()  # Optional fields allowed in decisions
 OPTIONAL_SNAPSHOT_FIELDS = {"quality_score"}  # Optional fields allowed in snapshot
 MUTABLE_METADATA_FIELDS = {
     "consumed_at",

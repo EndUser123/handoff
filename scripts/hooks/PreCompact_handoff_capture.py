@@ -32,7 +32,6 @@ if str(PACKAGE_ROOT) not in sys.path:
 
 # Import V1 features for integration
 from scripts.config import cleanup_old_handoffs
-from scripts.hooks.__lib.bridge_tokens import generate_bridge_token
 from scripts.hooks.__lib.handoff_files import HandoffFileStorage
 from scripts.hooks.__lib.handoff_v2 import (
     HandoffValidationError,
@@ -40,7 +39,6 @@ from scripts.hooks.__lib.handoff_v2 import (
     build_resume_snapshot,
     compute_file_content_hash,
     ensure_progress_state,
-    iso_now,
     make_decision_id,
     make_evidence_id,
     short_task_name,
@@ -365,9 +363,6 @@ def _build_decisions(
                     break
                 seen.add(summary)
 
-                # Add bridge token for decision continuity
-                bridge_token = generate_bridge_token(summary[:30], iso_now())
-
                 decisions.append(
                     {
                         "id": make_decision_id(),
@@ -379,7 +374,6 @@ def _build_decisions(
                         else "medium",
                         "applies_when": "Continue the current task after compact.",
                         "source_refs": [transcript_evidence_id],
-                        "bridge_token": bridge_token,
                     }
                 )
                 break

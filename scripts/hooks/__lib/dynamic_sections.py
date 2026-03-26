@@ -229,10 +229,8 @@ def build_decisions_section(session_data: dict[str, Any]) -> str:
         for decision in decisions[:10]:
             kind = decision.get("kind", "unknown")
             summary = decision.get("summary", "")
-            bridge = decision.get("bridge_token", "N/A")
 
             lines.append(f"**[{kind.upper()}]** {summary}")
-            lines.append(f"  Bridge Token: `{bridge}`")
             if decision.get("rationale"):
                 lines.append(f"  Rationale: {decision['rationale'][:150]}...")
             lines.append("")

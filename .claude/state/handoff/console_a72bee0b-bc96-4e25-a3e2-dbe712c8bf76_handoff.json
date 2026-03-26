@@ -1,55 +1,87 @@
 {
   "resume_snapshot": {
     "schema_version": 2,
-    "snapshot_id": "4ca344f2-11c8-474f-a324-b4e6f1c80072",
+    "snapshot_id": "2658e522-0726-442b-b235-6062cdf3c903",
     "terminal_id": "console_a72bee0b-bc96-4e25-a3e2-dbe712c8bf76",
-    "source_session_id": "9fec3f14-a4b1-405d-b761-0ebb8076802e",
-    "created_at": "2026-03-23T04:10:04.644522+00:00",
-    "expires_at": "2026-03-23T04:30:04.644522+00:00",
+    "source_session_id": "2a66f738-e74e-4648-bfcd-c095c155ad1b",
+    "created_at": "2026-03-26T12:34:32.267547+00:00",
+    "expires_at": "2026-03-26T12:54:32.267547+00:00",
     "status": "pending",
-    "goal": "The configs apply to all ports.  It's self-defeating to have GLM only for 3004 and M27 only for 3005.",
-    "current_task": "The configs apply to all ports. It's self-defeating to have GLM only for 3004 and M27 only for 3005.",
+    "goal": "I'm only supposed to have one script, remember?  I can have two, one for the server, one for the client, but there shouldn't be a single start and then an all, because that's just too much mess.",
+    "current_task": "I'm only supposed to have one script, remember? I can have two, one for the server, one for the client, but there should",
     "progress_percent": 35,
     "progress_state": "ready",
     "blockers": [],
     "active_files": [
-      "P:\\packages\\.mcp\\claude-code-proxy\\proxy-start.ps1",
-      "P:\\packages\\.mcp\\claude-code-proxy\\config-terminal1.yaml"
+      "P:\\.claude\\plans\\proposed-multi-provider-router-solution.md",
+      "P:\\.claude\\plans\\proposed-multi-provider-router-solution.review.summary.md",
+      "P:/packages/.mcp/claude-code-agent-sdk-router/src/core/transformers/anthropic.ts",
+      "P:/packages/.mcp/claude-code-agent-sdk-router/src/core/transformers/registry.ts",
+      "P:/packages/.mcp/claude-code-agent-sdk-router/src/core/types.ts",
+      "P:/packages/.mcp/claude-code-agent-sdk-router/src/core/transformers/openai.ts",
+      "P:/packages/.mcp/claude-code-agent-sdk-router/known_models.json",
+      "P:/packages/.mcp/claude-code-agent-sdk-router/src/core/transformers/groq.ts",
+      "P:/packages/.mcp/claude-code-agent-sdk-router/src/core/transformers/minimax.ts",
+      "P:/packages/.mcp/claude-code-agent-sdk-router/src/core/transformers/glm.ts"
     ],
     "pending_operations": [],
-    "next_step": "Understood — all 8 configs are available on all ports. The port is just the listening socket; the config determines routing. Let me fix the script so that after picking a port, you can pick any of the 8 configs.",
+    "next_step": "I'll replace `ccasr-start.ps1` with a unified version that shows all 5 ports (3456-3460) in the status display. Since all routes share port 3456, picking a route kills the old one and starts the new — that's the switchin",
     "decision_refs": [],
     "evidence_refs": [
-      "ev_4e84357b8d224e008f5605d5d4bfc713",
-      "ev_c2eb1689a52d4c0aa517e6d7827a8c58",
-      "ev_119b332ee8114bcab5cc2fe7979403d2"
+      "ev_ff48814c5dc245809b96a9a3e2b51d5f",
+      "ev_a7e5fac19d7840dc9b88c382feb45803",
+      "ev_30b07b965bd14bf0bb969e34cc57a3a1",
+      "ev_9307b58ab63a4235b614fe330f608da5",
+      "ev_753e007631f24b2781d44efa7b691623",
+      "ev_6a23e2d0fb7c44b29f9dec6f34ddd3cb"
     ],
-    "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\9fec3f14-a4b1-405d-b761-0ebb8076802e.jsonl",
-    "message_intent": "instruction"
+    "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\2a66f738-e74e-4648-bfcd-c095c155ad1b.jsonl",
+    "message_intent": "question"
   },
   "decision_register": [],
   "evidence_index": [
     {
-      "id": "ev_4e84357b8d224e008f5605d5d4bfc713",
+      "id": "ev_ff48814c5dc245809b96a9a3e2b51d5f",
       "type": "transcript",
       "label": "Current compact transcript",
-      "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\9fec3f14-a4b1-405d-b761-0ebb8076802e.jsonl",
-      "content_hash": "sha256:dd111bfc7c5f1ae9fdc7fe4b25e625e4e13d320a3f14bd4073c9c09b68a0c922"
+      "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\2a66f738-e74e-4648-bfcd-c095c155ad1b.jsonl",
+      "content_hash": "sha256:4cde5c5caab05ccde7a116e4b3d6308f5fb1d4d4eedbe893f0c098a0c45b23b7"
     },
     {
-      "id": "ev_c2eb1689a52d4c0aa517e6d7827a8c58",
+      "id": "ev_a7e5fac19d7840dc9b88c382feb45803",
       "type": "file",
-      "label": "proxy-start.ps1",
-      "path": "P:\\packages\\.mcp\\claude-code-proxy\\proxy-start.ps1",
-      "content_hash": "sha256:b37fc97525f145ff309ab53e1275ae4f55cc72c477937bbc6089b66cb33bba0a"
+      "label": "proposed-multi-provider-router-solution.md",
+      "path": "P:\\.claude\\plans\\proposed-multi-provider-router-solution.md",
+      "content_hash": "sha256:82b8a3b297a59863e5c32749b7193fc813270283df16f9b48637b0bb6d16b360"
     },
     {
-      "id": "ev_119b332ee8114bcab5cc2fe7979403d2",
+      "id": "ev_30b07b965bd14bf0bb969e34cc57a3a1",
       "type": "file",
-      "label": "config-terminal1.yaml",
-      "path": "P:\\packages\\.mcp\\claude-code-proxy\\config-terminal1.yaml",
-      "content_hash": "sha256:a5e31bbeedd863711e633052a1b1ba7fd3aca8b3540d42449d239e6427f77124"
+      "label": "proposed-multi-provider-router-solution.review.summary.md",
+      "path": "P:\\.claude\\plans\\proposed-multi-provider-router-solution.review.summary.md",
+      "content_hash": "sha256:9175c58c696083914513959a1c894b40e6f0bef68a5ad30b3775b8460981056c"
+    },
+    {
+      "id": "ev_9307b58ab63a4235b614fe330f608da5",
+      "type": "file",
+      "label": "anthropic.ts",
+      "path": "P:\\packages\\.mcp\\claude-code-agent-sdk-router\\src\\core\\transformers\\anthropic.ts",
+      "content_hash": "sha256:0339ff4e8b43ce4f22b98f4b590e6079ad90b713d011af7b65d84383d6f0076a"
+    },
+    {
+      "id": "ev_753e007631f24b2781d44efa7b691623",
+      "type": "file",
+      "label": "registry.ts",
+      "path": "P:\\packages\\.mcp\\claude-code-agent-sdk-router\\src\\core\\transformers\\registry.ts",
+      "content_hash": "sha256:c0f6de2e44fa2c1bd0ef3e9bc5aa41e2fbb3002dabe9236feb0d52f9db925487"
+    },
+    {
+      "id": "ev_6a23e2d0fb7c44b29f9dec6f34ddd3cb",
+      "type": "file",
+      "label": "types.ts",
+      "path": "P:\\packages\\.mcp\\claude-code-agent-sdk-router\\src\\core\\types.ts",
+      "content_hash": "sha256:b93dd111d8c8356e5c00096bfce2a2b866a9438130ef1f25027580bc29403c48"
     }
   ],
-  "checksum": "sha256:a015a047a15ad9554d9760116d26dd13f5da650ce9abd8bb45048ad624fa2515"
+  "checksum": "sha256:8b5e04d1ba8603423a6018c992fdbbf30e8346b4a7ac42c35e655c84284672ce"
 }
