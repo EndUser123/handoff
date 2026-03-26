@@ -1,14 +1,14 @@
 {
   "resume_snapshot": {
     "schema_version": 2,
-    "snapshot_id": "c264cb16-4090-4baf-9f9d-fc79b5239a5a",
+    "snapshot_id": "6c1490db-55ef-41cc-8f10-957976245856",
     "terminal_id": "console_237eb8a3-ec90-473c-a014-3b361278fade",
     "source_session_id": "3ea87756-ef42-496c-a938-640aaabd5743",
-    "created_at": "2026-03-26T12:53:40.102485+00:00",
-    "expires_at": "2026-03-26T13:13:40.102485+00:00",
+    "created_at": "2026-03-26T13:22:11.571015+00:00",
+    "expires_at": "2026-03-26T13:42:11.571015+00:00",
     "status": "pending",
-    "goal": "Is that file location and the session ID what Claude actually uses? I thought it was in a projects folder, on the C drive in the home directory.",
-    "current_task": "Is that file location and the session ID what Claude actually uses? I thought it was in a projects folder, on the C driv",
+    "goal": "Continue current task (meta-discussion filtered)",
+    "current_task": "Continue current task (meta-discussion filtered)",
     "progress_percent": 35,
     "progress_state": "ready",
     "blockers": [],
@@ -25,63 +25,77 @@
       "P:\\packages\\gitbatch\\skills\\gitbatch\\SKILL.md"
     ],
     "pending_operations": [],
-    "next_step": "The session ID is available in the hook JSON input (stdin). Let me check how SessionStart hooks receive it:",
-    "decision_refs": [],
+    "next_step": "Based on research, here's the key finding:",
+    "decision_refs": [
+      "dec_0d4edc24e75f4317b0cc18d9faf3cd22"
+    ],
     "evidence_refs": [
-      "ev_4664efe2e21248d2bf41dbb7de891e82",
-      "ev_0a3ffe55ad9046a7a1b808f63def4e7d",
-      "ev_febd6c89fc66481ba1b117f4e89ea4fa",
-      "ev_cbe433f3e1f54ae2876539277bcd217f",
-      "ev_5c40a127432f4d61b02ec407a7eeb4a5",
-      "ev_6658097dc2b04307b0c06fa1960ac981"
+      "ev_e608f9f3af694cb5b2acfc9ae9cb71f2",
+      "ev_207120abdf0045198257c07209ae1414",
+      "ev_b2c7a90c694744a19316163060002d0e",
+      "ev_1b4671641dbb443fabaa3a0f72c2a9dd",
+      "ev_54f941e2974d46788bf17187a91ace73",
+      "ev_30272926a85244a3a04ceda1816f8258"
     ],
     "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\3ea87756-ef42-496c-a938-640aaabd5743.jsonl",
-    "message_intent": "question"
+    "message_intent": "unsupported_language"
   },
-  "decision_register": [],
+  "decision_register": [
+    {
+      "id": "dec_0d4edc24e75f4317b0cc18d9faf3cd22",
+      "kind": "constraint",
+      "summary": "Based on my search, the key environment variable from Claude Code is **`CLAUDE_SESSION_ID`**, but there's a notable finding in the test report at `P:\\.claude\\tests\\SESSION_BINDING_FIX_TEST_REPORT.md`: > `CLAUDE_SESSION_ID` environment variable **never set by Claude Code** So relying on that env var doesn't work. The other env var I found is **`CLAUDE_PLUGIN_ROOT`**, which is used in the gitready package to locate plugin files. Let me verify what env vars are actually set:",
+      "details": "Based on my search, the key environment variable from Claude Code is **`CLAUDE_SESSION_ID`**, but there's a notable finding in the test report at `P:\\.claude\\tests\\SESSION_BINDING_FIX_TEST_REPORT.md`: > `CLAUDE_SESSION_ID` environment variable **never set by Claude Code** So relying on that env var doesn't work. The other env var I found is **`CLAUDE_PLUGIN_ROOT`**, which is used in the gitready package to locate plugin files. Let me verify what env vars are actually set:",
+      "priority": "high",
+      "applies_when": "Continue the current task after compact.",
+      "source_refs": [
+        "ev_e608f9f3af694cb5b2acfc9ae9cb71f2"
+      ]
+    }
+  ],
   "evidence_index": [
     {
-      "id": "ev_4664efe2e21248d2bf41dbb7de891e82",
+      "id": "ev_e608f9f3af694cb5b2acfc9ae9cb71f2",
       "type": "transcript",
       "label": "Current compact transcript",
       "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\3ea87756-ef42-496c-a938-640aaabd5743.jsonl",
-      "content_hash": "sha256:5d12cb2db363ed80c4f300dc737ab3b1f93e8b4286319b8a8ffa553df516c6b0"
+      "content_hash": "sha256:8b0eab49afcb575087281fa50591a6f6c22592f9748e70687d70e40b26b1ab59"
     },
     {
-      "id": "ev_0a3ffe55ad9046a7a1b808f63def4e7d",
+      "id": "ev_207120abdf0045198257c07209ae1414",
       "type": "file",
       "label": "fast.md",
       "path": "P:\\.claude\\skills\\arch\\resources\\fast.md",
       "content_hash": "sha256:728cff94ce5396b31b551d22cbd522db15ebf85fd6da44775f3fd9745be10549"
     },
     {
-      "id": "ev_febd6c89fc66481ba1b117f4e89ea4fa",
+      "id": "ev_b2c7a90c694744a19316163060002d0e",
       "type": "file",
       "label": "base.md",
       "path": "P:\\.claude\\skills\\arch\\resources\\base.md",
       "content_hash": "sha256:7d8fa7a28dad0377d79727beba9ae5dd816f16c2b321c0726ec591252ceb76c1"
     },
     {
-      "id": "ev_cbe433f3e1f54ae2876539277bcd217f",
+      "id": "ev_1b4671641dbb443fabaa3a0f72c2a9dd",
       "type": "file",
       "label": "SKILL.md",
       "path": "P:\\.claude\\skills\\p\\SKILL.md",
       "content_hash": "sha256:7504c150652b871718fefc6e8cbaee1ef90c731e671ffe9ffb3c36b7ee6075ce"
     },
     {
-      "id": "ev_5c40a127432f4d61b02ec407a7eeb4a5",
+      "id": "ev_54f941e2974d46788bf17187a91ace73",
       "type": "file",
       "label": "SKILL.md",
       "path": "P:\\packages\\gitready\\skills\\gitready\\SKILL.md",
       "content_hash": "sha256:8dd102642a08584145637d0890208ad550d1678c3a9e8800fbc0fb8ee743d40d"
     },
     {
-      "id": "ev_6658097dc2b04307b0c06fa1960ac981",
+      "id": "ev_30272926a85244a3a04ceda1816f8258",
       "type": "file",
       "label": "SKILL.md",
       "path": "P:\\packages\\gitbatch\\skills\\gitbatch\\SKILL.md",
       "content_hash": "sha256:26158b6eead50621f2eea6a434263f04730a9422e623b668abda878a3135f8e4"
     }
   ],
-  "checksum": "sha256:19fc4d62ad9cf8ba3ca48304e1eb07e804f463c5d955aaa8a514f5c381015476"
+  "checksum": "sha256:5129c105197de825fd5fcb75953a4972e3d94146439688a9c67cdd67730968a9"
 }
