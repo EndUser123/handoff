@@ -292,6 +292,44 @@ class HandoffFileStorage:
         )
         return self.save_handoff(updated)
 
+    def read_accumulated_state(self) -> list[dict[str, Any]]:
+        """Read the per-terminal accumulated JSONL state.
+
+        Returns list of events from the JSONL file, or empty list.
+        Non-existent or corrupt files return empty list (non-fatal).
+        """
+        accum_path = self.handoff_dir / f"{self.terminal_id}_accumulated.jsonl"
+        if not accum_path.exists():
+            return []
+
+        events: list[dict[str, Any]] = []
+        try:
+            with open(accum_path, encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        event = json.loads(line)
+                        if isinstance(event, dict):
+                            events.append(event)
+                    except json.JSONDecodeError:
+                        continue  # Skip malformed lines
+        except OSError:
+            return []
+
+        return events
+
+    def truncate_accumulated_state(self) -> bool:
+        """Truncate the accumulated JSONL file (called on new session start)."""
+        accum_path = self.handoff_dir / f"{self.terminal_id}_accumulated.jsonl"
+        try:
+            if accum_path.exists():
+                accum_path.unlink()
+            return True
+        except OSError:
+            return False
+
     def delete_handoff(self) -> bool:
         """Delete the per-terminal handoff file."""
         try:

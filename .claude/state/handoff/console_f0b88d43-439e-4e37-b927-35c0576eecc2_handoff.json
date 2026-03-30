@@ -1,0 +1,114 @@
+{
+  "resume_snapshot": {
+    "schema_version": 2,
+    "snapshot_id": "11a1afbb-0879-477d-95b9-6193565ae6f7",
+    "terminal_id": "console_f0b88d43-439e-4e37-b927-35c0576eecc2",
+    "source_session_id": "7a35a030-b1b3-4206-9886-69c3024c2ac8",
+    "created_at": "2026-03-30T18:40:12.957104+00:00",
+    "expires_at": "2026-03-30T19:00:12.957104+00:00",
+    "status": "pending",
+    "goal": "what problem are we solving?",
+    "current_task": "what problem are we solving?",
+    "progress_percent": 35,
+    "progress_state": "ready",
+    "blockers": [],
+    "active_files": [
+      "C:\\Users\\brsth\\.claude\\plans\\plan-adr-20260327-question-relevance-gate.md",
+      "P:\\.claude\\skills\\code\\flows\\feature.md",
+      "P:\\packages\\search-research\\core\\unified_router.py",
+      "P:\\packages\\search-research\\core\\quality_checker.py",
+      "P:\\packages\\search-research\\tests\\test_quality_checker.py",
+      "P:\\packages\\search-research\\tests\\conftest.py",
+      "P:\\packages\\search-research\\pyproject.toml",
+      "P:\\packages\\search-research\\tests\\test_topic_alignment.py",
+      "P:\\.claude\\hooks\\PreToolUse_auto_format.py",
+      "P:\\.claude\\hooks\\PreToolUse_mypy_type_check.py"
+    ],
+    "pending_operations": [],
+    "next_step": "Per the /refactor workflow, let me first read both files to understand the scope before launching discovery agents.",
+    "decision_refs": [
+      "dec_6dc63c150d7f48d593d1a5913b6ea44c",
+      "dec_6cf3b187c5e2445bbd8833db05a68483"
+    ],
+    "evidence_refs": [
+      "ev_b9abc19b9e3a4287be92ecef8c57c74b",
+      "ev_f79f3227eca24cf59b405e6c19e1dbac",
+      "ev_5638d6beced64d63a29d87ab7577aed2",
+      "ev_af76834303b1432789bc1eaa20d30a26",
+      "ev_743eba92d99448b3ac8b7e7ff4bf2a48",
+      "ev_49f50d110d054cb895bd494fa4d5b3f6"
+    ],
+    "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\7a35a030-b1b3-4206-9886-69c3024c2ac8.jsonl",
+    "message_intent": "question",
+    "quality_score": 0.4,
+    "tasks_snapshot": []
+  },
+  "decision_register": [
+    {
+      "id": "dec_6dc63c150d7f48d593d1a5913b6ea44c",
+      "kind": "constraint",
+      "summary": "Now I see the issue - my test strings don't match the actual patterns. Let me fix the tests:",
+      "details": "Now I see the issue - my test strings don't match the actual patterns. Let me fix the tests:",
+      "priority": "high",
+      "applies_when": "Continue the current task after compact.",
+      "source_refs": [
+        "ev_b9abc19b9e3a4287be92ecef8c57c74b"
+      ]
+    },
+    {
+      "id": "dec_6cf3b187c5e2445bbd8833db05a68483",
+      "kind": "constraint",
+      "summary": "The patterns don't match. Let me verify the actual pattern behavior:",
+      "details": "The patterns don't match. Let me verify the actual pattern behavior:",
+      "priority": "high",
+      "applies_when": "Continue the current task after compact.",
+      "source_refs": [
+        "ev_b9abc19b9e3a4287be92ecef8c57c74b"
+      ]
+    }
+  ],
+  "evidence_index": [
+    {
+      "id": "ev_b9abc19b9e3a4287be92ecef8c57c74b",
+      "type": "transcript",
+      "label": "Current compact transcript",
+      "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\7a35a030-b1b3-4206-9886-69c3024c2ac8.jsonl",
+      "content_hash": "sha256:946e29bc6480425e8d222bafafb2fed3bc001c485b89df78a44072eb789023d4"
+    },
+    {
+      "id": "ev_f79f3227eca24cf59b405e6c19e1dbac",
+      "type": "file",
+      "label": "plan-adr-20260327-question-relevance-gate.md",
+      "path": "C:\\Users\\brsth\\.claude\\plans\\plan-adr-20260327-question-relevance-gate.md",
+      "content_hash": "sha256:bf19846ed80477f46e7022b7c9b7cb995c0fbb2637c8d6bd29b587ed7e4bb7f6"
+    },
+    {
+      "id": "ev_5638d6beced64d63a29d87ab7577aed2",
+      "type": "file",
+      "label": "feature.md",
+      "path": "P:\\.claude\\skills\\code\\flows\\feature.md"
+    },
+    {
+      "id": "ev_af76834303b1432789bc1eaa20d30a26",
+      "type": "file",
+      "label": "unified_router.py",
+      "path": "P:\\packages\\search-research\\core\\unified_router.py",
+      "content_hash": "sha256:5b84d8af7c9def9dc64133431bb5aa32d778d311dfb981cc590ebb78cb957c17"
+    },
+    {
+      "id": "ev_743eba92d99448b3ac8b7e7ff4bf2a48",
+      "type": "file",
+      "label": "quality_checker.py",
+      "path": "P:\\packages\\search-research\\core\\quality_checker.py",
+      "content_hash": "sha256:2868a26373699efa515051356faf64cb2fce2402339694c3ff1a6cfb2d48169e"
+    },
+    {
+      "id": "ev_49f50d110d054cb895bd494fa4d5b3f6",
+      "type": "file",
+      "label": "test_quality_checker.py",
+      "path": "P:\\packages\\search-research\\tests\\test_quality_checker.py",
+      "content_hash": "sha256:c0d39055d249a7496a2341c895d05fa474db4755ef21ec413f012c572600a44e"
+    }
+  ],
+  "checksum": "sha256:75463ae2b52d98bab89534af342a9111cdc6067702e9805c6cbdb397ada7bad3"
+}

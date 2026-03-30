@@ -25,6 +25,7 @@ MessageIntent = Literal[
     "question",
     "instruction",
     "correction",
+    "directive",
     "meta",
     "unsupported_language",
 ]
@@ -94,6 +95,73 @@ CORRECTION_PATTERNS = [
     re.compile(r"^correction:"),
     # Fix-related corrections (common pattern: "fix X instead")
     re.compile(r"^(?:actually, )?fix \w+ instead"),
+]
+
+# Clarification patterns: messages asking for explanation or meaning
+# These indicate the user wants the AI to clarify something rather than perform a task
+CLARIFICATION_PATTERNS = [
+    # Direct clarification requests
+    re.compile(r"^what do you mean"),
+    re.compile(r"^what does .* mean"),
+    re.compile(r"^could you clarify"),
+    re.compile(r"^can you clarify"),
+    re.compile(r"^i don'?t understand"),
+    re.compile(r"^i doesn'?t understand"),
+    re.compile(r"^i can't (?:really | )?understand"),
+    re.compile(r"^can you explain"),
+    re.compile(r"^could you explain"),
+    re.compile(r"^please clarify"),
+    re.compile(r"^clarify (?:please | )?(?:what|how)"),
+    re.compile(r"^what (?:do you|does it|does that) refer to"),
+    re.compile(r"^what (?:are we|is this|do you) talking about"),
+    re.compile(r"^i'?m (?:a bit | )?confused"),
+    re.compile(r"^that(?:'s| is) (?:not |un)?clear"),
+    re.compile(r"^could you (?:please | )?rephrase"),
+    re.compile(r"^say that again"),
+    re.compile(r"^repeat (?:that|please)"),
+    re.compile(r"^what (?:did you|do you) mean by"),
+    re.compile(r"^i(?:'m| am) not sure (?:what|how|why)"),
+    re.compile(r"^not sure (?:what|how|why)"),
+    re.compile(r"^i(?:'m| am) confused about"),
+    # Questions seeking explanation (not directive)
+    re.compile(r"^why (?:does|is|do|are|would|should)"),
+    re.compile(r"^how (?:does|do|is|are|can|should)"),
+    re.compile(r"^what (?:is|are|does|do|exactly)"),
+    # Clarification about AI's previous statement
+    re.compile(r"^when you say"),
+    re.compile(r"^you mentioned .*[?]$"),
+    re.compile(r"^so .* mean[s]? .*[?]$"),
+]
+
+# Directive patterns: imperative verbs that indicate explicit task directives
+# These represent substantive changes the user wants the agent to perform
+DIRECTIVE_PATTERNS = [
+    # Core imperative verbs (single-word command starts)
+    re.compile(
+        r"^(?:fix|add|remove|delete|create|update|refactor|implement|build|write|edit|change|rename|move|extract|inline|optimize|improve|enhance|clean|simplify|consolidate|deprecate|extract|introduce|merge|split|separate|combine)\s+\S"
+    ),
+    # "do X" pattern (strong directive signal)
+    re.compile(
+        r"^do\s+(?:not\s+)?(?:the\s+)?(?:following\s+)?(?:file\s+)?(?:this\s+)?"
+    ),
+    # Explicit directive markers
+    re.compile(r"^make\s+(?:\w+\s+){0,3}(?:work|go|function| happen)"),
+    re.compile(r"^ensure\s+\w+"),
+    re.compile(r"^ensure\s+\w+\s+\w+\s+\w+"),
+    # Imperative with "that" (commanding consequence)
+    re.compile(r"^make\s+sure\s+"),
+    # Task assignment patterns
+    re.compile(r"^go\s+ahead\s+"),
+    re.compile(
+        r"^please\s+(?:do|add|fix|create|update|implement|remove|delete|change|refactor|build|write|edit|rename|move|extract|inline|optimize|clean|simplify|consolidate)\s+"
+    ),
+    # Imperative "must" (strong directive)
+    re.compile(r"^\w+\s+must\s+(?:be\s+)?(?:done\s+)?(?:to\s+)?(?:the\s+)?(?:\w+\s+)?"),
+    # Bare imperative (single word at start of line)
+    re.compile(
+        r"^(?:fix|add|remove|delete|create|update|refactor|implement|build|write|edit|change|rename|move|extract|inline|optimize|clean|simplify|consolidate|deprecate|extract|introduce|merge|split|separate|combine)\s*[\.:;]?\s*$",
+        re.IGNORECASE,
+    ),
 ]
 
 # Meta-discussion patterns (conversations about the system itself)
@@ -212,6 +280,11 @@ def detect_message_intent(message: str) -> MessageIntent:
     # Check for meta-instructions (lowest priority before default)
     if is_meta_instruction(text):
         return "meta"
+
+    # Check for directive patterns (imperative task commands)
+    # These are explicit directives like "fix X", "add Y", "refactor Z"
+    if is_directive_message(text):
+        return "directive"
 
     # Default: instruction
     return "instruction"
@@ -662,6 +735,70 @@ def is_correction_message(message: str) -> bool:
     return False
 
 
+def is_clarification_message(message: str) -> bool:
+    """Check if a message is a clarification request.
+
+    Clarification patterns indicate the user is asking the AI to explain
+    or clarify something rather than perform a task. These include questions
+    about meaning, understanding, or explanation.
+
+    This is used by PreCompact to detect when the user's goal is a
+    clarification request, so it can extract preceding context.
+
+    Args:
+        message: Message text to check
+
+    Returns:
+        True if message is a clarification request, False otherwise
+    """
+    if not message or not isinstance(message, str):
+        return False
+
+    message_lower = message.strip().lower()
+
+    # Use pre-compiled CLARIFICATION_PATTERNS (SEC-002: ReDoS fix)
+    for pattern in CLARIFICATION_PATTERNS:
+        if pattern.search(message_lower):
+            logger.debug(
+                f"Clarification pattern matched: {pattern.pattern[:30]}... in '{message[:50]}...'"
+            )
+            return True
+
+    return False
+
+
+def is_directive_message(message: str) -> bool:
+    """Check if a message is a directive indicating explicit task direction.
+
+    Directive patterns indicate the user is commanding the agent to perform
+    a specific action, using imperative verbs like "fix", "add", "refactor",
+    "create", "update", etc.
+
+    This is used by the AIR Auditor to detect explicit user directives
+    that should be tracked against agent actions.
+
+    Args:
+        message: Message text to check
+
+    Returns:
+        True if message is a directive, False otherwise
+    """
+    if not message or not isinstance(message, str):
+        return False
+
+    message_lower = message.strip().lower()
+
+    # Use pre-compiled DIRECTIVE_PATTERNS
+    for pattern in DIRECTIVE_PATTERNS:
+        if pattern.match(message_lower):
+            logger.debug(
+                f"Directive pattern matched: {pattern.pattern[:30]}... in '{message[:50]}...'"
+            )
+            return True
+
+    return False
+
+
 def is_same_topic(message1: str, message2: str, threshold: float = 0.2) -> bool:
     """Check if two messages are about the same topic using keyword overlap.
 
@@ -1049,6 +1186,75 @@ def extract_last_substantive_user_message(
             "topic_shift_hit": False,
             "scan_pattern": "error",
         }
+
+
+def extract_preceding_message(transcript_path: str | Path, goal: str) -> str | None:
+    """Extract the message that immediately preceded a clarification request.
+
+    When a user sends a clarification message (e.g., "what do you mean?"),
+    this function finds the message that the user is asking for clarification about.
+    This is typically the AI's response immediately before the user's clarification.
+
+    Args:
+        transcript_path: Path to transcript JSONL file
+        goal: The clarification message text
+
+    Returns:
+        The preceding message text, or None if not found
+    """
+    transcript_path = Path(transcript_path)
+
+    if not transcript_path.exists():
+        logger.warning(f"Transcript file not found: {transcript_path}")
+        return None
+
+    try:
+        parser = TranscriptParser(transcript_path)
+        entries = parser._get_parsed_entries()
+    except Exception as e:
+        logger.error(f"Failed to parse transcript: {e}")
+        return None
+
+    goal_lower = goal.strip().lower()
+    prev_message_text: str | None = None
+
+    # Scan through transcript entries
+    for entry in entries:
+        # Extract message text from entry
+        message_text = ""
+        if "message" in entry:
+            message = entry["message"]
+            if isinstance(message, str):
+                message_text = message
+            elif isinstance(message, dict):
+                content = message.get("content", [])
+                if isinstance(content, str):
+                    message_text = content
+                elif isinstance(content, list):
+                    text_parts = []
+                    for item in content:
+                        if isinstance(item, str):
+                            text_parts.append(item)
+                        elif isinstance(item, dict):
+                            text_parts.append(item.get("text", ""))
+                    message_text = " ".join(text_parts)
+
+        message_text_lower = message_text.strip().lower()
+
+        # If this entry matches the goal, return the previous message
+        if message_text_lower == goal_lower:
+            logger.debug(
+                f"Found goal message, returning preceding: "
+                f"'{prev_message_text[:50]}...' if prev else None"
+            )
+            return prev_message_text
+
+        # Update prev_message_text for next iteration
+        if message_text.strip():
+            prev_message_text = message_text.strip()
+
+    logger.debug(f"Goal message not found in transcript: '{goal[:50]}...'")
+    return None
 
 
 class TranscriptLines(Sequence[str]):
@@ -1621,8 +1827,7 @@ class TranscriptParser:
                     if re.search(pattern, msg_lower):
                         return {
                             "description": (
-                                f"Open discussion: {msg[:200]}"
-                                f"{'...' if len(msg) > 200 else ''}"
+                                f"Open discussion: {msg[:200]}{'...' if len(msg) > 200 else ''}"
                             ),
                             "context_type": "open_discussion",
                             "original_message": msg[:500],

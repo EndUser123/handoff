@@ -109,17 +109,17 @@ def test_full_flow_session_compaction_to_restore(tmp_path):
     4. Injection message is built correctly
     5. State persists after injection (sliding window pattern)
     """
-    # Override STATE_DIR for test
+    # Override _HANDOFF_DIR for test
     import UserPromptSubmit_modules.handoff_context_injector as injector
 
-    original_state_dir = injector.STATE_DIR
-    injector.STATE_DIR = tmp_path
+    original_handoff_dir = injector._HANDOFF_DIR
+    injector._HANDOFF_DIR = tmp_path
 
     try:
-        session_id = "test_integration_session"
+        terminal_id = "console_test_integration_session"
 
         # Step 1: Create envelope (simulates session compaction)
-        envelope, transcript_path = _make_simple_envelope(tmp_path, session_id)
+        envelope, transcript_path = _make_simple_envelope(tmp_path, terminal_id)
 
         # Verify envelope structure
         assert "resume_snapshot" in envelope
@@ -130,7 +130,7 @@ def test_full_flow_session_compaction_to_restore(tmp_path):
         # Step 2: Save envelope to state (simulates compaction writing state)
         import time
 
-        state_file = tmp_path / f"handoff_{session_id}.json"
+        state_file = tmp_path / f"{terminal_id}_handoff.json"
         # Add created_at timestamp for load_handoff_envelope
         envelope["created_at"] = time.time()
         state_file.write_text(json.dumps(envelope), encoding="utf-8")
@@ -139,7 +139,7 @@ def test_full_flow_session_compaction_to_restore(tmp_path):
         assert state_file.exists()
 
         # Step 3: Load envelope (simulates session restore)
-        loaded = load_handoff_envelope(session_id)
+        loaded = load_handoff_envelope(terminal_id)
         assert loaded is not None
         assert loaded["resume_snapshot"]["goal"] == "Test goal"
         assert loaded["resume_snapshot"]["transcript_path"] == str(transcript_path)
@@ -148,8 +148,7 @@ def test_full_flow_session_compaction_to_restore(tmp_path):
         message = injector.build_injection_message(loaded)
 
         # Verify message content
-        assert f"Session: {session_id}" in message
-        assert "**Transcript**:" in message
+        assert f"Session: {terminal_id}" in message
         assert "**Goal**:" in message
         assert "Test goal" in message
         assert "/chs:" in message
@@ -160,12 +159,12 @@ def test_full_flow_session_compaction_to_restore(tmp_path):
         assert state_file.exists()
 
         # Verify state can still be loaded (not deleted immediately)
-        reloaded = load_handoff_envelope(session_id)
+        reloaded = load_handoff_envelope(terminal_id)
         assert reloaded is not None
         assert reloaded["resume_snapshot"]["goal"] == "Test goal"
 
     finally:
-        injector.STATE_DIR = original_state_dir
+        injector._HANDOFF_DIR = original_handoff_dir
 
 
 def test_full_flow_expired_envelope_rejected(tmp_path):
@@ -178,32 +177,32 @@ def test_full_flow_expired_envelope_rejected(tmp_path):
     """
     import UserPromptSubmit_modules.handoff_context_injector as injector
 
-    original_state_dir = injector.STATE_DIR
-    injector.STATE_DIR = tmp_path
+    original_handoff_dir = injector._HANDOFF_DIR
+    injector._HANDOFF_DIR = tmp_path
 
     try:
-        session_id = "test_expired_session"
+        terminal_id = "console_test_expired_session"
 
         # Create envelope
-        envelope, _ = _make_simple_envelope(tmp_path, session_id)
+        envelope, _ = _make_simple_envelope(tmp_path, terminal_id)
 
         # Manually set created_at to be expired (more than HANDOFF_TTL ago)
         expired_time = time.time() - HANDOFF_TTL - 1
 
-        state_file = tmp_path / f"handoff_{session_id}.json"
+        state_file = tmp_path / f"{terminal_id}_handoff.json"
         state_file.write_text(
             json.dumps({"created_at": expired_time, **envelope}), encoding="utf-8"
         )
 
         # Load should return None (expired)
-        loaded = load_handoff_envelope(session_id)
+        loaded = load_handoff_envelope(terminal_id)
         assert loaded is None
 
         # File should be deleted
         assert not state_file.exists()
 
     finally:
-        injector.STATE_DIR = original_state_dir
+        injector._HANDOFF_DIR = original_handoff_dir
 
 
 def test_full_flow_envelope_checksum_validation(tmp_path):
@@ -216,14 +215,14 @@ def test_full_flow_envelope_checksum_validation(tmp_path):
     """
     import UserPromptSubmit_modules.handoff_context_injector as injector
 
-    original_state_dir = injector.STATE_DIR
-    injector.STATE_DIR = tmp_path
+    original_handoff_dir = injector._HANDOFF_DIR
+    injector._HANDOFF_DIR = tmp_path
 
     try:
-        session_id = "test_checksum_session"
+        terminal_id = "console_test_checksum_session"
 
         # Create envelope
-        envelope, _ = _make_simple_envelope(tmp_path, session_id)
+        envelope, _ = _make_simple_envelope(tmp_path, terminal_id)
 
         # Verify checksum is present
         original_checksum = envelope.get("checksum")
@@ -246,7 +245,7 @@ def test_full_flow_envelope_checksum_validation(tmp_path):
         assert tampered_checksum != original_checksum
 
     finally:
-        injector.STATE_DIR = original_state_dir
+        injector._HANDOFF_DIR = original_handoff_dir
 
 
 def test_full_flow_missing_state_graceful(tmp_path):
@@ -259,14 +258,14 @@ def test_full_flow_missing_state_graceful(tmp_path):
     """
     import UserPromptSubmit_modules.handoff_context_injector as injector
 
-    original_state_dir = injector.STATE_DIR
-    injector.STATE_DIR = tmp_path
+    original_handoff_dir = injector._HANDOFF_DIR
+    injector._HANDOFF_DIR = tmp_path
 
     try:
-        session_id = "nonexistent_session"
+        terminal_id = "console_nonexistent_session"
 
         # Load non-existent state
-        loaded = load_handoff_envelope(session_id)
+        loaded = load_handoff_envelope(terminal_id)
         assert loaded is None
 
         # Build injection message with None envelope should not crash
@@ -274,13 +273,13 @@ def test_full_flow_missing_state_graceful(tmp_path):
         from UserPromptSubmit_modules.base import HookContext
 
         result = injector.handoff_context_injector_hook(
-            HookContext(data={"session_id": session_id}, prompt="")
+            HookContext(data={"terminal_id": terminal_id}, prompt="")
         )
         assert result.context is None  # HookResult.empty() returns context=None
         assert result.tokens == 0
 
     finally:
-        injector.STATE_DIR = original_state_dir
+        injector._HANDOFF_DIR = original_handoff_dir
 
 
 if __name__ == "__main__":

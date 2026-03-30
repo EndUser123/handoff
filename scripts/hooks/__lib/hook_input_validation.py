@@ -37,12 +37,12 @@ HOOK_INPUT_SCHEMAS = {
             "session_id": str,
             "cwd": str,
             "hook_event_name": str,
-            "trigger": str,
         },
         "optional_fields": {
             "terminal_id": str,
             "source": str,
             "transcript_path": str,
+            "trigger": str,  # Sent by Claude Code on compact-triggered starts, not on fresh startup
         },
     },
 }

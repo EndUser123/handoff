@@ -192,8 +192,8 @@ class TestSuccessfulRecovery:
         assert result1.context is not None
         assert result2.context is None
 
-    def test_context_contains_transcript_path(self) -> None:
-        """Injected context must include the transcript path."""
+    def test_context_contains_transcript_placeholder(self) -> None:
+        """Injected context must include transcript placeholder (not raw path)."""
         from UserPromptSubmit_modules.base import HookContext
 
         envelope = _make_envelope(transcript_path="/sessions/abc123.jsonl")
@@ -205,7 +205,9 @@ class TestSuccessfulRecovery:
                 result = _mod.handoff_task_injector_hook(ctx)
 
         assert result.context is not None
-        assert "/sessions/abc123.jsonl" in result.context
+        # Implementation uses generic placeholder for privacy, not raw path
+        assert "Transcript:" in result.context
+        assert "<session transcript>" in result.context
 
     def test_context_contains_current_task(self) -> None:
         """Injected context must include the current task."""

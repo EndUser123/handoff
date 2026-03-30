@@ -1,0 +1,127 @@
+{
+  "resume_snapshot": {
+    "schema_version": 2,
+    "snapshot_id": "0c5e589c-b01b-411b-b5ed-97cb04b0fb6b",
+    "terminal_id": "console_b4c34f2f-5242-43d4-a640-2ff0510ce542",
+    "source_session_id": "83b40897-5a77-4c34-ad29-a103930de399",
+    "created_at": "2026-03-29T00:24:49.692198+00:00",
+    "expires_at": "2026-03-29T00:44:49.692198+00:00",
+    "status": "pending",
+    "goal": "Continue current task (meta-discussion filtered)",
+    "current_task": "Continue current task (meta-discussion filtered)",
+    "progress_percent": 35,
+    "progress_state": "ready",
+    "blockers": [],
+    "active_files": [
+      "C:\\Users\\brsth\\.claude\\plans\\plan-adr-20260328-intelligence-stream-source-enumeration.md",
+      "P:/.claude/skills/intelligence-stream-ingest/SKILL.md",
+      "P:/packages/intelligence-stream/bin/csf-ingest",
+      "P:/packages/intelligence-stream/csf/batch_status.py",
+      "P:/packages/intelligence-stream/csf/batch.py",
+      "P:/packages/intelligence-stream/csf/cache.py",
+      "P:/__csf/arch_decisions/ADR-20260328-intelligence-stream-source-enumeration.md",
+      "P:/packages/intelligence-stream/tests/test_batch_status.py",
+      "P:/packages/intelligence-stream/csf/logging.py",
+      "P:/packages/intelligence-stream/bin/csf-analyze"
+    ],
+    "pending_operations": [],
+    "next_step": "Let me debug this with a simple inline test:",
+    "decision_refs": [
+      "dec_1c84f75cabcb4e20ac5d5d86bbd1ddc8",
+      "dec_29f55a136a7640439d689d2c3284e5eb",
+      "dec_7dce02e554874f49ad1e07be4443e2fc"
+    ],
+    "evidence_refs": [
+      "ev_373a2ec162384010b292d481f6a0d814",
+      "ev_efb9b65ff5ea4060b6e708ca8f37f300",
+      "ev_bc4e11c6780e4cf0a9087361c33df26c",
+      "ev_4da4e798c95445da9768dce89670c9a5",
+      "ev_1455af4c6ce641a8b4fb231c13f828b2",
+      "ev_b9ddddd2a9194e36bcbe25020a21312c"
+    ],
+    "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\83b40897-5a77-4c34-ad29-a103930de399.jsonl",
+    "message_intent": "instruction",
+    "task_mode": "none",
+    "lifecycle_phase": "discussing"
+  },
+  "decision_register": [
+    {
+      "id": "dec_1c84f75cabcb4e20ac5d5d86bbd1ddc8",
+      "kind": "constraint",
+      "summary": "Found the bug. When `_get_analyze_video` is mocked, the function body (including `_analyze_video_ref = fn`) never executes. So `_analyze_video_ref` stays `None` and every call to `analyze_videos_parallel` calls `_get_analyze_video()` again but never stores the result — the mock is called once but returns a mock function that is never actually invoked (because `_analyze_video_ref` is still `None` so the check `if _analyze_video_ref is None` keeps triggering). The fix: patch `_analyze_video_ref` directly instead of `_get_analyze_video`.",
+      "details": "Found the bug. When `_get_analyze_video` is mocked, the function body (including `_analyze_video_ref = fn`) never executes. So `_analyze_video_ref` stays `None` and every call to `analyze_videos_parallel` calls `_get_analyze_video()` again but never stores the result — the mock is called once but returns a mock function that is never actually invoked (because `_analyze_video_ref` is still `None` so the check `if _analyze_video_ref is None` keeps triggering). The fix: patch `_analyze_video_ref` directly instead of `_get_analyze_video`.",
+      "priority": "high",
+      "applies_when": "Continue the current task after compact.",
+      "source_refs": [
+        "ev_373a2ec162384010b292d481f6a0d814"
+      ]
+    },
+    {
+      "id": "dec_29f55a136a7640439d689d2c3284e5eb",
+      "kind": "constraint",
+      "summary": "The debug confirms my analysis: when `_get_analyze_video` is mocked, the body of `_get_analyze_video()` (including `_analyze_video_ref = fn`) never executes. So `_analyze_video_ref` stays `None` even after the mock is called. But the cached reference IS checked in `_analyze_one`: `if _analyze_video_ref is None` — so subsequent calls to `analyze_videos_parallel` would keep calling the mock (which returns `mock_fn` that is never used). The fix is to patch `_analyze_video_ref` directly — setting it to the mock function so the `if _analyze_video_ref is None` check bypasses `_get_analyze_video` and uses the mock directly. Let me update the test file to patch `_analyze_video_ref` instead of `_get_analyze_video`:",
+      "details": "The debug confirms my analysis: when `_get_analyze_video` is mocked, the body of `_get_analyze_video()` (including `_analyze_video_ref = fn`) never executes. So `_analyze_video_ref` stays `None` even after the mock is called. But the cached reference IS checked in `_analyze_one`: `if _analyze_video_ref is None` — so subsequent calls to `analyze_videos_parallel` would keep calling the mock (which returns `mock_fn` that is never used). The fix is to patch `_analyze_video_ref` directly — setting it to the mock function so the `if _analyze_video_ref is None` check bypasses `_get_analyze_video` and uses the mock directly. Let me update the test file to patch `_analyze_video_ref` instead of `_get_analyze_video`:",
+      "priority": "high",
+      "applies_when": "Continue the current task after compact.",
+      "source_refs": [
+        "ev_373a2ec162384010b292d481f6a0d814"
+      ]
+    },
+    {
+      "id": "dec_7dce02e554874f49ad1e07be4443e2fc",
+      "kind": "constraint",
+      "summary": "The root issue is clear: when `_get_analyze_video` is mocked, the assignment `_analyze_video_ref = fn` inside that function body never executes, so `_analyze_video_ref` stays `None`. The `if _analyze_video_ref is None` check keeps triggering but the mock's return value (the actual mock function) is never used. The fix: patch `_analyze_video_ref` directly with the mock function, and keep the fixture to reset it between tests. This way, `if _analyze_video_ref is None` is False (ref is the mock) and the code calls the mock directly. I'll rewrite the patching pattern to use `_analyze_video_ref` directly:",
+      "details": "The root issue is clear: when `_get_analyze_video` is mocked, the assignment `_analyze_video_ref = fn` inside that function body never executes, so `_analyze_video_ref` stays `None`. The `if _analyze_video_ref is None` check keeps triggering but the mock's return value (the actual mock function) is never used. The fix: patch `_analyze_video_ref` directly with the mock function, and keep the fixture to reset it between tests. This way, `if _analyze_video_ref is None` is False (ref is the mock) and the code calls the mock directly. I'll rewrite the patching pattern to use `_analyze_video_ref` directly:",
+      "priority": "high",
+      "applies_when": "Continue the current task after compact.",
+      "source_refs": [
+        "ev_373a2ec162384010b292d481f6a0d814"
+      ]
+    }
+  ],
+  "evidence_index": [
+    {
+      "id": "ev_373a2ec162384010b292d481f6a0d814",
+      "type": "transcript",
+      "label": "Current compact transcript",
+      "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\83b40897-5a77-4c34-ad29-a103930de399.jsonl",
+      "content_hash": "sha256:5b922e7314a076befe3f8e694ba981115754642bd7d37ada6905b790fcba6a74"
+    },
+    {
+      "id": "ev_efb9b65ff5ea4060b6e708ca8f37f300",
+      "type": "file",
+      "label": "plan-adr-20260328-intelligence-stream-source-enumeration.md",
+      "path": "C:\\Users\\brsth\\.claude\\plans\\plan-adr-20260328-intelligence-stream-source-enumeration.md",
+      "content_hash": "sha256:f65db4eb274f3f7a2ed5d924daa1e8c4311d08e908422837118cfe8d35571824"
+    },
+    {
+      "id": "ev_bc4e11c6780e4cf0a9087361c33df26c",
+      "type": "file",
+      "label": "SKILL.md",
+      "path": "P:\\packages\\intelligence-stream\\skills\\ingest\\SKILL.md",
+      "content_hash": "sha256:c6cb6861a2e4ca70dd8d85664f7db1bcd183a2ebb4e0e005be822e21217283fe"
+    },
+    {
+      "id": "ev_4da4e798c95445da9768dce89670c9a5",
+      "type": "file",
+      "label": "csf-ingest",
+      "path": "P:\\packages\\intelligence-stream\\bin\\csf-ingest",
+      "content_hash": "sha256:1c141a6d403f57f77a8c28dbc7d07f72a0529ee63764fcdd425a42b66aeef9ae"
+    },
+    {
+      "id": "ev_1455af4c6ce641a8b4fb231c13f828b2",
+      "type": "file",
+      "label": "batch_status.py",
+      "path": "P:\\packages\\intelligence-stream\\csf\\batch_status.py",
+      "content_hash": "sha256:12fb5fe92c4f236ce0f5a209656e318bd0613ce176f19c498130dcd654ff8244"
+    },
+    {
+      "id": "ev_b9ddddd2a9194e36bcbe25020a21312c",
+      "type": "file",
+      "label": "batch.py",
+      "path": "P:\\packages\\intelligence-stream\\csf\\batch.py",
+      "content_hash": "sha256:5f0a4b932a838d89eb987f0841f2f224ceffebd5aca5288c240e4655e54fca25"
+    }
+  ],
+  "checksum": "sha256:5161412e40d763d6dbb9d8646c6af366af2f6a8102a54cb547d99f4bca8e2662"
+}

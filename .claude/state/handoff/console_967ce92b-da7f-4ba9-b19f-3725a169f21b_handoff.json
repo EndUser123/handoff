@@ -1,0 +1,106 @@
+{
+  "resume_snapshot": {
+    "schema_version": 2,
+    "snapshot_id": "2d25ab09-0fa9-4647-8ff7-ad5f1da73ecd",
+    "terminal_id": "console_967ce92b-da7f-4ba9-b19f-3725a169f21b",
+    "source_session_id": "7546c571-f235-42cd-b230-439d39728e72",
+    "created_at": "2026-03-30T18:50:32.994721+00:00",
+    "expires_at": "2026-03-30T19:10:32.994721+00:00",
+    "status": "rejected_stale",
+    "goal": "save the solution to an adr",
+    "current_task": "save the solution to an adr",
+    "progress_percent": 35,
+    "progress_state": "ready",
+    "blockers": [],
+    "active_files": [
+      "P:\\.claude\\skills\\sqa\\SKILL.md",
+      "P:\\.claude\\skills\\sqa\\orchestrator.py",
+      "P:\\.claude\\skills\\sqa\\layers\\layer_meta.py",
+      "P:\\.claude\\skills\\pre-mortem\\SKILL.md",
+      "P:\\packages\\rca\\skill\\hooks\\PostToolUse_rca_phase_tracker.py",
+      "P:\\__csf\\arch_decisions\\ADR-20260329-sqa-enhancement-five-ideas.md",
+      "P:\\.claude\\skills\\sqa\\findings\\models.py",
+      "C:/Users/brsth/.claude/plans/plan-adr-20260329-sqa-enhancement-five-ideas.md",
+      "P:\\.claude\\skills\\planning\\__lib\\auto_verify.py",
+      "P:/.claude/skills/planning/references/adversarial-agent-prompts.md"
+    ],
+    "pending_operations": [],
+    "next_step": "Now I'll write the review findings and summary files, then run auto_verify.",
+    "decision_refs": [
+      "dec_caa5783323024e4eb9408ecb154e436e"
+    ],
+    "evidence_refs": [
+      "ev_eef4cdb81a0a4d1c866a6ec24b99ef5b",
+      "ev_d1caf04e78864f5d967b4903ac5cedcf",
+      "ev_20a17719b6ef4fcaba837ab9e041c956",
+      "ev_2439ac1379f44c898c5e2a56816b001d",
+      "ev_17f6464c91f643c0bcdccb312c9c4397",
+      "ev_5753737d0a9c44ed8a1105579777c69e"
+    ],
+    "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\7546c571-f235-42cd-b230-439d39728e72.jsonl",
+    "message_intent": "instruction",
+    "quality_score": 0.4,
+    "tasks_snapshot": [],
+    "rejected_at": "2026-03-30T18:51:42.211708+00:00",
+    "rejected_by_session_id": "7546c571-f235-42cd-b230-439d39728e72",
+    "rejection_reason": "snapshot evidence path outside project directory"
+  },
+  "decision_register": [
+    {
+      "id": "dec_caa5783323024e4eb9408ecb154e436e",
+      "kind": "constraint",
+      "summary": "Now I'll synthesize the findings and update the plan. The key BLOCKER findings are: 1. **LOGIC-001/LOGIC-002** (BLOCKER): health_band gap (50-79 unassigned) + per-finding score [0-1] vs bands [0-100] scaling mismatch 2. **FM-001** (BLOCKER): ThreadPoolExecutor findings.extend race condition - no lock 3. **FM-002** (BLOCKER): subprocess.run without timeout 4. **SEC-SQA-001** (HIGH): Command injection via target path 5. **LOGIC-003** (HIGH): L2 failure flag never set 6. **TEST-002** (HIGH): In-place mutation bug in _enforce_evidence_citations 7. **SEC-SQA-001** also flags: reflect `--contradiction` doesn't exist as CLI flag",
+      "details": "Now I'll synthesize the findings and update the plan. The key BLOCKER findings are: 1. **LOGIC-001/LOGIC-002** (BLOCKER): health_band gap (50-79 unassigned) + per-finding score [0-1] vs bands [0-100] scaling mismatch 2. **FM-001** (BLOCKER): ThreadPoolExecutor findings.extend race condition - no lock 3. **FM-002** (BLOCKER): subprocess.run without timeout 4. **SEC-SQA-001** (HIGH): Command injection via target path 5. **LOGIC-003** (HIGH): L2 failure flag never set 6. **TEST-002** (HIGH): In-place mutation bug in _enforce_evidence_citations 7. **SEC-SQA-001** also flags: reflect `--contradiction` doesn't exist as CLI flag",
+      "priority": "high",
+      "applies_when": "Continue the current task after compact.",
+      "source_refs": [
+        "ev_eef4cdb81a0a4d1c866a6ec24b99ef5b"
+      ]
+    }
+  ],
+  "evidence_index": [
+    {
+      "id": "ev_eef4cdb81a0a4d1c866a6ec24b99ef5b",
+      "type": "transcript",
+      "label": "Current compact transcript",
+      "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\7546c571-f235-42cd-b230-439d39728e72.jsonl",
+      "content_hash": "sha256:6ed0a3685dd1fea2895ef3117b75761856cc3ed396cbf2dd8eda08578f3294f2"
+    },
+    {
+      "id": "ev_d1caf04e78864f5d967b4903ac5cedcf",
+      "type": "file",
+      "label": "SKILL.md",
+      "path": "P:\\.claude\\skills\\sqa\\SKILL.md",
+      "content_hash": "sha256:7ddceb2ee94e7342fd329268cc88c2467dbcff9826c03bb83b58ce7c844de40a"
+    },
+    {
+      "id": "ev_20a17719b6ef4fcaba837ab9e041c956",
+      "type": "file",
+      "label": "orchestrator.py",
+      "path": "P:\\.claude\\skills\\sqa\\orchestrator.py",
+      "content_hash": "sha256:e4e0f278c1d0d5a8bd67245f0de1253cc086b071e31cccc7a43edbfa5a71c1af"
+    },
+    {
+      "id": "ev_2439ac1379f44c898c5e2a56816b001d",
+      "type": "file",
+      "label": "layer_meta.py",
+      "path": "P:\\.claude\\skills\\sqa\\layers\\layer_meta.py",
+      "content_hash": "sha256:cc359ceae939052a50da22a19bea6bf2ffc2e4d73ba0e4fbfc361a51494255ce"
+    },
+    {
+      "id": "ev_17f6464c91f643c0bcdccb312c9c4397",
+      "type": "file",
+      "label": "SKILL.md",
+      "path": "P:\\.claude\\skills\\pre-mortem\\SKILL.md",
+      "content_hash": "sha256:e7591ecc9b8660a9b04354ccfb66a9a534fabcc8730c828f24aba395103c98cf"
+    },
+    {
+      "id": "ev_5753737d0a9c44ed8a1105579777c69e",
+      "type": "file",
+      "label": "PostToolUse_rca_phase_tracker.py",
+      "path": "P:\\packages\\rca\\skill\\hooks\\PostToolUse_rca_phase_tracker.py",
+      "content_hash": "sha256:e217840bd4d39cb35bf9b32fbbc4a0679a39216253dd6b6eaa94cb2249c3ff75"
+    }
+  ],
+  "checksum": "sha256:2267765685d611c47ac2a5b7053c835a8262a0d988185c53f20c04e393a6ff66"
+}

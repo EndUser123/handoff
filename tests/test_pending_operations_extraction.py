@@ -89,7 +89,7 @@ class TestPendingOperationsToolUseDetection:
         """Test that Skill tool_use is detected as pending operation."""
         transcript_file = tmp_path / "test.jsonl"
         transcript_file.write_text(
-            '{"type": "tool_use", "name": "Skill", "input": {"skill": "debugRCA"}}\n'
+            '{"type": "tool_use", "name": "Skill", "input": {"skill": "rca"}}\n'
         )
 
         parser = TranscriptParser(transcript_file)
@@ -97,7 +97,7 @@ class TestPendingOperationsToolUseDetection:
 
         assert len(ops) == 1
         assert ops[0]["type"] == "skill"
-        assert "skill: debugRCA" in ops[0]["target"]
+        assert "skill: rca" in ops[0]["target"]
 
 
 class TestPendingOperationsKeywordFallback:

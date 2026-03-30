@@ -1,0 +1,115 @@
+{
+  "resume_snapshot": {
+    "schema_version": 2,
+    "snapshot_id": "9bc9d748-1cb1-4fd1-ad90-8991f0d1ba55",
+    "terminal_id": "console_2611382b-1e2c-4b58-a1f6-d057ba54ead1",
+    "source_session_id": "0ecb3822-462d-4e4f-a0b3-c199afa53124",
+    "created_at": "2026-03-30T14:51:44.863666+00:00",
+    "expires_at": "2026-03-30T15:11:44.863666+00:00",
+    "status": "pending",
+    "goal": "The problem is that GTO is supposed to suggest them if it doesn't find the evidence that they were used after the major change.",
+    "current_task": "The problem is that GTO is supposed to suggest them if it doesn't find the evidence that they were used after the major ",
+    "progress_percent": 35,
+    "progress_state": "ready",
+    "blockers": [],
+    "active_files": [
+      "C:\\Users\\brsth\\.claude\\plans\\plan-adr-20260328-sqa-multi-terminal-hardening.md",
+      "P:\\.claude\\skills\\sqa\\orchestrator.py",
+      "P:\\.claude\\skills\\sqa\\findings\\models.py",
+      "P:\\.claude\\skills\\sqa\\tests\\conftest.py",
+      "P:\\.claude\\skills\\sqa\\tests\\test_integration.py",
+      "P:\\packages\\debugRCA\\src\\debug_rca\\library_docs_cache.py",
+      "P:\\packages\\debug-rca\\pyproject.toml",
+      "P:\\packages\\rca\\pyproject.toml",
+      "P:\\packages\\rca\\src\\rca\\__init__.py",
+      "P:/packages/rca/src/rca/library_docs_cache.py"
+    ],
+    "pending_operations": [],
+    "next_step": "Let me check the assertions script to understand what it's looking for:",
+    "decision_refs": [
+      "dec_ee9dbaaa302348019fd60bb8c565aafc",
+      "dec_b73b5a8cc9d9451b91f7d2674b00f8d1"
+    ],
+    "evidence_refs": [
+      "ev_11eeecf7b1d841a2b63295886f6d6e84",
+      "ev_fd424e1c92624aedb11634190a4fc053",
+      "ev_47fa1957123e450781e29b0c0868ed56",
+      "ev_95187326fa7c4b8883aab3757baeec95",
+      "ev_ed92109dc7c745bd97deec251c6493a8",
+      "ev_54aeb5d17f834df4a095f70548dede9d"
+    ],
+    "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\0ecb3822-462d-4e4f-a0b3-c199afa53124.jsonl",
+    "message_intent": "instruction",
+    "quality_score": 0.4,
+    "tasks_snapshot": []
+  },
+  "decision_register": [
+    {
+      "id": "dec_ee9dbaaa302348019fd60bb8c565aafc",
+      "kind": "constraint",
+      "summary": "Found the root issue. Two independent logging systems that never talk to each other: - **GTO orchestrator** writes → `P:\\packages\\rca\\.evidence\\skill-usage.jsonl` - **Skill coverage detector** reads → `C:\\Users\\brsth\\.evidence\\skill_coverage\\packages_rca.jsonl` These paths are completely separate. The `skill_coverage_detector` never sees skill usage because it reads from a different file. Additionally, `detect_skill_coverage()` has no mechanism to detect **\"major change just happened — run verification skills\"**. The fix needs to be in the skill coverage detector to: 1. Read from the same log GTO writes to (`skill-usage.jsonl`), not a separate coverage log 2. Surface `/verify` and `/pre-mortem` when the target has recent git activity (indicating a change was just made) Let me look at the gap_skill_mapper to understand the full picture:",
+      "details": "Found the root issue. Two independent logging systems that never talk to each other: - **GTO orchestrator** writes → `P:\\packages\\rca\\.evidence\\skill-usage.jsonl` - **Skill coverage detector** reads → `C:\\Users\\brsth\\.evidence\\skill_coverage\\packages_rca.jsonl` These paths are completely separate. The `skill_coverage_detector` never sees skill usage because it reads from a different file. Additionally, `detect_skill_coverage()` has no mechanism to detect **\"major change just happened — run verification skills\"**. The fix needs to be in the skill coverage detector to: 1. Read from the same log GTO writes to (`skill-usage.jsonl`), not a separate coverage log 2. Surface `/verify` and `/pre-mortem` when the target has recent git activity (indicating a change was just made) Let me look at the gap_skill_mapper to understand the full picture:",
+      "priority": "high",
+      "applies_when": "Continue the current task after compact.",
+      "source_refs": [
+        "ev_11eeecf7b1d841a2b63295886f6d6e84"
+      ]
+    },
+    {
+      "id": "dec_b73b5a8cc9d9451b91f7d2674b00f8d1",
+      "kind": "constraint",
+      "summary": "Found the root cause. `run_gto_monorepo.py` **never calls `detect_skill_coverage()`**. It only formats `results.gaps` — the actual gap findings. The skill coverage findings are computed by `gto_orchestrator.py` (line 951), but `run_gto_monorepo.py` uses a different code path that bypasses it entirely. This is a bug — `run_gto_monorepo.py` and `gto_orchestrator.py` should both integrate skill coverage. Let me fix `run_gto_monorepo.py`:",
+      "details": "Found the root cause. `run_gto_monorepo.py` **never calls `detect_skill_coverage()`**. It only formats `results.gaps` — the actual gap findings. The skill coverage findings are computed by `gto_orchestrator.py` (line 951), but `run_gto_monorepo.py` uses a different code path that bypasses it entirely. This is a bug — `run_gto_monorepo.py` and `gto_orchestrator.py` should both integrate skill coverage. Let me fix `run_gto_monorepo.py`:",
+      "priority": "high",
+      "applies_when": "Continue the current task after compact.",
+      "source_refs": [
+        "ev_11eeecf7b1d841a2b63295886f6d6e84"
+      ]
+    }
+  ],
+  "evidence_index": [
+    {
+      "id": "ev_11eeecf7b1d841a2b63295886f6d6e84",
+      "type": "transcript",
+      "label": "Current compact transcript",
+      "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\0ecb3822-462d-4e4f-a0b3-c199afa53124.jsonl",
+      "content_hash": "sha256:c329a48639851701b07f0b3753659406618a3084880a157a0c6e217f056ebb42"
+    },
+    {
+      "id": "ev_fd424e1c92624aedb11634190a4fc053",
+      "type": "file",
+      "label": "plan-adr-20260328-sqa-multi-terminal-hardening.md",
+      "path": "C:\\Users\\brsth\\.claude\\plans\\plan-adr-20260328-sqa-multi-terminal-hardening.md",
+      "content_hash": "sha256:7dc0a2e1fbe4c69b102bebb3191c189c649e38ab22a44aa5032cd01a3c121415"
+    },
+    {
+      "id": "ev_47fa1957123e450781e29b0c0868ed56",
+      "type": "file",
+      "label": "orchestrator.py",
+      "path": "P:\\.claude\\skills\\sqa\\orchestrator.py",
+      "content_hash": "sha256:e4e0f278c1d0d5a8bd67245f0de1253cc086b071e31cccc7a43edbfa5a71c1af"
+    },
+    {
+      "id": "ev_95187326fa7c4b8883aab3757baeec95",
+      "type": "file",
+      "label": "models.py",
+      "path": "P:\\.claude\\skills\\sqa\\findings\\models.py",
+      "content_hash": "sha256:37becd02bc9fbdccdb78920f35a84f33096a46dde243f3b7ee209e11910327bc"
+    },
+    {
+      "id": "ev_ed92109dc7c745bd97deec251c6493a8",
+      "type": "file",
+      "label": "conftest.py",
+      "path": "P:\\.claude\\skills\\sqa\\tests\\conftest.py",
+      "content_hash": "sha256:816e7b0525f66db2c474fe8b6072b1047ac69673f64f5ed57e4e6f860feedbdd"
+    },
+    {
+      "id": "ev_54aeb5d17f834df4a095f70548dede9d",
+      "type": "file",
+      "label": "test_integration.py",
+      "path": "P:\\.claude\\skills\\sqa\\tests\\test_integration.py",
+      "content_hash": "sha256:022a2919a41bdb2036b9b6e3745a992f9c14b7ee588ca83764920f514d0a9719"
+    }
+  ],
+  "checksum": "sha256:005739b35aee3e7a580ee46cae1a5d1e0c35f3706dd8f0f7d42e2e2cfcd2cf21"
+}

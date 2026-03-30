@@ -107,7 +107,7 @@ class TestToolResultSkipping:
             {
                 "type": "user",
                 "message": {
-                    "content": "<command-message>debugRCA</command-message>\nInvestigate the bug"
+                    "content": "<command-message>rca</command-message>\nInvestigate the bug"
                 },
             },
             {"type": "user", "message": {"content": "Continue investigating"}},

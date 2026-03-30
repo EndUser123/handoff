@@ -344,6 +344,7 @@ def build_resume_snapshot(
     message_intent: str,  # Intent classification of the goal (required)
     freshness_minutes: int = DEFAULT_FRESHNESS_MINUTES,
     quality_score: float | None = None,
+    tasks_snapshot: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Build the V2 resume snapshot."""
     # QUAL-005: Validate message_intent is a recognized value
@@ -378,6 +379,8 @@ def build_resume_snapshot(
     }
     if quality_score is not None:
         snapshot["quality_score"] = quality_score
+    if tasks_snapshot is not None:
+        snapshot["tasks_snapshot"] = tasks_snapshot
     return snapshot
 
 
@@ -632,6 +635,7 @@ def build_restore_message_dynamic(payload: dict[str, Any]) -> str:
         "has_errors": any(
             b.get("type") == "awaiting_approval" for b in snapshot.get("blockers", [])
         ),
+        "tasks_snapshot": snapshot.get("tasks_snapshot", []),
     }
 
     # Generate dynamic content

@@ -1,5 +1,7 @@
 ---
 name: handoff
+version: "1.0.0"
+status: "stable"
 description: Research-backed handover documentation system using handoff package
 category: documentation
 triggers:
@@ -29,8 +31,6 @@ Generate comprehensive handover documentation that ensures **100% work continuit
 - **Storage**: `P:/.claude/state/task_tracker/`
 
 ### Hook-Only Architecture
-
-The handoff package uses automatic capture via PreCompact hooks:
 
 | Feature | Implementation | Trigger |
 |---------|---------------|---------|
@@ -87,224 +87,12 @@ pip install -e P:/packages/handoff
 # - No manual invocation needed
 ```
 
-## Quality Scoring
+## References
 
-The handoff package now implements the /handoff quality scoring algorithm:
-
-| Component | Weight | Description |
-|-----------|--------|-------------|
-| Completion Tracking | 30% | Resolved issues vs total modifications |
-| Action-Outcome Correlation | 25% | Blocker presence indicates incomplete work |
-| Decision Documentation | 20% | Number of decisions captured (target: 3+) |
-| Issue Resolution | 15% | Absence of blocker indicates resolution |
-| Knowledge Contribution | 10% | Patterns learned captured (target: 2+) |
-
-**Quality Ratings**:
-- **0.9-1.0**: Excellent - Comprehensive documentation
-- **0.7-0.8**: Good - Well-documented with minor gaps
-- **0.5-0.6**: Acceptable - Basic documentation with gaps
-- **<0.5**: Needs Improvement
-
-## Retention Policy
-
-Handoff documents are retained for **90 days** by default (configurable via `HANDOFF_RETENTION_DAYS` env var).
-
-After 90 days, handoffs are candidates for cleanup because:
-- Context is stale for session-bridging purposes
-- Relevant decisions should be captured in CKS/patterns
-- Storage efficiency for long-running projects
-
-## Auto-Cleanup
-
-```bash
-# Manual cleanup (for debugging):
-python -m scripts.cli cleanup --dry-run
-
-# Execute cleanup
-python -m scripts.cli cleanup
-
-# Custom retention period
-export HANDOFF_RETENTION_DAYS=30
-```
-
-## Core Features
-
-### Work Context Structure
-
-**Session Metadata**: Session ID, quality score (0-1), duration, working directory
-
-**Core Components**:
-- **Final Actions**: What was completed with evidence and priority
-- **Outcomes**: Success/partial/failed outcomes with status tracking
-- **Active Work**: Current work in progress with priority ranking
-- **Working Decisions**: Key decisions for continuity
-- **Tasks Snapshot**: Task status with priority and effort estimation
-- **Known Issues**: Problems with resolution hints and priority
-- **Open Questions**: Clarification needs with categorization
-
-**Enhanced Context**:
-- **Session Objectives**: Primary goals with priority and status
-- **Knowledge Contributions**: Insights and patterns learned
-- **Quality Metrics**: Session effectiveness scoring
-
-### Automated Context Detection
-- **Git Status Analysis**: Detect active work from git changes
-- **Recent File Activity**: Identify modified files in last hour
-- **Project Fingerprinting**: Quick project analysis
-- **Session State Validation**: Verify context consistency
-
-### Quality Scoring Algorithm
-- **30%** Completion Tracking
-- **25%** Action-Outcome Correlation
-- **20%** Decision Documentation
-- **15%** Issue Resolution
-- **10%** Knowledge Contribution
-
-## Usage Patterns
-
-### Automatic Handoff Capture
-
-```bash
-# Handoff is captured automatically before /compact
-# Just run /compact normally - no extra steps needed
-```
-
-### Manual Handoff Generation (Debugging)
-
-```bash
-# For debugging or manual operations:
-python -m scripts.cli list       # Show handoff details
-python -m scripts.cli restore    # Show restore status
-python -m scripts.cli debug      # Debug mode (validation, checksum, decisions)
-python -m scripts.cli cleanup    # Clean up old handoffs (dry-run)
-```
-
-**Auto-cleanup behavior**:
-- Handover documents older than 90 days are candidates for deletion
-- Dry-run mode shows what would be deleted without actually deleting
-- Use `--force` to actually delete files
-- Customize retention via `HOD_RETENTION_DAYS` environment variable
-
-**Rationale**: Handover documents are session-bridging artifacts, not permanent records. After 90 days, context is stale and relevant decisions should be captured in CKS/patterns.
-
-## Handover Document Template
-
-```markdown
-# Session Handover Document
-
-## Session Metadata
-- **Session ID**: session_20251115_143022
-- **Quality Score**: 0.85/1.00
-- **Timestamp**: 2025-11-15T14:30:22Z
-- **Duration**: 2h 15m
-- **Working Directory**: /path/to/project
-
-## Original Request
-**User Request**: "I'm getting super frustrated with stupid coding mistakes"
-**Trigger**: User asked for research document from 6 external repos
-**Context**: Wanted implementable options, not theory
-
-## Session Objectives
-🟢 **Complete task X** (completed, high)
-🟡 **Document findings** (postponed, medium)
-
-## Final Actions Taken
-✅ **Action A** (high priority)
-✅ **Action B** (high priority)
-
-## Outcomes
-📈 **Success outcome** (success)
-📈 **Another success** (success)
-
-## Active Work At Handoff
-🔄 **Currently Working On**: Auto-skill activation implementation
-   - Status: Implemented, tested, enabled
-   - Files Modified: UserPromptSubmit_skill_router.py, UserPromptSubmit_router.py, settings.json
-   - Next: Monitor for effectiveness
-
-**CRITICAL**: "Active Work At Handoff" MUST only include work done in THIS session.
-- Include ONLY if: files created/modified, tools executed, evidence of progress
-- Do NOT copy from previous handovers or TaskList without verification
-- If no active work in this session, state: "No active work in this session"
-
-## Working Decisions (Critical for Continuity)
-🧠 **Decision**: Use approach X over Y
-   - **Rationale**: Reason here
-   - **Impact**: High
-
-## Current Tasks
-📋 **#611**: Task description (in_progress, high)
-📋 **#612**: Task description (pending, high)
-
-## Known Issues
-⚠️ **ISSUE-1**: Description (observed, medium)
-⚠️ **ISSUE-2**: Description (observed, low)
-
-## Open Questions
-❓ **Question**: Question text? (high, technical)
-
-## Knowledge Contributions
-💡 **Insight**: Session continuity requires decision preservation (pattern)
-
-## Next Immediate Action
-1. Review research document at `P:/docs/research/coding-mistake-prevention-research.md`
-2. Test auto-skill with "debug this" prompt
-3. Decide on build verification priority
-
-## Continuation Instructions
-1. **Priority Actions**: Address high-priority tasks first
-2. **Critical Decisions**: Respect documented decisions
-3. **Quality Target**: Maintain >0.8 session quality score
-```
-
-## Quality Metrics
-
-### Session Quality Score (0-1)
-- **0.9-1.0**: Excellent - Comprehensive documentation
-- **0.7-0.8**: Good - Well-documented with minor gaps
-- **0.5-0.6**: Acceptable - Basic documentation with gaps
-- **<0.5**: Needs Improvement
-
-### Quality Breakdown
-- Task Completion
-- Decision Documentation
-- Action-Outcome Link
-- Knowledge Capture
-- Issue Resolution
-
-## Session Continuity Workflow
-
-### Before Compact/Handover
-1. `/handoff detailed` - Document current work
-2. Log critical decisions with ADRs
-3. Define next session objectives
-4. `/handoff quality` - Assess completeness
-
-### After Compact/Handover
-1. `/handoff load` - Restore previous context
-2. Review decisions for continuity
-3. Check quality score
-4. Continue with prioritized objectives
-
-## Data Storage
-
-- **Session State**: `__csf/.staging/claude_session.json`
-- **Work Context**: `__csf/.staging/work_context.json`
-- **Handover Documents**: `__csf/.staging/handovers/`
-- **Quality Metrics**: `__csf/.staging/quality_metrics.json`
-
-### Auto-Cleanup Policy
-
-**Handover documents older than 90 days are automatically deleted.**
-
-**Rationale**: Handover documents are session-bridging artifacts, not permanent records. After 90 days, the context is stale and relevant decisions should be captured in CKS/patterns.
-
-**Cleanup options**:
-```bash
-# Manual cleanup (for debugging)
-python -m scripts.cli cleanup --dry-run  # Show what would be deleted
-python -m scripts.cli cleanup              # Delete old handoffs
-
-# Custom retention period
-export HANDOFF_RETENTION_DAYS=30  # Default: 90
-```
+| File | Contents |
+|------|----------|
+| `references/quality-scoring.md` | Quality scoring weights, ratings, and breakdown |
+| `references/core-features.md` | Work context structure, automated detection, scoring algorithm |
+| `references/usage-patterns.md` | Automatic capture, manual CLI, session continuity workflow |
+| `references/handover-template.md` | Full handover document template with examples |
+| `references/retention-policy.md` | 90-day retention, auto-cleanup, data storage paths |

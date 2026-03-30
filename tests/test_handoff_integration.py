@@ -172,6 +172,109 @@ def test_stale_snapshot_is_rejected_with_metadata_only_hint(tmp_path, monkeypatc
     assert rejected["resume_snapshot"]["status"] == "rejected_stale"
 
 
+def test_tasks_snapshot_flows_through_handoff_pipeline(tmp_path, monkeypatch):
+    """Regression test: tasks_snapshot should flow from PreCompact through to restore message."""
+    terminal_id = "console_tasks_test"
+    monkeypatch.setenv("HANDOFF_PROJECT_ROOT", str(tmp_path))
+
+    # Create task tracker state before PreCompact runs
+    task_tracker_dir = tmp_path / ".claude" / "state" / "task_tracker"
+    task_tracker_dir.mkdir(parents=True, exist_ok=True)
+    task_file = task_tracker_dir / f"{terminal_id}_tasks.json"
+    task_data = {
+        "terminal_id": terminal_id,
+        "tasks": {
+            "task_list": [
+                {"id": "1", "status": "in_progress", "description": "Fix the bug in handler"},
+                {"id": "2", "status": "pending", "description": "Write regression test"},
+                {"id": "3", "status": "completed", "description": "Review PR"},
+            ]
+        },
+    }
+    with open(task_file, "w", encoding="utf-8") as f:
+        json.dump(task_data, f)
+
+    # Create transcript - use same structure as working _capture_v2_snapshot
+    transcript_path = tmp_path / "transcripts" / "tasks.jsonl"
+    _write_transcript(
+        transcript_path,
+        [
+            {
+                "type": "user",
+                "message": {
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Finish the Handoff V2 migration and pass task status through.",
+                        }
+                    ]
+                },
+            },
+            {
+                "type": "tool_use",
+                "name": "Edit",
+                "input": {
+                    "file_path": "P:/packages/handoff/scripts/hooks/SessionStart_handoff_restore.py"
+                },
+            },
+            {
+                "type": "assistant",
+                "message": {
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Decision: pass task status through handoff. editing the handoff restore file.",
+                        }
+                    ]
+                },
+            },
+        ],
+    )
+
+    # Run PreCompact
+    precompact_payload = {
+        "session_id": "source-session-tasks",
+        "terminal_id": terminal_id,
+        "transcript_path": str(transcript_path),
+        "cwd": str(tmp_path),
+        "hook_event_name": "PreCompact",
+        "trigger": "manual",
+    }
+    output = _run_hook("PreCompact_handoff_capture.py", precompact_payload, env=None)
+    assert output["decision"] == "approve"
+
+    # Verify tasks_snapshot was stored in the envelope
+    storage = HandoffFileStorage(tmp_path, terminal_id)
+    saved = storage.load_handoff()
+    assert saved is not None
+    assert "tasks_snapshot" in saved["resume_snapshot"]
+    # Should have 2 pending/in_progress tasks (not completed)
+    task_snapshot = saved["resume_snapshot"]["tasks_snapshot"]
+    pending = [t for t in task_snapshot if t.get("status") not in ("completed", "done")]
+    assert len(pending) == 2
+
+    # Run SessionStart restore
+    restore_payload = {
+        "session_id": "restore-session-tasks",
+        "terminal_id": terminal_id,
+        "cwd": str(tmp_path),
+        "hook_event_name": "SessionStart",
+        "trigger": "compact",
+        "source": "compact",
+    }
+    restore_output = _run_hook("SessionStart_handoff_restore.py", restore_payload)
+
+    # Verify tasks appear in restore message
+    context = restore_output["additionalContext"]
+    assert "## Current Tasks" in context
+    assert "[in_progress]" in context
+    assert "[pending]" in context
+    assert "Fix the bug in handler" in context
+    assert "Write regression test" in context
+    # Completed tasks should not appear
+    assert "Review PR" not in context
+
+
 def test_invalid_checksum_is_rejected_without_task_context(tmp_path, monkeypatch):
     _, storage = _capture_v2_snapshot(
         tmp_path, monkeypatch, terminal_id="console_invalid"

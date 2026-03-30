@@ -43,6 +43,7 @@ from scripts.hooks.__lib.handoff_v2 import (
     make_evidence_id,
     short_task_name,
 )
+from scripts.hooks.__lib.dynamic_sections import calculate_quality_score_dynamic
 from scripts.hooks.__lib.hook_input_validation import (
     HookInputError,
     validate_hook_input,
@@ -52,7 +53,11 @@ from scripts.hooks.__lib.transcript import (  # type: ignore
     TranscriptParser,
     extract_last_substantive_user_message,
 )
-from scripts.hooks.__lib.transcript import is_meta_discussion  # noqa: F401
+from scripts.hooks.__lib.transcript import (  # noqa: F401
+    is_meta_discussion,
+    is_clarification_message,
+    extract_preceding_message,
+)
 
 SESSION_PATTERNS = {
     "planning": [
@@ -107,6 +112,98 @@ def detect_session_type(user_message: str, active_files: list[str]) -> tuple[str
             best_match = session_type
             best_score = score
     return best_match, SESSION_EMOJIS.get(best_match, "📍")
+
+
+# CREATE vs IMPLEMENT task mode patterns
+# Distinguishes creating new artifacts from implementing/fixing existing ones
+CREATE_PATTERNS = [
+    re.compile(r"^\s*(?:create|write|add|new)\b", re.IGNORECASE),
+    re.compile(
+        r"\b(?:create|write|add)\s+(?:an?\s+)?(?:new\s+)?(?:adr|artifact|document|file|module|component)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(?:create|make|build)\s+(?:an?\s+)?(?:new\s+)?(?:skill|hook|agent|system)\b",
+        re.IGNORECASE,
+    ),
+]
+IMPLEMENT_PATTERNS = [
+    re.compile(r"^\s*(?:implement|fix|repair|resolve)\b", re.IGNORECASE),
+    re.compile(r"\b(?:implement|fix|repair|resolve|debug)\s+", re.IGNORECASE),
+    re.compile(
+        r"\b(?:refactor|update|modify|change|improve|enhance|optimize)\s+(?:the\s+)?",
+        re.IGNORECASE,
+    ),
+]
+
+
+def detect_task_mode(user_message: str, active_files: list[str]) -> str:
+    """Detect whether task is CREATE (new artifact) or IMPLEMENT (existing work).
+
+    Distinguishes between:
+    - CREATE: Making new artifacts (ADR, documentation, new features, skills, hooks)
+    - IMPLEMENT: Fixing, refactoring, improving existing code/features
+    - none: Cannot determine or not applicable
+
+    Args:
+        user_message: The user's goal message
+        active_files: List of active file paths
+
+    Returns:
+        "create", "implement", or "none"
+    """
+    haystack = " ".join([user_message, *active_files]).lower()
+    c_score = sum(1 for p in CREATE_PATTERNS if p.search(haystack))
+    i_score = sum(1 for p in IMPLEMENT_PATTERNS if p.search(haystack))
+    if c_score > i_score:
+        return "create"
+    elif i_score > c_score:
+        return "implement"
+    return "none"
+
+
+def detect_lifecycle_phase(
+    blockers: list[dict[str, Any]],
+    active_files: list[str],
+    pending_operations: list[dict[str, Any]],
+    goal: str,
+    task_mode: str = "none",
+) -> str:
+    """Detect conversation lifecycle phase from already-extracted data.
+
+    Returns one of: "discussing", "planning", "implementing".
+    Default is "implementing" (preserves current behavior).
+
+    Note: "approved" and "reviewing" are declared in VALID_LIFECYCLE_PHASES
+    but are not produced by this function. They are reserved for future
+    JSONL-based detection (Phase 2) or UserPromptSubmit hook detection.
+    """
+    if not goal or not goal.strip():
+        # Edge case: empty goal with no other signals → discussing
+        return "discussing"
+
+    # If awaiting_approval blocker exists, session is in planning
+    if any(b.get("type") == "awaiting_approval" for b in blockers):
+        return "planning"
+
+    has_pending = bool(pending_operations)
+
+    # If pending operations exist with no blockers, implementing
+    if has_pending:
+        return "implementing"
+
+    # No pending ops — check if goal ends with question mark
+    if goal.strip().endswith("?"):
+        return "discussing"
+
+    # Use task_mode as override signal:
+    # If task_mode indicates active implementation work, trust it over
+    # the absence of pending_operations (handles early-compact scenario)
+    if task_mode in ("implement", "create") and any(active_files):
+        return "implementing"
+
+    # No edits, no pending ops, no clear implementation signal → discussing
+    return "discussing"
 
 
 def detect_planning_session(
@@ -544,6 +641,54 @@ def main() -> None:
         last_assistant_text = _extract_last_assistant_text(parser)
         next_step = _infer_next_step(last_assistant_text, pending_operations, goal)
 
+        # Detect task mode (CREATE vs IMPLEMENT) for handoff envelope
+        task_mode = detect_task_mode(goal, active_files)
+        logger.debug("[PreCompact V2] Task mode detected: %s", task_mode)
+
+        # Detect lifecycle phase (discussing/planning/implementing)
+        # Prefer accumulated JSONL state over inference when available
+        accumulated_lifecycle_phase = None
+        try:
+            storage_for_accum = HandoffFileStorage(project_root, terminal_id)
+            accumulated_events = storage_for_accum.read_accumulated_state()
+            # Find the last phase_transition event
+            for event in reversed(accumulated_events):
+                if event.get("type") == "phase_transition":
+                    accumulated_lifecycle_phase = event.get("to")
+                    break
+        except Exception as exc:
+            logger.debug("[PreCompact V2] Accumulated state read failed: %s", exc)
+
+        if accumulated_lifecycle_phase:
+            lifecycle_phase = accumulated_lifecycle_phase
+            logger.info(
+                "[PreCompact V2] Using accumulated lifecycle phase: %s",
+                lifecycle_phase,
+            )
+        else:
+            lifecycle_phase = detect_lifecycle_phase(
+                blockers,
+                active_files,
+                pending_operations,
+                goal,
+                task_mode,
+            )
+            logger.debug(
+                "[PreCompact V2] Lifecycle phase detected (inferred): %s",
+                lifecycle_phase,
+            )
+
+        # Extract preceding context if goal is a clarification message
+        preceding_task_context = ""
+        if is_clarification_message(goal):
+            preceding_msg = extract_preceding_message(transcript_path, goal)
+            if preceding_msg:
+                preceding_task_context = preceding_msg
+                logger.info(
+                    "[PreCompact V2] Goal is clarification - captured preceding context: %s...",
+                    preceding_msg[:80],
+                )
+
         evidence_index = _build_evidence_index(
             project_root, transcript_path, active_files
         )
@@ -584,6 +729,25 @@ def main() -> None:
                 "[PreCompact V2] Dynamic quality score calculation failed: %s", exc
             )
 
+        # Read task state from task tracker for handoff
+        tasks_snapshot: list[dict[str, Any]] = []
+        try:
+            task_tracker_dir = project_root / ".claude" / "state" / "task_tracker"
+            task_file_path = task_tracker_dir / f"{terminal_id}_tasks.json"
+            if task_file_path.exists():
+                with open(task_file_path, encoding="utf-8") as f:
+                    task_data = json.load(f)
+                # Extract tasks list from the task tracker file
+                tasks_snapshot = task_data.get("tasks", {}).get("task_list", [])
+                logger.debug(
+                    "[PreCompact V2] Loaded %d tasks from task tracker",
+                    len(tasks_snapshot),
+                )
+        except Exception as exc:
+            logger.warning(
+                "[PreCompact V2] Failed to read task state: %s", exc
+            )
+
         resume_snapshot = build_resume_snapshot(
             terminal_id=terminal_id,
             source_session_id=input_data.get("session_id", ""),
@@ -600,6 +764,7 @@ def main() -> None:
             transcript_path=transcript_path,
             message_intent=message_intent,
             quality_score=quality_score,
+            tasks_snapshot=tasks_snapshot,
         )
         envelope = build_envelope(
             resume_snapshot=resume_snapshot,

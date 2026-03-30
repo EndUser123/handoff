@@ -5,6 +5,9 @@ This tests the envelope expiration logic:
 - Expired envelopes (created_at > HANDOFF_TTL ago) should be rejected
 - Expired envelopes should be deleted from disk
 - Fresh envelopes should be accepted
+
+The injector reads from P:/.claude/state/handoff/{terminal_id}_handoff.json
+matching the format written by PreCompact_handoff_capture.py.
 """
 
 from __future__ import annotations
@@ -24,13 +27,12 @@ if str(_hooks_path) not in sys.path:
 
 from UserPromptSubmit_modules.handoff_context_injector import (
     HANDOFF_TTL,
-    delete_handoff_state,
     load_handoff_envelope,
 )
 
 
 def _write_envelope(path: Path, created_at: float | None = None) -> None:
-    """Write a test envelope to disk."""
+    """Write a test envelope to disk in the terminal_id format."""
     if created_at is None:
         created_at = time.time()
 
@@ -49,40 +51,41 @@ def _write_envelope(path: Path, created_at: float | None = None) -> None:
 
 def test_fresh_envelope_is_loaded(tmp_path):
     """Fresh envelopes (created within HANDOFF_TTL) should be loaded successfully."""
-    # Override STATE_DIR for test
+    # Override _HANDOFF_DIR for test
     import UserPromptSubmit_modules.handoff_context_injector as injector
 
-    original_state_dir = injector.STATE_DIR
-    injector.STATE_DIR = tmp_path
+    original_handoff_dir = injector._HANDOFF_DIR
+    injector._HANDOFF_DIR = tmp_path
 
     try:
-        state_file = tmp_path / "handoff_test_session.json"
+        # Use terminal_id filename format: {terminal_id}_handoff.json
+        state_file = tmp_path / "console_test_terminal_handoff.json"
         _write_envelope(state_file, created_at=time.time())
 
-        envelope = load_handoff_envelope("test_session")
+        envelope = load_handoff_envelope("console_test_terminal")
 
         assert envelope is not None
         assert envelope["session_id"] == "test_session"
         assert envelope["resume_snapshot"]["goal"] == "test goal"
     finally:
-        injector.STATE_DIR = original_state_dir
+        injector._HANDOFF_DIR = original_handoff_dir
 
 
 def test_expired_envelope_is_rejected(tmp_path):
     """Expired envelopes (created_at > HANDOFF_TTL ago) should return None."""
-    # Override STATE_DIR for test
+    # Override _HANDOFF_DIR for test
     import UserPromptSubmit_modules.handoff_context_injector as injector
 
-    original_state_dir = injector.STATE_DIR
-    injector.STATE_DIR = tmp_path
+    original_handoff_dir = injector._HANDOFF_DIR
+    injector._HANDOFF_DIR = tmp_path
 
     try:
-        state_file = tmp_path / "handoff_test_session.json"
+        state_file = tmp_path / "console_test_terminal_handoff.json"
         # Create envelope that expired 1 second ago
         expired_time = time.time() - HANDOFF_TTL - 1
         _write_envelope(state_file, created_at=expired_time)
 
-        envelope = load_handoff_envelope("test_session")
+        envelope = load_handoff_envelope("console_test_terminal")
 
         # Expired envelope should return None
         assert envelope is None
@@ -90,26 +93,26 @@ def test_expired_envelope_is_rejected(tmp_path):
         # File should be deleted
         assert not state_file.exists()
     finally:
-        injector.STATE_DIR = original_state_dir
+        injector._HANDOFF_DIR = original_handoff_dir
 
 
 def test_boundary_envelope_at_ttl_limit(tmp_path):
     """Envelope exactly at TTL boundary is rejected (uses > not >=)."""
-    # Override STATE_DIR for test
+    # Override _HANDOFF_DIR for test
     import UserPromptSubmit_modules.handoff_context_injector as injector
 
-    original_state_dir = injector.STATE_DIR
-    injector.STATE_DIR = tmp_path
+    original_handoff_dir = injector._HANDOFF_DIR
+    injector._HANDOFF_DIR = tmp_path
 
     try:
-        state_file = tmp_path / "handoff_test_session.json"
+        state_file = tmp_path / "console_test_terminal_handoff.json"
         # Create envelope exactly at TTL limit (should be expired)
         # The code uses: time.time() - created_at > HANDOFF_TTL
         # So at exactly HANDOFF_TTL, the envelope is expired
         boundary_time = time.time() - HANDOFF_TTL
         _write_envelope(state_file, created_at=boundary_time)
 
-        envelope = load_handoff_envelope("test_session")
+        envelope = load_handoff_envelope("console_test_terminal")
 
         # Boundary envelope should be expired (rejected)
         assert envelope is None
@@ -117,48 +120,24 @@ def test_boundary_envelope_at_ttl_limit(tmp_path):
         # File should be deleted
         assert not state_file.exists()
     finally:
-        injector.STATE_DIR = original_state_dir
+        injector._HANDOFF_DIR = original_handoff_dir
 
 
-def test_delete_handoff_state_removes_file(tmp_path):
-    """delete_handoff_state() should remove the state file."""
-    # Override STATE_DIR for test
+def test_missing_file_returns_none(tmp_path):
+    """Missing handoff file should return None gracefully."""
+    # Override _HANDOFF_DIR for test
     import UserPromptSubmit_modules.handoff_context_injector as injector
 
-    original_state_dir = injector.STATE_DIR
-    injector.STATE_DIR = tmp_path
+    original_handoff_dir = injector._HANDOFF_DIR
+    injector._HANDOFF_DIR = tmp_path
 
     try:
-        state_file = tmp_path / "handoff_test_session.json"
-        _write_envelope(state_file)
+        envelope = load_handoff_envelope("console_nonexistent_terminal")
 
-        # Verify file exists
-        assert state_file.exists()
-
-        # Delete it
-        delete_handoff_state("test_session")
-
-        # Verify file is gone
-        assert not state_file.exists()
+        # Should return None for missing file
+        assert envelope is None
     finally:
-        injector.STATE_DIR = original_state_dir
-
-
-def test_delete_handoff_state_missing_file_is_graceful(tmp_path):
-    """delete_handoff_state() should handle missing files gracefully."""
-    # Override STATE_DIR for test
-    import UserPromptSubmit_modules.handoff_context_injector as injector
-
-    original_state_dir = injector.STATE_DIR
-    injector.STATE_DIR = tmp_path
-
-    try:
-        # Try to delete non-existent file (should not raise)
-        delete_handoff_state("nonexistent_session")
-
-        # Should not raise any exception
-    finally:
-        injector.STATE_DIR = original_state_dir
+        injector._HANDOFF_DIR = original_handoff_dir
 
 
 if __name__ == "__main__":

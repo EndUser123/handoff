@@ -1,0 +1,92 @@
+{
+  "resume_snapshot": {
+    "schema_version": 2,
+    "snapshot_id": "5172350c-de69-4979-bb5f-ba76cac31045",
+    "terminal_id": "console_bb9f578b-f327-4a25-816c-659715443c98",
+    "source_session_id": "84075f70-1cb3-4182-800d-e0029d0169e6",
+    "created_at": "2026-03-30T22:40:42.378304+00:00",
+    "expires_at": "2026-03-30T23:00:42.378304+00:00",
+    "status": "rejected_stale",
+    "goal": "You have to fix those errors.",
+    "current_task": "You have to fix those errors.",
+    "progress_percent": 35,
+    "progress_state": "ready",
+    "blockers": [],
+    "active_files": [
+      "P:\\__csf\\arch_decisions\\ADR-20260329-llm-consultation-pattern-fix.md",
+      "C:\\Users\\brsth\\.claude\\plans\\plan-adr-20260329-llm-consultation-pattern-fix.md",
+      "P:\\.claude\\hooks\\Stop_good_question_gate.py",
+      "P:/.claude/skills/__lib/skill_autonomy_registry.py",
+      "P:\\.claude\\hooks\\PreToolUse.py",
+      "P:\\.claude\\hooks\\PreToolUse_context_sufficiency_gate.py",
+      "P:/.claude/hooks/PreToolUse_context_sufficiency_gate.py",
+      "P:\\.claude\\settings.json",
+      "P:\\.claude\\hooks\\__lib\\circuit_breaker.py",
+      "P:\\.claude\\hooks\\PreToolUse_skill_question_gate.py"
+    ],
+    "pending_operations": [],
+    "next_step": "The original version used `STATE_DIR` pointing to `P:/.claude/hooks/state/` with `handoff_{session_id}.json`. My fix changed to `_HANDOFF_DIR` pointing to `P:/.claude/state/handoff/` with `{terminal_id}_handoff.json`. Th",
+    "decision_refs": [],
+    "evidence_refs": [
+      "ev_d758eca3a49e45c4ac8acd9ccc2834ae",
+      "ev_5a2dc5bb03384f55b6c165f0d81478f2",
+      "ev_e0104b4991c446c6bf46ffab154c7410",
+      "ev_89fea4506b8e42c58a38ee81df1b8468",
+      "ev_46169b786d754350a8629c8f41c7a892",
+      "ev_48152b3b944c4635bdcf456d74db3210"
+    ],
+    "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\84075f70-1cb3-4182-800d-e0029d0169e6.jsonl",
+    "message_intent": "instruction",
+    "quality_score": 0.9,
+    "tasks_snapshot": [],
+    "rejected_at": "2026-03-30T22:41:39.947451+00:00",
+    "rejected_by_session_id": "84075f70-1cb3-4182-800d-e0029d0169e6",
+    "rejection_reason": "snapshot evidence path outside project directory"
+  },
+  "decision_register": [],
+  "evidence_index": [
+    {
+      "id": "ev_d758eca3a49e45c4ac8acd9ccc2834ae",
+      "type": "transcript",
+      "label": "Current compact transcript",
+      "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\84075f70-1cb3-4182-800d-e0029d0169e6.jsonl",
+      "content_hash": "sha256:6b700f8df766a90b27116c4d9550b40268c7b581ccaa6b9ae6534db997d2e1b2"
+    },
+    {
+      "id": "ev_5a2dc5bb03384f55b6c165f0d81478f2",
+      "type": "file",
+      "label": "ADR-20260329-llm-consultation-pattern-fix.md",
+      "path": "P:\\__csf\\arch_decisions\\ADR-20260329-llm-consultation-pattern-fix.md",
+      "content_hash": "sha256:d4a542de019b41900e81f5018bdd77c93e7a1c55f1cc0a03a966b8e4dab1bafd"
+    },
+    {
+      "id": "ev_e0104b4991c446c6bf46ffab154c7410",
+      "type": "file",
+      "label": "plan-adr-20260329-llm-consultation-pattern-fix.md",
+      "path": "C:\\Users\\brsth\\.claude\\plans\\plan-adr-20260329-llm-consultation-pattern-fix.md",
+      "content_hash": "sha256:1acdf666948485071e9009d93f2ef08d7524ab898b1deecaecffc012082f9e4b"
+    },
+    {
+      "id": "ev_89fea4506b8e42c58a38ee81df1b8468",
+      "type": "file",
+      "label": "Stop_good_question_gate.py",
+      "path": "P:\\.claude\\hooks\\Stop_good_question_gate.py",
+      "content_hash": "sha256:b398df20cd9934244affea3158d56f2e5d8a0ed3a5594e6fcdcab67c4fd04dea"
+    },
+    {
+      "id": "ev_46169b786d754350a8629c8f41c7a892",
+      "type": "file",
+      "label": "skill_autonomy_registry.py",
+      "path": "P:\\.claude\\skills\\__lib\\skill_autonomy_registry.py",
+      "content_hash": "sha256:58c89f71c78878a36d410faab1356e0e0d5c278a81a094881bcf0793440e19d2"
+    },
+    {
+      "id": "ev_48152b3b944c4635bdcf456d74db3210",
+      "type": "file",
+      "label": "PreToolUse.py",
+      "path": "P:\\.claude\\hooks\\PreToolUse.py",
+      "content_hash": "sha256:aed5d0b320d2a5cf3833014f09b5bae2374ab360a9d92be17754ccda65ebc17a"
+    }
+  ],
+  "checksum": "sha256:5d8ce886b5bb96151cfaad218d76c9cf083db76e67f54f47fee5989b1c3dae10"
+}
