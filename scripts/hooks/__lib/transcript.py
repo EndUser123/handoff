@@ -2318,7 +2318,9 @@ class TranscriptParser:
                 tool_id = item.get("id", "")
 
                 # Determine completion state by checking for corresponding tool result
-                tool_state = "completed" if tool_id in completed_tool_ids else "in_progress"
+                tool_state = (
+                    "completed" if tool_id in completed_tool_ids else "in_progress"
+                )
 
                 # Extract target from tool input
                 target = "unknown"
