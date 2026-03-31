@@ -296,9 +296,8 @@ class TestInvestigationOperationDetails:
         """Test Grep operation includes pattern in target."""
         transcript_file = tmp_path / "test.jsonl"
         long_pattern = "def some_very_long_function_name_that_exceeds_limit" * 2
-        transcript_file.write_text(
-            f'{{"type": "tool_use", "name": "Grep", "input": {{"pattern": "{long_pattern}"}}}}\n'
-        )
+        entry = make_tool_use_entry("Grep", {"pattern": long_pattern})
+        transcript_file.write_text(json.dumps(entry) + "\n")
 
         parser = TranscriptParser(transcript_file)
         ops = parser.extract_pending_operations()
