@@ -213,8 +213,11 @@ class TestPendingOperationsPriority:
 
         transcript_file = tmp_path / "test.jsonl"
         entries = [
-            {"type": "tool_use", "name": "Grep", "input": {"pattern": "test"}},
-            {"type": "assistant", "content": "I will review the code now."},
+            make_tool_use_entry("Grep", {"pattern": "test"}),
+            {
+                "type": "assistant",
+                "content": "I will review the code now.",
+            },
         ]
         transcript_file.write_text("\n".join(json.dumps(e) for e in entries) + "\n")
 
