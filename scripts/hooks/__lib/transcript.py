@@ -2281,14 +2281,44 @@ class TranscriptParser:
 
         pending_ops = []
 
-        # First pass: Detect tool_use events (more reliable than text keywords)
+        # Build set of completed tool IDs for completion detection
+        # In the transcript, tool results appear as entries with type="tool" and the
+        # same id as the corresponding tool_use entry
+        completed_tool_ids: set[str] = set()
+        for entry in entries:
+            if entry.get("type") == "tool":
+                tool_id = entry.get("id", "")
+                if tool_id:
+                    completed_tool_ids.add(tool_id)
+
+        # First pass: Detect tool_use events inside assistant message content
+        # Real transcript structure: {"type": "assistant", "message": {"content": [{"type": "tool_use", ...}]}}
         for i, entry in enumerate(entries):
             entry_type = entry.get("type", "")
 
-            # Detect actual tool invocations
-            if entry_type == "tool_use":
-                tool_name = entry.get("name", "")
-                input_data = entry.get("input", {})
+            if entry_type != "assistant":
+                continue
+
+            # Extract content items from nested message structure
+            msg_obj = entry.get("message", {})
+            if not isinstance(msg_obj, dict):
+                continue
+            content_items = msg_obj.get("content", [])
+            if not isinstance(content_items, list):
+                continue
+
+            for item in content_items:
+                if not isinstance(item, dict):
+                    continue
+                if item.get("type") != "tool_use":
+                    continue
+
+                tool_name = item.get("name", "")
+                input_data = item.get("input", {})
+                tool_id = item.get("id", "")
+
+                # Determine completion state by checking for corresponding tool result
+                tool_state = "completed" if tool_id in completed_tool_ids else "in_progress"
 
                 # Extract target from tool input
                 target = "unknown"
@@ -2330,7 +2360,7 @@ class TranscriptParser:
                     {
                         "type": op_type,
                         "target": target,
-                        "state": "in_progress",
+                        "state": tool_state,
                         "details": {"tool": tool_name, "input": str(input_data)[:200]},
                     }
                 )
@@ -2338,6 +2368,9 @@ class TranscriptParser:
                 # Limit to prevent excessive pending operations
                 if len(pending_ops) >= 5:
                     break
+
+            if len(pending_ops) >= 5:
+                break
 
         # Second pass: Fallback to keyword detection in assistant text (if no tools found)
         if not pending_ops:

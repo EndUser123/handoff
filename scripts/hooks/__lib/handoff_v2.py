@@ -14,7 +14,6 @@ from typing import Any
 from uuid import uuid4
 
 # Import dynamic sections for content generation
-from scripts.hooks.__lib import dynamic_sections  # type: ignore
 
 SCHEMA_VERSION = 2
 DEFAULT_FRESHNESS_MINUTES = int(os.getenv("HANDOFF_FRESHNESS_MINUTES", "20"))
@@ -646,7 +645,9 @@ def build_restore_message_compact(payload: dict[str, Any]) -> str:
 
     # Format active files
     active_files = snapshot.get("active_files", [])
-    active_files_str = "\n".join(f"- {f}" for f in active_files) if active_files else "none"
+    active_files_str = (
+        "\n".join(f"- {f}" for f in active_files) if active_files else "none"
+    )
 
     # Format pending operations
     pending_ops = snapshot.get("pending_operations", [])
@@ -661,14 +662,14 @@ def build_restore_message_compact(payload: dict[str, Any]) -> str:
 
     lines = [
         "<compact-restore>",
-        f"status: restored",
+        "status: restored",
         f"goal: {intent_prefix} {snapshot['goal']}",
         f"current_task: {snapshot['current_task']}",
         f"progress_state: {snapshot['progress_state']}",
         f"progress_percent: {snapshot['progress_percent']}",
         f"next_step: {snapshot['next_step']}",
         f"blockers_requiring_user: {blockers_str}",
-        f"active_files:",
+        "active_files:",
         active_files_str,
         f"pending_operations: {len(pending_ops)} pending",
         pending_str,

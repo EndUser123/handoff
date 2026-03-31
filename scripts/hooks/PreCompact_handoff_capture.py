@@ -745,9 +745,7 @@ def main() -> None:
                     len(tasks_snapshot),
                 )
         except Exception as exc:
-            logger.warning(
-                "[PreCompact V2] Failed to read task state: %s", exc
-            )
+            logger.warning("[PreCompact V2] Failed to read task state: %s", exc)
 
         resume_snapshot = build_resume_snapshot(
             terminal_id=terminal_id,
@@ -826,15 +824,11 @@ def main() -> None:
             }
             with marker_path.open("w", encoding="utf-8") as fh:
                 json.dump(marker_payload, fh)
-            logger.debug(
-                "[PreCompact V2] Compaction marker written: %s", marker_path
-            )
+            logger.debug("[PreCompact V2] Compaction marker written: %s", marker_path)
         except Exception as exc:
             # Marker write failure is non-fatal — handoff is already saved.
             # UserPromptSubmit will fall back to SessionStart restore.
-            logger.warning(
-                "[PreCompact V2] Failed to write compaction marker: %s", exc
-            )
+            logger.warning("[PreCompact V2] Failed to write compaction marker: %s", exc)
 
         output = {
             "decision": "approve",
