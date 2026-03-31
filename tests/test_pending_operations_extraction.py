@@ -5,10 +5,38 @@ Tests the enhanced pending operations detection that:
 2. Falls back to enhanced keyword detection including review/analysis patterns
 3. Correctly identifies investigation operations
 
-Relates to fix for handoff regression where review tasks weren't detected.
+All tool_use entries use NESTED format (production standard):
+  {"type": "assistant", "message": {"content": [{"type": "tool_use", ...}]}}
 """
 
+import json
+import uuid
 from core.hooks.__lib.transcript import TranscriptParser
+
+
+def make_tool_use_entry(tool_name: str, tool_input: dict) -> dict:
+    """Create a nested-format tool_use entry matching production transcript structure.
+
+    Production format: tool_use entries are nested inside assistant message.content.
+    """
+    entry_id = f"call_{uuid.uuid4().hex[:8]}"
+    return {
+        "type": "assistant",
+        "uuid": f"entry_{entry_id}",
+        "message": {
+            "id": f"msg_{entry_id}",
+            "type": "message",
+            "role": "assistant",
+            "content": [
+                {
+                    "type": "tool_use",
+                    "id": entry_id,
+                    "name": tool_name,
+                    "input": tool_input,
+                }
+            ],
+        },
+    }
 
 
 class TestPendingOperationsToolUseDetection:
