@@ -1,89 +1,102 @@
 {
   "resume_snapshot": {
     "schema_version": 2,
-    "snapshot_id": "0d9eb84e-18aa-4156-ae25-3d0a746df6ea",
+    "snapshot_id": "3c12d1fe-8b37-4282-b192-e4bfc3036b7f",
     "terminal_id": "console_182b2ceb-0e83-48ca-b8c1-997762aa488e",
-    "source_session_id": "ee3c81ef-35c1-461c-b604-bdc55e7872e1",
-    "created_at": "2026-03-30T18:03:20.933422+00:00",
-    "expires_at": "2026-03-30T18:23:20.933422+00:00",
+    "source_session_id": "5e58e894-d3cd-4553-afbb-b426822818ff",
+    "created_at": "2026-03-31T22:56:30.122039+00:00",
+    "expires_at": "2026-03-31T23:16:30.122039+00:00",
     "status": "pending",
-    "goal": "[Request interrupted by user for tool use]",
-    "current_task": "[Request interrupted by user for tool use]",
+    "goal": "but you told me last time I asked that we had downloaded several.",
+    "current_task": "but you told me last time I asked that we had downloaded several.",
     "progress_percent": 35,
     "progress_state": "ready",
     "blockers": [],
     "active_files": [
-      "P:\\packages\\intelligence-stream\\README.md",
-      "P:\\packages\\intelligence-stream\\skills\\ingest\\SKILL.md",
-      "P:\\packages\\intelligence-stream\\bin\\csf-source",
+      "C:\\Users\\brsth\\.claude\\plans\\polished-mixing-grove.md",
       "P:\\packages\\intelligence-stream\\csf\\transcript.py",
-      "P:\\packages\\intelligence-stream\\csf\\batch.py",
-      "P:\\packages\\intelligence-stream\\csf\\batch_status.py",
-      "P:\\packages\\intelligence-stream\\csf\\cache.py",
-      "P:\\packages\\intelligence-stream\\csf\\source_enumerator.py",
-      "P:\\packages\\intelligence-stream\\bin\\csf-transcripts",
-      "P:\\packages\\intelligence-stream\\bin\\csf-batch"
+      "P:/packages/intelligence-stream/tests/test_transcript.py",
+      "P:/packages/intelligence-stream/csf/transcript.py",
+      "C:\\Users\\brsth\\AppData\\Local\\Temp\\claude\\P--\\5e58e894-d3cd-4553-afbb-b426822818ff\\tasks\\bb4k18rda.output",
+      "P:\\packages\\intelligence-stream\\tests\\test_transcript.py",
+      "C:\\Users\\brsth\\AppData\\Local\\Temp\\claude\\P--\\5e58e894-d3cd-4553-afbb-b426822818ff\\tasks\\bxmrb2t6u.output",
+      "P:\\__csf\\arch_decisions\\ADR-20260330-transcript-fetch-circuit-breaker.md",
+      "P:/packages/intelligence-stream/tests/conftest.py",
+      "P:/__csf/arch_decisions/ADR-20260329-cleanup-prevention-enhancement.md"
     ],
     "pending_operations": [],
-    "next_step": "Now I'll update the plan with the accepted fixes:",
-    "decision_refs": [],
-    "evidence_refs": [
-      "ev_c8e8f19497db4a8fa0815d0062ef49d2",
-      "ev_8dc3203b74ea497895809e0080aa0b99",
-      "ev_c52505fc6e9f4449b54781e4c670c93d",
-      "ev_14041367615a42e3b9da830ba897884c",
-      "ev_b64d084677884d2c94b4a7dbbc92a8d7",
-      "ev_e85f8df2ad004f6aa03a4818498602a9"
+    "next_step": "Now let me read the full cache storage implementation to complete the evidence gathering.",
+    "decision_refs": [
+      "dec_b20cfe3228274a27821715ce39824135"
     ],
-    "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\ee3c81ef-35c1-461c-b604-bdc55e7872e1.jsonl",
+    "evidence_refs": [
+      "ev_08f53de48eac4bd899918b3120efde5e",
+      "ev_43f5036b736d431b9c29a36e624e84dc",
+      "ev_bdb02d367ba94dba9ef5669af9678109",
+      "ev_1bffdda7afd1433595a047d35912a713",
+      "ev_b305c3ef298b49af94a27a7d716174fd",
+      "ev_a31beea0e77b4aeeb9d9f5f7e8f02da4"
+    ],
+    "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\5e58e894-d3cd-4553-afbb-b426822818ff.jsonl",
     "message_intent": "instruction",
     "quality_score": 0.4,
     "tasks_snapshot": []
   },
-  "decision_register": [],
+  "decision_register": [
+    {
+      "id": "dec_b20cfe3228274a27821715ce39824135",
+      "kind": "constraint",
+      "summary": "Zero. The cache has the schema (`transcript_cache` table exists) but 0 rows. The script has never actually downloaded and cached any transcripts — it's only been run in dry-run mode (no `--run` flag), or any live runs exited before the background writer thread could flush its queue to disk. The Rick Astley analysis that exists (`dQw4w9WgXcQ.json`) used `mode=\"transcript\"` but the `fallback_reason` shows `summarize_timeout_120s` — the summarize step timed out, not the transcript fetch. The transcript fetch itself may have succeeded via one of the free sources (ytdlp, youtube_transcript_api), but it was never cached because `set_cached_transcript` writes to a background queue that needs the process to stay alive long enough to flush.",
+      "details": "Zero. The cache has the schema (`transcript_cache` table exists) but 0 rows. The script has never actually downloaded and cached any transcripts — it's only been run in dry-run mode (no `--run` flag), or any live runs exited before the background writer thread could flush its queue to disk. The Rick Astley analysis that exists (`dQw4w9WgXcQ.json`) used `mode=\"transcript\"` but the `fallback_reason` shows `summarize_timeout_120s` — the summarize step timed out, not the transcript fetch. The transcript fetch itself may have succeeded via one of the free sources (ytdlp, youtube_transcript_api), but it was never cached because `set_cached_transcript` writes to a background queue that needs the process to stay alive long enough to flush.",
+      "priority": "high",
+      "applies_when": "Continue the current task after compact.",
+      "source_refs": [
+        "ev_08f53de48eac4bd899918b3120efde5e"
+      ]
+    }
+  ],
   "evidence_index": [
     {
-      "id": "ev_c8e8f19497db4a8fa0815d0062ef49d2",
+      "id": "ev_08f53de48eac4bd899918b3120efde5e",
       "type": "transcript",
       "label": "Current compact transcript",
-      "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\ee3c81ef-35c1-461c-b604-bdc55e7872e1.jsonl",
-      "content_hash": "sha256:d28f65ce216bc514450beb6f47ae41b0a4a0a7bd683724422fa420c7f546185f"
+      "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\5e58e894-d3cd-4553-afbb-b426822818ff.jsonl",
+      "content_hash": "sha256:70314dc15dcebf45f1235d933b273505c917f55d4ddffb5dc7ca58b2d0cfc6d8"
     },
     {
-      "id": "ev_8dc3203b74ea497895809e0080aa0b99",
+      "id": "ev_43f5036b736d431b9c29a36e624e84dc",
       "type": "file",
-      "label": "README.md",
-      "path": "P:\\packages\\intelligence-stream\\README.md",
-      "content_hash": "sha256:e9a9853c48c35e0f1bfe697edd54ef9aa7c7613b7382fb840979d18c6fa05f3a"
+      "label": "polished-mixing-grove.md",
+      "path": "C:\\Users\\brsth\\.claude\\plans\\polished-mixing-grove.md",
+      "content_hash": "sha256:a21073f9110ff97fdfccf684f48784e62c8588d0a5176d26b695287fb94400e7"
     },
     {
-      "id": "ev_c52505fc6e9f4449b54781e4c670c93d",
-      "type": "file",
-      "label": "SKILL.md",
-      "path": "P:\\packages\\intelligence-stream\\skills\\ingest\\SKILL.md",
-      "content_hash": "sha256:4d47af7adc106e030f8cd99fae83ea4ce5877e7854997624b8dafe8bdb18d849"
-    },
-    {
-      "id": "ev_14041367615a42e3b9da830ba897884c",
-      "type": "file",
-      "label": "csf-source",
-      "path": "P:\\packages\\intelligence-stream\\bin\\csf-source",
-      "content_hash": "sha256:cc0ef0519961484c49970539a1bbcbebce850911dd7a6371a577462ff068a327"
-    },
-    {
-      "id": "ev_b64d084677884d2c94b4a7dbbc92a8d7",
+      "id": "ev_bdb02d367ba94dba9ef5669af9678109",
       "type": "file",
       "label": "transcript.py",
       "path": "P:\\packages\\intelligence-stream\\csf\\transcript.py",
-      "content_hash": "sha256:c2bf57619b648459f45dfda6535c1f723b540728b489fdbc05e6346ca59f138a"
+      "content_hash": "sha256:91b22376642b67f6de08879a7946a693fc4d656b0d948fbb131877516006dd34"
     },
     {
-      "id": "ev_e85f8df2ad004f6aa03a4818498602a9",
+      "id": "ev_1bffdda7afd1433595a047d35912a713",
       "type": "file",
-      "label": "batch.py",
-      "path": "P:\\packages\\intelligence-stream\\csf\\batch.py",
-      "content_hash": "sha256:9a9c8697e9c3a840871b6c5f544464e4eb804ffcef686cfa885af9cea4e26b86"
+      "label": "test_transcript.py",
+      "path": "P:\\packages\\intelligence-stream\\tests\\test_transcript.py",
+      "content_hash": "sha256:bf2c3f9eb1c04aa37952d7f4ccf6de682058ce56c8dec29e63039b89e877e4ee"
+    },
+    {
+      "id": "ev_b305c3ef298b49af94a27a7d716174fd",
+      "type": "file",
+      "label": "transcript.py",
+      "path": "P:\\packages\\intelligence-stream\\csf\\transcript.py",
+      "content_hash": "sha256:91b22376642b67f6de08879a7946a693fc4d656b0d948fbb131877516006dd34"
+    },
+    {
+      "id": "ev_a31beea0e77b4aeeb9d9f5f7e8f02da4",
+      "type": "file",
+      "label": "bb4k18rda.output",
+      "path": "C:\\Users\\brsth\\AppData\\Local\\Temp\\claude\\P--\\5e58e894-d3cd-4553-afbb-b426822818ff\\tasks\\bb4k18rda.output"
     }
   ],
-  "checksum": "sha256:d1eee81ad260b17333c7b7f6124e08233d6a91f549f18c5da2708633a5c23443"
+  "checksum": "sha256:32b65a22117d5477c732d379764eba58c077909d6a369bae7a4a8b10a01e2a39"
 }

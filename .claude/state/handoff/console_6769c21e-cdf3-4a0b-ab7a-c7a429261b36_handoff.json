@@ -1,12 +1,12 @@
 {
   "resume_snapshot": {
     "schema_version": 2,
-    "snapshot_id": "e6cce1af-c768-46aa-995c-b7947902df59",
+    "snapshot_id": "6965c79c-3ddf-41d9-bac1-53b1e190ed69",
     "terminal_id": "console_6769c21e-cdf3-4a0b-ab7a-c7a429261b36",
     "source_session_id": "eccc132f-1e4f-442a-a9d1-b70fe244d13f",
-    "created_at": "2026-03-30T21:14:31.900873+00:00",
-    "expires_at": "2026-03-30T21:34:31.900873+00:00",
-    "status": "rejected_stale",
+    "created_at": "2026-03-31T17:39:59.137073+00:00",
+    "expires_at": "2026-03-31T17:59:59.137073+00:00",
+    "status": "pending",
     "goal": "Continue current task (meta-discussion filtered)",
     "current_task": "Continue current task (meta-discussion filtered)",
     "progress_percent": 35,
@@ -25,67 +25,64 @@
       "P:\\.claude\\hooks\\SessionStart.py"
     ],
     "pending_operations": [],
-    "next_step": "Let me check if there's another session working on the terminal ID fix, and also verify what the task list shows:",
+    "next_step": "The issue is pyright doesn't narrow the type after the `if sid` check when calling `set.add()`. Let me fix with explicit type annotation:",
     "decision_refs": [],
     "evidence_refs": [
-      "ev_d5e16d8e29f140809b8b66359b99a381",
-      "ev_97ef69813dc2436a8cb7f787d5495bb9",
-      "ev_b5dcd374a8e34ee2b9c7053d1a740771",
-      "ev_8fed0cd7e6d44a2ab06faa8f08afebe5",
-      "ev_ae42cdf29b4d4218b7fd58dcb398681f",
-      "ev_27373ded804a4d8a899a749b77b48a3e"
+      "ev_6cfb9fec5a3b46bfa2b896deb13831e7",
+      "ev_f41b6746349d4c67b2cc96255233c71d",
+      "ev_931173746b694f3cbbf382b108078ec7",
+      "ev_6fe99a0efc3140c0b9d332d5437eb74b",
+      "ev_0de8bd48032d425f9b19366366b6d22d",
+      "ev_0eebf104974b480a86897e15749cd7a3"
     ],
     "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\eccc132f-1e4f-442a-a9d1-b70fe244d13f.jsonl",
-    "message_intent": "question",
+    "message_intent": "instruction",
     "quality_score": 0.4,
-    "tasks_snapshot": [],
-    "rejected_at": "2026-03-30T21:16:02.668236+00:00",
-    "rejected_by_session_id": "eccc132f-1e4f-442a-a9d1-b70fe244d13f",
-    "rejection_reason": "snapshot evidence path outside project directory"
+    "tasks_snapshot": []
   },
   "decision_register": [],
   "evidence_index": [
     {
-      "id": "ev_d5e16d8e29f140809b8b66359b99a381",
+      "id": "ev_6cfb9fec5a3b46bfa2b896deb13831e7",
       "type": "transcript",
       "label": "Current compact transcript",
       "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\eccc132f-1e4f-442a-a9d1-b70fe244d13f.jsonl",
-      "content_hash": "sha256:f673815a5c0d05cf42f76ac1c58bcc5efbfabe44616868b7995ca2ddaaa8c231"
+      "content_hash": "sha256:b1ada313053c9de58944d8e6d35728c3cea52f5a042e479620d6293152e29da1"
     },
     {
-      "id": "ev_97ef69813dc2436a8cb7f787d5495bb9",
+      "id": "ev_f41b6746349d4c67b2cc96255233c71d",
       "type": "file",
       "label": "SKILL.md",
       "path": "C:\\Users\\brsth\\.claude\\skills\\notebooklm\\SKILL.md"
     },
     {
-      "id": "ev_b5dcd374a8e34ee2b9c7053d1a740771",
+      "id": "ev_931173746b694f3cbbf382b108078ec7",
       "type": "file",
       "label": "SKILL.md",
       "path": "P:\\.claude\\skills\\notebooklm\\SKILL.md",
-      "content_hash": "sha256:e263e43aaebf8ecfe179d2f25612b1624554eb3a94b887b5f7de9852f45015d3"
+      "content_hash": "sha256:a26ea81ccbaaec938b4fb5952e0ab2afbf013af1f947978af7321a89de682f8a"
     },
     {
-      "id": "ev_8fed0cd7e6d44a2ab06faa8f08afebe5",
+      "id": "ev_6fe99a0efc3140c0b9d332d5437eb74b",
       "type": "file",
       "label": "repos-template.yaml",
       "path": "P:\\.claude\\skills\\gitingest\\references\\repos-template.yaml",
       "content_hash": "sha256:f9397d5ebe99e5d96ebb0f0b2bc097a2959849856ea933970009bebed4e01221"
     },
     {
-      "id": "ev_ae42cdf29b4d4218b7fd58dcb398681f",
+      "id": "ev_0de8bd48032d425f9b19366366b6d22d",
       "type": "file",
       "label": "gitingest_runner.py",
       "path": "P:\\.claude\\skills\\gitingest\\scripts\\gitingest_runner.py",
       "content_hash": "sha256:63e591f54cd443845b9012868eeb4516ce27c6c7e974ed0d601482b67b70ea63"
     },
     {
-      "id": "ev_27373ded804a4d8a899a749b77b48a3e",
+      "id": "ev_0eebf104974b480a86897e15749cd7a3",
       "type": "file",
       "label": "ext-mcp-servers.yaml",
       "path": "P:\\tmp\\ext-mcp-servers.yaml",
       "content_hash": "sha256:70791e3a0d0d93258af9ecc252dffdb9e4d99503dbc270de347f3214db4dd850"
     }
   ],
-  "checksum": "sha256:ce1b78b07624c55e4f3ccf900c2c2d3925f57c3584615c7c950c434e38313155"
+  "checksum": "sha256:e52584190a53fe4b040dfa46513a4ba5dfb10742f3b327e14733c7d8087362bc"
 }

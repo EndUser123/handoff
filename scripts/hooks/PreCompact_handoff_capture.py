@@ -8,6 +8,7 @@ import logging
 import os
 import re
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -812,6 +813,28 @@ def main() -> None:
             storage.handoff_file.name,
             storage.handoff_file.stat().st_size,
         )
+
+        # Write compaction marker so UserPromptSubmit hook can detect intra-session compaction
+        # and inject restoration context on the first prompt after compaction.
+        try:
+            marker_dir = project_root / ".claude" / "hooks" / "state"
+            marker_dir.mkdir(parents=True, exist_ok=True)
+            marker_path = marker_dir / f"compaction_marker_{terminal_id}.json"
+            marker_payload = {
+                "timestamp": time.time(),
+                "handoff_path": str(storage.handoff_file),
+            }
+            with marker_path.open("w", encoding="utf-8") as fh:
+                json.dump(marker_payload, fh)
+            logger.debug(
+                "[PreCompact V2] Compaction marker written: %s", marker_path
+            )
+        except Exception as exc:
+            # Marker write failure is non-fatal — handoff is already saved.
+            # UserPromptSubmit will fall back to SessionStart restore.
+            logger.warning(
+                "[PreCompact V2] Failed to write compaction marker: %s", exc
+            )
 
         output = {
             "decision": "approve",

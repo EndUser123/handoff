@@ -175,5 +175,10 @@ def handoff_task_injector_hook(context: HookContext) -> HookResult:
     if envelope is None:
         return HookResult.empty()
 
+    # Bail if snapshot was already restored by SessionStart (prevents dual-path re-injection loop)
+    resume_snapshot = envelope.get("resume_snapshot") or {}
+    if resume_snapshot.get("status") != "pending":
+        return HookResult.empty()
+
     message = _build_recovery_message(envelope)
     return HookResult(context=message, tokens=len(message) // 4)

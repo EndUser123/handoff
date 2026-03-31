@@ -1,151 +1,115 @@
 {
   "resume_snapshot": {
     "schema_version": 2,
-    "snapshot_id": "61190da6-2e6e-4efc-9831-7959f2234ad5",
+    "snapshot_id": "de0dfb31-ceed-48b6-9267-f2bbf03d7f18",
     "terminal_id": "console_64278965-118f-499f-b752-1d072cc0b9ad",
-    "source_session_id": "c39d6ec7-3ed4-4f4d-a3fe-59d3818400ff",
-    "created_at": "2026-03-28T23:46:30.873179+00:00",
-    "expires_at": "2026-03-29T00:06:30.873179+00:00",
-    "status": "pending",
-    "goal": "Yes, please.",
-    "current_task": "Yes, please.",
+    "source_session_id": "67897a18-4e62-4679-919e-6ae94b573920",
+    "created_at": "2026-03-31T12:14:37.478833+00:00",
+    "expires_at": "2026-03-31T12:34:37.478833+00:00",
+    "status": "consumed",
+    "goal": "what's next?",
+    "current_task": "what's next?",
     "progress_percent": 35,
     "progress_state": "ready",
     "blockers": [],
     "active_files": [
-      "C:\\Users\\brsth\\.claude\\plans\\plan-adr-20260328-proactive-commitment-tracking-path-c.md",
-      "P:\\.claude\\hooks\\Stop_router.py",
-      "P:\\.claude\\hooks\\SessionStart.py",
-      "P:\\.claude\\hooks\\PreCompact.py",
-      "P:\\.claude\\hooks\\__lib\\file_lock.py",
-      "P:\\.claude\\skills\\gto\\gto_orchestrator.py",
-      "P:\\.claude\\settings.json",
-      "P:\\.claude\\arch_decisions\\ADR-20260328-proactive-commitment-tracking-path-c.md",
-      "P:\\.claude\\skills\\gto\\tests\\lib\\test_session_outcome_detector.py",
-      "P:\\.claude\\hooks\\__lib\\commitment_tracker.py"
+      "P:\\.claude\\skills\\nlm-skill\\SKILL.md",
+      "C:\\Users\\brsth\\.claude\\projects\\P--\\memory\\nlm_skill_auth_auto_recovery.md",
+      "C:\\Users\\brsth\\.claude\\projects\\P--\\memory\\MEMORY.md",
+      "P:\\.claude\\skills\\nlm-skill\\references\\troubleshooting.md",
+      "C:\\Users\\brsth\\.claude\\projects\\P--\\67897a18-4e62-4679-919e-6ae94b573920\\tool-results\\bz6kdm3li.txt",
+      "C:\\Users\\brsth\\.claude\\projects\\P--\\67897a18-4e62-4679-919e-6ae94b573920\\tool-results\\bquz1i044.txt",
+      "P:\\.claude\\skills\\arch\\resources\\deep.md",
+      "P:\\.claude\\skills\\arch\\references\\constitutional-principles.md",
+      "P:\\.claude\\skills\\arch\\references\\quality-model.md",
+      "P:\\.claude\\skills\\arch\\resources\\base.md"
     ],
     "pending_operations": [],
-    "next_step": "Updating SKILL.md to accurately reflect the new scope — session outcomes and skill coverage only, no code scanning.",
+    "next_step": "`status: READY` — plan passes verification.",
     "decision_refs": [
-      "dec_9cd53094c2354bac965a8644634b5136",
-      "dec_4c18aa6d49f844c8a1990f716317042a",
-      "dec_6d29add259c9432c937909978aab18b4",
-      "dec_5ea79db2c059444494746a1b75e07b36",
-      "dec_29feed07c97443da8852846b6cbde8ee"
+      "dec_2c5f76577cd143388f3b090991d85698",
+      "dec_5a1a5432557f4045b53f4003cbb2867c"
     ],
     "evidence_refs": [
-      "ev_547114a9d98545feb96f98ed85d691ef",
-      "ev_af2b3716039e4956b2587eefb08d37da",
-      "ev_95e0c765cd794fe5bcef2305db9e7d23",
-      "ev_1a2a8a2e58eb41db958b90e2df1f88b0",
-      "ev_cb93856f728a4a42bba089c008176452",
-      "ev_23baa6b92bc64b7fb7d1fbd00db739e9"
+      "ev_2f150bc9a4f940f88f02c2fef7f2dcfd",
+      "ev_243afe1c7d934aa7a1463020a15724d5",
+      "ev_9c564710133e4d5c949c9abdc2d21aa0",
+      "ev_3b7a829895804763a7dbc99c793f5148",
+      "ev_ee22950d7e1349cbbc8173527a7ad071",
+      "ev_37dc04103d9b43f7ac19dc58a0dfffe8"
     ],
-    "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\c39d6ec7-3ed4-4f4d-a3fe-59d3818400ff.jsonl",
-    "message_intent": "instruction",
-    "task_mode": "none",
-    "lifecycle_phase": "discussing"
+    "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\67897a18-4e62-4679-919e-6ae94b573920.jsonl",
+    "message_intent": "question",
+    "quality_score": 0.4,
+    "tasks_snapshot": [],
+    "consumed_at": "2026-03-31T12:16:02.808960+00:00",
+    "consumed_by_session_id": "67897a18-4e62-4679-919e-6ae94b573920"
   },
   "decision_register": [
     {
-      "id": "dec_9cd53094c2354bac965a8644634b5136",
+      "id": "dec_2c5f76577cd143388f3b090991d85698",
       "kind": "constraint",
-      "summary": "I don't understand how looking at the chat session can evidence 1262 gaps.",
-      "details": "I don't understand how looking at the chat session can evidence 1262 gaps.",
+      "summary": "The findings file must be a **sibling** of the plan (same directory), not in an adversarial subdirectory. `Path(plan_path).with_suffix(\".review.findings.json\")` replaces `.md` with `.review.findings.json`, so it expects: `C:\\Users\\brsth\\.claude\\plans\\plan-adr-20260329-premortem-v6-enhancements.review.findings.json`",
+      "details": "The findings file must be a **sibling** of the plan (same directory), not in an adversarial subdirectory. `Path(plan_path).with_suffix(\".review.findings.json\")` replaces `.md` with `.review.findings.json`, so it expects: `C:\\Users\\brsth\\.claude\\plans\\plan-adr-20260329-premortem-v6-enhancements.review.findings.json`",
       "priority": "high",
       "applies_when": "Continue the current task after compact.",
       "source_refs": [
-        "ev_547114a9d98545feb96f98ed85d691ef"
+        "ev_2f150bc9a4f940f88f02c2fef7f2dcfd"
       ]
     },
     {
-      "id": "dec_4c18aa6d49f844c8a1990f716317042a",
-      "kind": "anti_goal",
-      "summary": "It's ridiculous that you would check the entire codebase. You should not do that. What do you need to change so that you stop being ridiculous?",
-      "details": "It's ridiculous that you would check the entire codebase. You should not do that. What do you need to change so that you stop being ridiculous?",
-      "priority": "medium",
-      "applies_when": "Continue the current task after compact.",
-      "source_refs": [
-        "ev_547114a9d98545feb96f98ed85d691ef"
-      ]
-    },
-    {
-      "id": "dec_6d29add259c9432c937909978aab18b4",
+      "id": "dec_5a1a5432557f4045b53f4003cbb2867c",
       "kind": "constraint",
-      "summary": "The user is right. Running a full codebase GTO scan on `P:\\.claude\\hooks` was the wrong approach. **What I should have done instead:** For Path C specifically, I should have run GTO only on the commitment tracker files: ``` /gto --project-root \"P:\\.claude\\hooks\\__lib\\commitment_tracker.py\" ``` Or scoped to the specific gap types relevant to Path C — not a blanket scan of all hook files. **What needs to change in my behavior:** 1. **Don't auto-scan large directories** when given a vague task. The auto-detection picked `P:\\.claude\\hooks` (the entire hooks directory) and then GTO reported gaps for every Python file in it, including false-positive \"missing_test\" gaps for files that are integration-tested. 2. **Be targeted.** Path C scope is: `commitment_tracker.py`, its tests, and the hooks that invoke it. That's 3-4 files, not 1262 gaps across hundreds of files. 3. **Filter gap types.** If I do run GTO on a target, I should specify which gap types matter — e.g., `--gap-types code_quality,import_issue` — rather than accepting the full output including `missing_test` gaps that are expected artifacts of the hook architecture. **The practical fix:** Next time I need to verify a feature's health, I'll scope GTO to the specific files implementing it, not the enclosing directory. That gives a meaningful signal instead of noise.",
-      "details": "The user is right. Running a full codebase GTO scan on `P:\\.claude\\hooks` was the wrong approach. **What I should have done instead:** For Path C specifically, I should have run GTO only on the commitment tracker files: ``` /gto --project-root \"P:\\.claude\\hooks\\__lib\\commitment_tracker.py\" ``` Or scoped to the specific gap types relevant to Path C — not a blanket scan of all hook files. **What needs to change in my behavior:** 1. **Don't auto-scan large directories** when given a vague task. The auto-detection picked `P:\\.claude\\hooks` (the entire hooks directory) and then GTO reported gaps for every Python file in it, including false-positive \"missing_test\" gaps for files that are integration-tested. 2. **Be targeted.** Path C scope is: `commitment_tracker.py`, its tests, and the hooks that invoke it. That's 3-4 files, not 1262 gaps across hundreds of files. 3. **Filter gap types.** If I do run GTO on a target, I should specify which gap types matter — e.g., `--gap-types code_quality,import_issue` — rather than accepting the full output including `missing_test` gaps that are expected artifacts of the hook architecture. **The practical fix:** Next time I need to verify a feature's health, I'll scope GTO to the specific files implementing it, not the enclosing directory. That gives a meaningful signal instead of noise.",
+      "summary": "My simulation shows all dispositions found. The auto_verify must be reading from a cached bytecode. Let me force-reload:",
+      "details": "My simulation shows all dispositions found. The auto_verify must be reading from a cached bytecode. Let me force-reload:",
       "priority": "high",
       "applies_when": "Continue the current task after compact.",
       "source_refs": [
-        "ev_547114a9d98545feb96f98ed85d691ef"
-      ]
-    },
-    {
-      "id": "dec_5ea79db2c059444494746a1b75e07b36",
-      "kind": "constraint",
-      "summary": "For Path C verification specifically? **I don't need one.** GTO's target directory is for its gap detectors to scan files for: - Missing tests (`test_gap_detector`) - Missing docstrings (`doc_gap_detector`) - TODO/FIXME markers (`code_marker_detector`) - Import errors (`import_issue_detector`) But for Path C, the commitment tracker already has: - 25 passing tests (91% coverage) - No TODO/FIXME markers - Proper docstrings Running a full GTO scan on it would produce noise, not signal. **What I actually needed for Path C verification:** 1. `pytest P:\\.claude\\hooks\\tests\\test_commitment_tracker.py` — confirms tests pass 2. Check `settings.json` for `PROACTIVE_COMMITMENT_TRACKER_ENABLED=true` — confirms flag is set That's it. No GTO, no gap analysis, no target directory needed. I reached for the wrong tool because I defaulted to \"run GTO\" instead of thinking about what verification actually answers the question.",
-      "details": "For Path C verification specifically? **I don't need one.** GTO's target directory is for its gap detectors to scan files for: - Missing tests (`test_gap_detector`) - Missing docstrings (`doc_gap_detector`) - TODO/FIXME markers (`code_marker_detector`) - Import errors (`import_issue_detector`) But for Path C, the commitment tracker already has: - 25 passing tests (91% coverage) - No TODO/FIXME markers - Proper docstrings Running a full GTO scan on it would produce noise, not signal. **What I actually needed for Path C verification:** 1. `pytest P:\\.claude\\hooks\\tests\\test_commitment_tracker.py` — confirms tests pass 2. Check `settings.json` for `PROACTIVE_COMMITMENT_TRACKER_ENABLED=true` — confirms flag is set That's it. No GTO, no gap analysis, no target directory needed. I reached for the wrong tool because I defaulted to \"run GTO\" instead of thinking about what verification actually answers the question.",
-      "priority": "high",
-      "applies_when": "Continue the current task after compact.",
-      "source_refs": [
-        "ev_547114a9d98545feb96f98ed85d691ef"
-      ]
-    },
-    {
-      "id": "dec_29feed07c97443da8852846b6cbde8ee",
-      "kind": "constraint",
-      "summary": "The issue is clear: `save_json_artifact()` never writes `health_score` into the JSON even though `_compute_health()` exists and is used for markdown output. Let me check the exact artifact construction to fix it.",
-      "details": "The issue is clear: `save_json_artifact()` never writes `health_score` into the JSON even though `_compute_health()` exists and is used for markdown output. Let me check the exact artifact construction to fix it.",
-      "priority": "high",
-      "applies_when": "Continue the current task after compact.",
-      "source_refs": [
-        "ev_547114a9d98545feb96f98ed85d691ef"
+        "ev_2f150bc9a4f940f88f02c2fef7f2dcfd"
       ]
     }
   ],
   "evidence_index": [
     {
-      "id": "ev_547114a9d98545feb96f98ed85d691ef",
+      "id": "ev_2f150bc9a4f940f88f02c2fef7f2dcfd",
       "type": "transcript",
       "label": "Current compact transcript",
-      "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\c39d6ec7-3ed4-4f4d-a3fe-59d3818400ff.jsonl",
-      "content_hash": "sha256:132d356e53448a0cc47955bd5feb53e5c872f84e417bc9e925a3a2930e6d0172"
+      "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\67897a18-4e62-4679-919e-6ae94b573920.jsonl",
+      "content_hash": "sha256:f7b31854a2b7608b5dc39346cfdab84586bb8203df8431da7c38d7d285e6a4ec"
     },
     {
-      "id": "ev_af2b3716039e4956b2587eefb08d37da",
+      "id": "ev_243afe1c7d934aa7a1463020a15724d5",
       "type": "file",
-      "label": "plan-adr-20260328-proactive-commitment-tracking-path-c.md",
-      "path": "C:\\Users\\brsth\\.claude\\plans\\plan-adr-20260328-proactive-commitment-tracking-path-c.md",
-      "content_hash": "sha256:003c42dec19d1ed6ccc9504a659f3f118eee3465920f652eb964772164419528"
+      "label": "SKILL.md",
+      "path": "P:\\.claude\\skills\\nlm-skill\\SKILL.md"
     },
     {
-      "id": "ev_95e0c765cd794fe5bcef2305db9e7d23",
+      "id": "ev_9c564710133e4d5c949c9abdc2d21aa0",
       "type": "file",
-      "label": "Stop_router.py",
-      "path": "P:\\.claude\\hooks\\Stop_router.py",
-      "content_hash": "sha256:6ffd47d718901b54800211c414808f24ff5c7593689a8f3fadfa26048b8eb1e4"
+      "label": "nlm_skill_auth_auto_recovery.md",
+      "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\memory\\nlm_skill_auth_auto_recovery.md",
+      "content_hash": "sha256:287e4828838183f149c4b16e9f7db111fdcbe8bc079f1a160eb90d30e4aa4c2c"
     },
     {
-      "id": "ev_1a2a8a2e58eb41db958b90e2df1f88b0",
+      "id": "ev_3b7a829895804763a7dbc99c793f5148",
       "type": "file",
-      "label": "SessionStart.py",
-      "path": "P:\\.claude\\hooks\\SessionStart.py",
-      "content_hash": "sha256:21cbe7b1608ef7dbe82e23400c866e5e751b412e1d48d0e0d499ed341864537f"
+      "label": "MEMORY.md",
+      "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\memory\\MEMORY.md",
+      "content_hash": "sha256:29e9cb78bf8348c49ff6751ea20eb2b5e89a39a053b9a5252a82885c15a41602"
     },
     {
-      "id": "ev_cb93856f728a4a42bba089c008176452",
+      "id": "ev_ee22950d7e1349cbbc8173527a7ad071",
       "type": "file",
-      "label": "PreCompact.py",
-      "path": "P:\\.claude\\hooks\\PreCompact.py",
-      "content_hash": "sha256:1174ff4a747d2617323bff86b61aec61a55508c9082fbe357936ca7619ece987"
+      "label": "troubleshooting.md",
+      "path": "P:\\.claude\\skills\\nlm-skill\\references\\troubleshooting.md"
     },
     {
-      "id": "ev_23baa6b92bc64b7fb7d1fbd00db739e9",
+      "id": "ev_37dc04103d9b43f7ac19dc58a0dfffe8",
       "type": "file",
-      "label": "file_lock.py",
-      "path": "P:\\.claude\\hooks\\__lib\\file_lock.py",
-      "content_hash": "sha256:6a66d1f8cc6350ac30f9b9ce9580c44df5cc87290605cf73215b58a439963b0b"
+      "label": "bz6kdm3li.txt",
+      "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\67897a18-4e62-4679-919e-6ae94b573920\\tool-results\\bz6kdm3li.txt",
+      "content_hash": "sha256:a762e5018b05052998a67156edd6b296b79ea5fff01fe10d8bd5e28949eee9b0"
     }
   ],
-  "checksum": "sha256:12b74b0883af8ed6f344f6a8fa21bb3e6c31a15194298ad476f07d9a2695a324"
+  "checksum": "sha256:a642910c2c7d873cfdf3f5235c55ed42a8dcf45f6a0c3d4ea450ea54bee1e95e"
 }

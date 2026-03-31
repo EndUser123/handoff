@@ -1,14 +1,14 @@
 {
   "resume_snapshot": {
     "schema_version": 2,
-    "snapshot_id": "1b695cb9-04a7-460a-9f14-0f2e0c790cb8",
+    "snapshot_id": "cb996bd1-5d1d-44de-ad23-d80b9a79256b",
     "terminal_id": "console_bb9f578b-f327-4a25-816c-659715443c98",
     "source_session_id": "84075f70-1cb3-4182-800d-e0029d0169e6",
-    "created_at": "2026-03-31T00:18:40.602216+00:00",
-    "expires_at": "2026-03-31T00:38:40.602216+00:00",
-    "status": "rejected_stale",
-    "goal": "save as an adr",
-    "current_task": "save as an adr",
+    "created_at": "2026-03-31T22:51:45.525614+00:00",
+    "expires_at": "2026-03-31T23:11:45.525614+00:00",
+    "status": "pending",
+    "goal": "Continue current task (meta-discussion filtered)",
+    "current_task": "Continue current task (meta-discussion filtered)",
     "progress_percent": 35,
     "progress_state": "ready",
     "blockers": [],
@@ -25,68 +25,91 @@
       "P:\\.claude\\hooks\\PreToolUse_skill_question_gate.py"
     ],
     "pending_operations": [],
-    "next_step": "/arch [STANDARD enforcement]",
-    "decision_refs": [],
+    "next_step": "Grep result: `tool_result` appears **0 times** in `transcript.py`. There is no reference to tool results anywhere in the file.",
+    "decision_refs": [
+      "dec_d692633b1f864ce0a5f57367f3f6afdb",
+      "dec_376cd816eea140ca80009d6f9d926f8b"
+    ],
     "evidence_refs": [
-      "ev_67d4738fe9644f1eba53c12dd73100aa",
-      "ev_9cb8788877a84afe9110a7aaa4e32271",
-      "ev_f5ade8b41ed54463ba7c2122725d80c4",
-      "ev_1835aba00e314348b7b2f9b2696f7a8c",
-      "ev_c28a8bc1c0a448e3b18b69d6c8fc745b",
-      "ev_e10c966323294ff4b3a4f58d02d8e1b7"
+      "ev_1a3dd816b6004e55a81fe32c2cc0576f",
+      "ev_6cd2fbc3de894f8eaf11415c009bf4bb",
+      "ev_ed171e269a7d402eaf42f81ce2f22344",
+      "ev_07d2db4104154658a097f9132b2ddc0e",
+      "ev_3e8dae16cc4c41a3ad614077b1d19ffe",
+      "ev_48ec3cef14e14c688fb481a36fe95b48"
     ],
     "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\84075f70-1cb3-4182-800d-e0029d0169e6.jsonl",
-    "message_intent": "instruction",
+    "message_intent": "question",
     "quality_score": 0.4,
-    "tasks_snapshot": [],
-    "rejected_at": "2026-03-31T00:19:28.695762+00:00",
-    "rejected_by_session_id": "84075f70-1cb3-4182-800d-e0029d0169e6",
-    "rejection_reason": "snapshot evidence path outside project directory"
+    "tasks_snapshot": []
   },
-  "decision_register": [],
+  "decision_register": [
+    {
+      "id": "dec_d692633b1f864ce0a5f57367f3f6afdb",
+      "kind": "constraint",
+      "summary": "Confirmed — `_build_injection` doesn't exist in the injector file. This is a pre-existing test breakage unrelated to my change (I only modified `PreCompact_handoff_capture.py`). The 3 handoff hook tests pass cleanly. **Summary of the fix applied:** `PreCompact_handoff_capture.py` was saving the handoff envelope but **never writing the compaction marker** that `userpromptsubmit_task_injector.py` reads to detect intra-session compaction. The marker-writing code was documented as expected but never implemented. Added after the successful `storage.save_handoff()` call: - `time` import - Marker write to `<project_root>/.claude/hooks/state/compaction_marker_{terminal_id}.json` - Contains `{\"timestamp\": ..., \"handoff_path\": \"...\"}` — matching the format the injector already reads - Non-fatal: if the write fails, the handoff is already safely persisted and `SessionStart_handoff_restore` still fires **Bug 1 (unwired hook):** Not actually a bug — `handoff_task_injector` is registered in `registry.py` and loaded via `HookImporter`. **Bug 2 (missing marker write):** Fixed now. **Bug 3 (self-referential handoff chain):** Requires deeper investigation — `source_session_id` comes from `input_data.get(\"session_id\")` at PreCompact time, which reflects the current (compacting) session's ID.",
+      "details": "Confirmed — `_build_injection` doesn't exist in the injector file. This is a pre-existing test breakage unrelated to my change (I only modified `PreCompact_handoff_capture.py`). The 3 handoff hook tests pass cleanly. **Summary of the fix applied:** `PreCompact_handoff_capture.py` was saving the handoff envelope but **never writing the compaction marker** that `userpromptsubmit_task_injector.py` reads to detect intra-session compaction. The marker-writing code was documented as expected but never implemented. Added after the successful `storage.save_handoff()` call: - `time` import - Marker write to `<project_root>/.claude/hooks/state/compaction_marker_{terminal_id}.json` - Contains `{\"timestamp\": ..., \"handoff_path\": \"...\"}` — matching the format the injector already reads - Non-fatal: if the write fails, the handoff is already safely persisted and `SessionStart_handoff_restore` still fires **Bug 1 (unwired hook):** Not actually a bug — `handoff_task_injector` is registered in `registry.py` and loaded via `HookImporter`. **Bug 2 (missing marker write):** Fixed now. **Bug 3 (self-referential handoff chain):** Requires deeper investigation — `source_session_id` comes from `input_data.get(\"session_id\")` at PreCompact time, which reflects the current (compacting) session's ID.",
+      "priority": "high",
+      "applies_when": "Continue the current task after compact.",
+      "source_refs": [
+        "ev_1a3dd816b6004e55a81fe32c2cc0576f"
+      ]
+    },
+    {
+      "id": "dec_376cd816eea140ca80009d6f9d926f8b",
+      "kind": "constraint",
+      "summary": "Grep confirms 0 matches — `_build_injection` is absent from `userpromptsubmit_task_injector.py`. The pre-existing test imports a function that was never defined. My original claim was correct but lacked explicit tool citation.",
+      "details": "Grep confirms 0 matches — `_build_injection` is absent from `userpromptsubmit_task_injector.py`. The pre-existing test imports a function that was never defined. My original claim was correct but lacked explicit tool citation.",
+      "priority": "high",
+      "applies_when": "Continue the current task after compact.",
+      "source_refs": [
+        "ev_1a3dd816b6004e55a81fe32c2cc0576f"
+      ]
+    }
+  ],
   "evidence_index": [
     {
-      "id": "ev_67d4738fe9644f1eba53c12dd73100aa",
+      "id": "ev_1a3dd816b6004e55a81fe32c2cc0576f",
       "type": "transcript",
       "label": "Current compact transcript",
       "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\84075f70-1cb3-4182-800d-e0029d0169e6.jsonl",
-      "content_hash": "sha256:1c5a90097614a26ec10eb15f6ea96f57deb66a5c1c42370a466f868b6cc99ddb"
+      "content_hash": "sha256:91062b7e49d79642a021ba238864f5e8cf94150fcd9098947343d456ff52aee7"
     },
     {
-      "id": "ev_9cb8788877a84afe9110a7aaa4e32271",
+      "id": "ev_6cd2fbc3de894f8eaf11415c009bf4bb",
       "type": "file",
       "label": "ADR-20260329-llm-consultation-pattern-fix.md",
       "path": "P:\\__csf\\arch_decisions\\ADR-20260329-llm-consultation-pattern-fix.md",
       "content_hash": "sha256:d4a542de019b41900e81f5018bdd77c93e7a1c55f1cc0a03a966b8e4dab1bafd"
     },
     {
-      "id": "ev_f5ade8b41ed54463ba7c2122725d80c4",
+      "id": "ev_ed171e269a7d402eaf42f81ce2f22344",
       "type": "file",
       "label": "plan-adr-20260329-llm-consultation-pattern-fix.md",
       "path": "C:\\Users\\brsth\\.claude\\plans\\plan-adr-20260329-llm-consultation-pattern-fix.md",
       "content_hash": "sha256:1acdf666948485071e9009d93f2ef08d7524ab898b1deecaecffc012082f9e4b"
     },
     {
-      "id": "ev_1835aba00e314348b7b2f9b2696f7a8c",
+      "id": "ev_07d2db4104154658a097f9132b2ddc0e",
       "type": "file",
       "label": "Stop_good_question_gate.py",
       "path": "P:\\.claude\\hooks\\Stop_good_question_gate.py",
       "content_hash": "sha256:b398df20cd9934244affea3158d56f2e5d8a0ed3a5594e6fcdcab67c4fd04dea"
     },
     {
-      "id": "ev_c28a8bc1c0a448e3b18b69d6c8fc745b",
+      "id": "ev_3e8dae16cc4c41a3ad614077b1d19ffe",
       "type": "file",
       "label": "skill_autonomy_registry.py",
       "path": "P:\\.claude\\skills\\__lib\\skill_autonomy_registry.py",
       "content_hash": "sha256:58c89f71c78878a36d410faab1356e0e0d5c278a81a094881bcf0793440e19d2"
     },
     {
-      "id": "ev_e10c966323294ff4b3a4f58d02d8e1b7",
+      "id": "ev_48ec3cef14e14c688fb481a36fe95b48",
       "type": "file",
       "label": "PreToolUse.py",
       "path": "P:\\.claude\\hooks\\PreToolUse.py",
-      "content_hash": "sha256:aed5d0b320d2a5cf3833014f09b5bae2374ab360a9d92be17754ccda65ebc17a"
+      "content_hash": "sha256:7fda808ed4894df97efb4cb2d7303698766e9fd12bd977d596b5ebf5b3c0b9bd"
     }
   ],
-  "checksum": "sha256:dbbc7dfbd3001336932ec14414673bfab1415055df9630e4f72cb15e2d1922b3"
+  "checksum": "sha256:fc7e163cab991e1dd79f878d305826cf363e810c1f364f62f2119d547462c96f"
 }

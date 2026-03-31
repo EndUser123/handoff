@@ -10,6 +10,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from scripts.hooks.userpromptsubmit_task_injector import _clear_marker
+
 logger = logging.getLogger(__name__)
 
 # Configure logging to ensure diagnostic output is captured
@@ -206,6 +208,8 @@ def main() -> None:
                 session_id=session_id,
                 reason="restored after compact",
             )
+            # Clear the UPS marker so UserPromptSubmit doesn't re-inject the same snapshot
+            _clear_marker(terminal_id)
             print(
                 json.dumps(
                     _build_output(

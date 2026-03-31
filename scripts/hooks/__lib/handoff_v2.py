@@ -722,7 +722,7 @@ def short_task_name(goal: str) -> str:
     cleaned = " ".join(goal.split()).strip()
     if not cleaned:
         return "Unknown task"
-    return cleaned[:120]
+    return cleaned
 
 
 def ensure_progress_state(

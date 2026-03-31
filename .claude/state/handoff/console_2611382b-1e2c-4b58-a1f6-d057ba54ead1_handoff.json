@@ -1,14 +1,14 @@
 {
   "resume_snapshot": {
     "schema_version": 2,
-    "snapshot_id": "9bc9d748-1cb1-4fd1-ad90-8991f0d1ba55",
+    "snapshot_id": "bf6e7f06-7701-4ada-be5d-408806ff12cd",
     "terminal_id": "console_2611382b-1e2c-4b58-a1f6-d057ba54ead1",
     "source_session_id": "0ecb3822-462d-4e4f-a0b3-c199afa53124",
-    "created_at": "2026-03-30T14:51:44.863666+00:00",
-    "expires_at": "2026-03-30T15:11:44.863666+00:00",
+    "created_at": "2026-03-31T17:05:36.878048+00:00",
+    "expires_at": "2026-03-31T17:25:36.878048+00:00",
     "status": "pending",
-    "goal": "The problem is that GTO is supposed to suggest them if it doesn't find the evidence that they were used after the major change.",
-    "current_task": "The problem is that GTO is supposed to suggest them if it doesn't find the evidence that they were used after the major ",
+    "goal": "Yes please, start with the easiest first.",
+    "current_task": "Yes please, start with the easiest first.",
     "progress_percent": 35,
     "progress_state": "ready",
     "blockers": [],
@@ -25,18 +25,17 @@
       "P:/packages/rca/src/rca/library_docs_cache.py"
     ],
     "pending_operations": [],
-    "next_step": "Let me check the assertions script to understand what it's looking for:",
+    "next_step": "Let me investigate #2529 first — phantom `skill_guard` imports.",
     "decision_refs": [
-      "dec_ee9dbaaa302348019fd60bb8c565aafc",
-      "dec_b73b5a8cc9d9451b91f7d2674b00f8d1"
+      "dec_457e7f3596ed408d9961dcd6b239e095"
     ],
     "evidence_refs": [
-      "ev_11eeecf7b1d841a2b63295886f6d6e84",
-      "ev_fd424e1c92624aedb11634190a4fc053",
-      "ev_47fa1957123e450781e29b0c0868ed56",
-      "ev_95187326fa7c4b8883aab3757baeec95",
-      "ev_ed92109dc7c745bd97deec251c6493a8",
-      "ev_54aeb5d17f834df4a095f70548dede9d"
+      "ev_1f8708cc8788448fa6d277883c5d1c4c",
+      "ev_6c1c06ccdc2d4af98c80d30b675e47b9",
+      "ev_234b5a0ad11a44d5b862312c457d53d4",
+      "ev_afac86fffd5f4459be07d47211952b9a",
+      "ev_0471c025b7884555ad19b1ebcea78d73",
+      "ev_88cb1a45a2f0400183b0d213c6ccd2fe"
     ],
     "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\0ecb3822-462d-4e4f-a0b3-c199afa53124.jsonl",
     "message_intent": "instruction",
@@ -45,71 +44,60 @@
   },
   "decision_register": [
     {
-      "id": "dec_ee9dbaaa302348019fd60bb8c565aafc",
+      "id": "dec_457e7f3596ed408d9961dcd6b239e095",
       "kind": "constraint",
-      "summary": "Found the root issue. Two independent logging systems that never talk to each other: - **GTO orchestrator** writes → `P:\\packages\\rca\\.evidence\\skill-usage.jsonl` - **Skill coverage detector** reads → `C:\\Users\\brsth\\.evidence\\skill_coverage\\packages_rca.jsonl` These paths are completely separate. The `skill_coverage_detector` never sees skill usage because it reads from a different file. Additionally, `detect_skill_coverage()` has no mechanism to detect **\"major change just happened — run verification skills\"**. The fix needs to be in the skill coverage detector to: 1. Read from the same log GTO writes to (`skill-usage.jsonl`), not a separate coverage log 2. Surface `/verify` and `/pre-mortem` when the target has recent git activity (indicating a change was just made) Let me look at the gap_skill_mapper to understand the full picture:",
-      "details": "Found the root issue. Two independent logging systems that never talk to each other: - **GTO orchestrator** writes → `P:\\packages\\rca\\.evidence\\skill-usage.jsonl` - **Skill coverage detector** reads → `C:\\Users\\brsth\\.evidence\\skill_coverage\\packages_rca.jsonl` These paths are completely separate. The `skill_coverage_detector` never sees skill usage because it reads from a different file. Additionally, `detect_skill_coverage()` has no mechanism to detect **\"major change just happened — run verification skills\"**. The fix needs to be in the skill coverage detector to: 1. Read from the same log GTO writes to (`skill-usage.jsonl`), not a separate coverage log 2. Surface `/verify` and `/pre-mortem` when the target has recent git activity (indicating a change was just made) Let me look at the gap_skill_mapper to understand the full picture:",
+      "summary": "Looking at what's genuinely actionable: **In progress:** - **#2561** — Fix TOCTOU races in `Stop_completion_verification_guard.py` (P0) - **#2472** — Fix `/all` skill execution — `search_async` API misuse and result quality - **#2569** — Investigate why AI doesn't test fixes after implementation **High-priority unblocked (no dependencies):** - **#2529** — Fix CRIT-SEC-002/LOGIC-001: phantom `skill_guard` imports - **#2530** — Fix CRIT-LOGIC-002: `file_lock` TOCTOU race - **#2562** — RCA: `history_scanner.py` never implemented (false completion claims) - **#2341** — Fix GTO viability gate performance and validation - **#2146** — Source-of-truth verification **Medium priority (exploration/research):** - **#2467** — Adversarial compliance review of intelligence-stream improvements plan - **#2473** — Fix HyDE layer in search-research skill - **#2567** — Investigate web content ingestion into CKS / NotebookLM / Obsidian Want me to pick one of these up?",
+      "details": "Looking at what's genuinely actionable: **In progress:** - **#2561** — Fix TOCTOU races in `Stop_completion_verification_guard.py` (P0) - **#2472** — Fix `/all` skill execution — `search_async` API misuse and result quality - **#2569** — Investigate why AI doesn't test fixes after implementation **High-priority unblocked (no dependencies):** - **#2529** — Fix CRIT-SEC-002/LOGIC-001: phantom `skill_guard` imports - **#2530** — Fix CRIT-LOGIC-002: `file_lock` TOCTOU race - **#2562** — RCA: `history_scanner.py` never implemented (false completion claims) - **#2341** — Fix GTO viability gate performance and validation - **#2146** — Source-of-truth verification **Medium priority (exploration/research):** - **#2467** — Adversarial compliance review of intelligence-stream improvements plan - **#2473** — Fix HyDE layer in search-research skill - **#2567** — Investigate web content ingestion into CKS / NotebookLM / Obsidian Want me to pick one of these up?",
       "priority": "high",
       "applies_when": "Continue the current task after compact.",
       "source_refs": [
-        "ev_11eeecf7b1d841a2b63295886f6d6e84"
-      ]
-    },
-    {
-      "id": "dec_b73b5a8cc9d9451b91f7d2674b00f8d1",
-      "kind": "constraint",
-      "summary": "Found the root cause. `run_gto_monorepo.py` **never calls `detect_skill_coverage()`**. It only formats `results.gaps` — the actual gap findings. The skill coverage findings are computed by `gto_orchestrator.py` (line 951), but `run_gto_monorepo.py` uses a different code path that bypasses it entirely. This is a bug — `run_gto_monorepo.py` and `gto_orchestrator.py` should both integrate skill coverage. Let me fix `run_gto_monorepo.py`:",
-      "details": "Found the root cause. `run_gto_monorepo.py` **never calls `detect_skill_coverage()`**. It only formats `results.gaps` — the actual gap findings. The skill coverage findings are computed by `gto_orchestrator.py` (line 951), but `run_gto_monorepo.py` uses a different code path that bypasses it entirely. This is a bug — `run_gto_monorepo.py` and `gto_orchestrator.py` should both integrate skill coverage. Let me fix `run_gto_monorepo.py`:",
-      "priority": "high",
-      "applies_when": "Continue the current task after compact.",
-      "source_refs": [
-        "ev_11eeecf7b1d841a2b63295886f6d6e84"
+        "ev_1f8708cc8788448fa6d277883c5d1c4c"
       ]
     }
   ],
   "evidence_index": [
     {
-      "id": "ev_11eeecf7b1d841a2b63295886f6d6e84",
+      "id": "ev_1f8708cc8788448fa6d277883c5d1c4c",
       "type": "transcript",
       "label": "Current compact transcript",
       "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\0ecb3822-462d-4e4f-a0b3-c199afa53124.jsonl",
-      "content_hash": "sha256:c329a48639851701b07f0b3753659406618a3084880a157a0c6e217f056ebb42"
+      "content_hash": "sha256:577ca6ea7254116b45b900bb6f8ed12f818bbba223bf8b322150b8b7ae4868b6"
     },
     {
-      "id": "ev_fd424e1c92624aedb11634190a4fc053",
+      "id": "ev_6c1c06ccdc2d4af98c80d30b675e47b9",
       "type": "file",
       "label": "plan-adr-20260328-sqa-multi-terminal-hardening.md",
       "path": "C:\\Users\\brsth\\.claude\\plans\\plan-adr-20260328-sqa-multi-terminal-hardening.md",
       "content_hash": "sha256:7dc0a2e1fbe4c69b102bebb3191c189c649e38ab22a44aa5032cd01a3c121415"
     },
     {
-      "id": "ev_47fa1957123e450781e29b0c0868ed56",
+      "id": "ev_234b5a0ad11a44d5b862312c457d53d4",
       "type": "file",
       "label": "orchestrator.py",
       "path": "P:\\.claude\\skills\\sqa\\orchestrator.py",
-      "content_hash": "sha256:e4e0f278c1d0d5a8bd67245f0de1253cc086b071e31cccc7a43edbfa5a71c1af"
+      "content_hash": "sha256:a3f3c3081da4fe8f0e868f6ee76afb72bdc46eff901ddc9265076f5975eb5cdc"
     },
     {
-      "id": "ev_95187326fa7c4b8883aab3757baeec95",
+      "id": "ev_afac86fffd5f4459be07d47211952b9a",
       "type": "file",
       "label": "models.py",
       "path": "P:\\.claude\\skills\\sqa\\findings\\models.py",
-      "content_hash": "sha256:37becd02bc9fbdccdb78920f35a84f33096a46dde243f3b7ee209e11910327bc"
+      "content_hash": "sha256:fb8443fd374546533713aac26a02fdc990ff8bc95d126a31a2669b4b1c8aae17"
     },
     {
-      "id": "ev_ed92109dc7c745bd97deec251c6493a8",
+      "id": "ev_0471c025b7884555ad19b1ebcea78d73",
       "type": "file",
       "label": "conftest.py",
       "path": "P:\\.claude\\skills\\sqa\\tests\\conftest.py",
       "content_hash": "sha256:816e7b0525f66db2c474fe8b6072b1047ac69673f64f5ed57e4e6f860feedbdd"
     },
     {
-      "id": "ev_54aeb5d17f834df4a095f70548dede9d",
+      "id": "ev_88cb1a45a2f0400183b0d213c6ccd2fe",
       "type": "file",
       "label": "test_integration.py",
       "path": "P:\\.claude\\skills\\sqa\\tests\\test_integration.py",
       "content_hash": "sha256:022a2919a41bdb2036b9b6e3745a992f9c14b7ee588ca83764920f514d0a9719"
     }
   ],
-  "checksum": "sha256:005739b35aee3e7a580ee46cae1a5d1e0c35f3706dd8f0f7d42e2e2cfcd2cf21"
+  "checksum": "sha256:999707e8b06e8acebc6ce8689bd45dcee90eb0ccf4af0700769756cf8fce803b"
 }
