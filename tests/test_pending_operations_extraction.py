@@ -45,9 +45,8 @@ class TestPendingOperationsToolUseDetection:
     def test_detect_read_operation(self, tmp_path):
         """Test that Read tool_use is detected as pending operation."""
         transcript_file = tmp_path / "test.jsonl"
-        transcript_file.write_text(
-            '{"type": "tool_use", "name": "Read", "input": {"file_path": "test.py"}}\n'
-        )
+        entry = make_tool_use_entry("Read", {"file_path": "test.py"})
+        transcript_file.write_text(json.dumps(entry) + "\n")
 
         parser = TranscriptParser(transcript_file)
         ops = parser.extract_pending_operations()
@@ -60,9 +59,8 @@ class TestPendingOperationsToolUseDetection:
     def test_detect_grep_investigation(self, tmp_path):
         """Test that Grep tool_use is detected as investigation operation."""
         transcript_file = tmp_path / "test.jsonl"
-        transcript_file.write_text(
-            '{"type": "tool_use", "name": "Grep", "input": {"pattern": "def test_"}}\n'
-        )
+        entry = make_tool_use_entry("Grep", {"pattern": "def test_"})
+        transcript_file.write_text(json.dumps(entry) + "\n")
 
         parser = TranscriptParser(transcript_file)
         ops = parser.extract_pending_operations()
@@ -74,9 +72,8 @@ class TestPendingOperationsToolUseDetection:
     def test_detect_glob_investigation(self, tmp_path):
         """Test that Glob tool_use is detected as investigation operation."""
         transcript_file = tmp_path / "test.jsonl"
-        transcript_file.write_text(
-            '{"type": "tool_use", "name": "Glob", "input": {"pattern": "**/*.py"}}\n'
-        )
+        entry = make_tool_use_entry("Glob", {"pattern": "**/*.py"})
+        transcript_file.write_text(json.dumps(entry) + "\n")
 
         parser = TranscriptParser(transcript_file)
         ops = parser.extract_pending_operations()
@@ -88,9 +85,10 @@ class TestPendingOperationsToolUseDetection:
     def test_detect_edit_operation(self, tmp_path):
         """Test that Edit tool_use is detected as pending operation."""
         transcript_file = tmp_path / "test.jsonl"
-        transcript_file.write_text(
-            '{"type": "tool_use", "name": "Edit", "input": {"file_path": "src.py", "old_string": "old", "new_string": "new"}}\n'
+        entry = make_tool_use_entry(
+            "Edit", {"file_path": "src.py", "old_string": "old", "new_string": "new"}
         )
+        transcript_file.write_text(json.dumps(entry) + "\n")
 
         parser = TranscriptParser(transcript_file)
         ops = parser.extract_pending_operations()
@@ -102,9 +100,8 @@ class TestPendingOperationsToolUseDetection:
     def test_detect_bash_test_operation(self, tmp_path):
         """Test that Bash with pytest is detected as test operation."""
         transcript_file = tmp_path / "test.jsonl"
-        transcript_file.write_text(
-            '{"type": "tool_use", "name": "Bash", "input": {"command": "pytest tests/test_file.py"}}\n'
-        )
+        entry = make_tool_use_entry("Bash", {"command": "pytest tests/test_file.py"})
+        transcript_file.write_text(json.dumps(entry) + "\n")
 
         parser = TranscriptParser(transcript_file)
         ops = parser.extract_pending_operations()
@@ -116,9 +113,8 @@ class TestPendingOperationsToolUseDetection:
     def test_detect_skill_operation(self, tmp_path):
         """Test that Skill tool_use is detected as pending operation."""
         transcript_file = tmp_path / "test.jsonl"
-        transcript_file.write_text(
-            '{"type": "tool_use", "name": "Skill", "input": {"skill": "rca"}}\n'
-        )
+        entry = make_tool_use_entry("Skill", {"skill": "rca"})
+        transcript_file.write_text(json.dumps(entry) + "\n")
 
         parser = TranscriptParser(transcript_file)
         ops = parser.extract_pending_operations()
@@ -133,7 +129,6 @@ class TestPendingOperationsKeywordFallback:
 
     def test_detect_review_keywords(self, tmp_path):
         """Test that review keywords are detected as investigation operations."""
-        import json
 
         transcript_file = tmp_path / "test.jsonl"
         entry = {
@@ -150,7 +145,6 @@ class TestPendingOperationsKeywordFallback:
 
     def test_detect_analyze_keywords(self, tmp_path):
         """Test that analyze keywords are detected as investigation operations."""
-        import json
 
         transcript_file = tmp_path / "test.jsonl"
         entry = {
@@ -167,7 +161,6 @@ class TestPendingOperationsKeywordFallback:
 
     def test_detect_investigate_keywords(self, tmp_path):
         """Test that investigate keywords are detected as investigation operations."""
-        import json
 
         transcript_file = tmp_path / "test.jsonl"
         entry = {
@@ -184,7 +177,6 @@ class TestPendingOperationsKeywordFallback:
 
     def test_detect_debug_keywords(self, tmp_path):
         """Test that debug keywords are detected as investigation operations."""
-        import json
 
         transcript_file = tmp_path / "test.jsonl"
         entry = {
@@ -218,7 +210,6 @@ class TestPendingOperationsPriority:
 
     def test_tool_use_over_keywords(self, tmp_path):
         """Test that tool_use events are used even when keywords also present."""
-        import json
 
         transcript_file = tmp_path / "test.jsonl"
         entries = [
@@ -242,7 +233,6 @@ class TestPendingOperationsLimits:
 
     def test_max_five_operations(self, tmp_path):
         """Test that only 5 pending operations are returned."""
-        import json
 
         transcript_file = tmp_path / "test.jsonl"
         lines = [
@@ -290,7 +280,6 @@ class TestInvestigationOperationDetails:
 
     def test_investigation_with_file_target(self, tmp_path):
         """Test investigation operation extracts file target from context."""
-        import json
 
         transcript_file = tmp_path / "test.jsonl"
         entry = {
