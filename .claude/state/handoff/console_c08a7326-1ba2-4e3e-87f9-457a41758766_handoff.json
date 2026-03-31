@@ -1,14 +1,14 @@
 {
   "resume_snapshot": {
     "schema_version": 2,
-    "snapshot_id": "b1e3a1ff-c76d-480c-abce-ba4c037b650a",
+    "snapshot_id": "48a0fbff-fa83-41d2-84d5-003257e38a5c",
     "terminal_id": "console_c08a7326-1ba2-4e3e-87f9-457a41758766",
     "source_session_id": "a1392cf9-c085-45af-a54c-fe56e8da0567",
-    "created_at": "2026-03-30T22:42:52.588275+00:00",
-    "expires_at": "2026-03-30T23:02:52.588275+00:00",
+    "created_at": "2026-03-30T23:43:43.887314+00:00",
+    "expires_at": "2026-03-31T00:03:43.887314+00:00",
     "status": "rejected_stale",
-    "goal": "first we have to fix those hook errors we are still getting.",
-    "current_task": "first we have to fix those hook errors we are still getting.",
+    "goal": "Use the more robust implementation and update GTO.",
+    "current_task": "Use the more robust implementation and update GTO.",
     "progress_percent": 35,
     "progress_state": "ready",
     "blockers": [],
@@ -25,68 +25,68 @@
       "C:\\Users\\brsth\\.claude\\plans\\adversarial\\plan_adr_ai_context_gap_self_correction\\compliance-findings.json"
     ],
     "pending_operations": [],
-    "next_step": "Let me test the actual hook execution:",
+    "next_step": "I stand corrected. There are **two distinct session chain systems**:",
     "decision_refs": [],
     "evidence_refs": [
-      "ev_f8008cf2385b425382ec97023333a558",
-      "ev_c9263d119be3467fa39ad81eacc00310",
-      "ev_24e6e3e0a1a640abb90a71d09f39cb8c",
-      "ev_17e97e96850b4acc94db5478d40b8069",
-      "ev_45779cca2a8d4abd86eb326af7c80dea",
-      "ev_1f9ad5b1e9fe497b8178438ca544934b"
+      "ev_ba2f3b36f88e40f08346e2a536c66e77",
+      "ev_cc6c33bb10c54861bd77fdbd2aa62e21",
+      "ev_af27ac34d642416592267deaee8ae27a",
+      "ev_fe1707a3cac745b688751b924eb08bb5",
+      "ev_f7c14e2be18a4d148e2796d1fd8f8a1e",
+      "ev_82b7662107aa47fbb6cae24703e3693a"
     ],
     "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\a1392cf9-c085-45af-a54c-fe56e8da0567.jsonl",
     "message_intent": "instruction",
-    "quality_score": 0.9,
+    "quality_score": 0.4,
     "tasks_snapshot": [],
-    "rejected_at": "2026-03-30T22:44:22.067917+00:00",
+    "rejected_at": "2026-03-30T23:44:50.715684+00:00",
     "rejected_by_session_id": "a1392cf9-c085-45af-a54c-fe56e8da0567",
     "rejection_reason": "snapshot evidence path outside project directory"
   },
   "decision_register": [],
   "evidence_index": [
     {
-      "id": "ev_f8008cf2385b425382ec97023333a558",
+      "id": "ev_ba2f3b36f88e40f08346e2a536c66e77",
       "type": "transcript",
       "label": "Current compact transcript",
       "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\a1392cf9-c085-45af-a54c-fe56e8da0567.jsonl",
-      "content_hash": "sha256:e7603310b9edae4891949d0d5fea70452485c419d0e7375ab0187e7a0ab235f5"
+      "content_hash": "sha256:a912ceb397e586a5a6ace18b774656bb9cc265fa655f2cc919572735d94c3c7c"
     },
     {
-      "id": "ev_c9263d119be3467fa39ad81eacc00310",
+      "id": "ev_cc6c33bb10c54861bd77fdbd2aa62e21",
       "type": "file",
       "label": "sqa.txt",
       "path": "C:\\Users\\brsth\\Downloads\\sqa.txt",
       "content_hash": "sha256:80071d8df66d9dc158099496a52187caefb993f9a256c8722d20df8bcd483ce6"
     },
     {
-      "id": "ev_24e6e3e0a1a640abb90a71d09f39cb8c",
+      "id": "ev_af27ac34d642416592267deaee8ae27a",
       "type": "file",
       "label": "ADR-20260329-ai-context-gap-self-correction.md",
       "path": "P:\\__csf\\arch_decisions\\ADR-20260329-ai-context-gap-self-correction.md",
       "content_hash": "sha256:e689ef8b2af3dbc413ada6c2c273caaae6ea4d935ea2bfb0195d29030525d71a"
     },
     {
-      "id": "ev_17e97e96850b4acc94db5478d40b8069",
+      "id": "ev_fe1707a3cac745b688751b924eb08bb5",
       "type": "file",
       "label": "plan-adr-ai-context-gap-self-correction.md",
       "path": "C:\\Users\\brsth\\.claude\\plans\\plan-adr-ai-context-gap-self-correction.md",
       "content_hash": "sha256:0f46fe112ed0380089059e90d3c4af066df3d00ce753ba4de332c3c1f00c66c9"
     },
     {
-      "id": "ev_45779cca2a8d4abd86eb326af7c80dea",
+      "id": "ev_f7c14e2be18a4d148e2796d1fd8f8a1e",
       "type": "file",
       "label": "auto_verify.py",
       "path": "P:\\.claude\\skills\\planning\\__lib\\auto_verify.py",
       "content_hash": "sha256:1a2a5d4a413f408846dbf6849f4a25f00b7d4436358f4bddda396b29f2fbfcc5"
     },
     {
-      "id": "ev_1f9ad5b1e9fe497b8178438ca544934b",
+      "id": "ev_82b7662107aa47fbb6cae24703e3693a",
       "type": "file",
       "label": "auto_fix.py",
       "path": "P:\\.claude\\skills\\planning\\__lib\\auto_fix.py",
       "content_hash": "sha256:49c5bb205738910a1540c4a204557f8fd5ace8fc255d33a10645ad62a22a214b"
     }
   ],
-  "checksum": "sha256:1170fbc110f272cf2a112550821e152df9eba329bdc162bf491994be6c814b73"
+  "checksum": "sha256:1ae30b3ffdda1530b104dccaeaee15b811a70abf2f11b4fe0a502102f13e27be"
 }

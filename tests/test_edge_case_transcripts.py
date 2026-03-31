@@ -71,7 +71,7 @@ def test_single_substantive_message():
     )
     assert result["scan_pattern"] == "found_substantive"
     assert result["messages_scanned"] == 1
-    assert result["message_intent"] == "instruction"
+    assert result["message_intent"] == "directive"
 
     # Clean up
     transcript_path.unlink(missing_ok=True)
@@ -221,7 +221,7 @@ def test_all_correction_transcript():
 
     # "Fix it properly" is substantive (not a correction pattern match)
     assert result["goal"] == "Fix it properly"
-    assert result["message_intent"] == "instruction"
+    assert result["message_intent"] == "directive"
 
     # Clean up
     transcript_path.unlink(missing_ok=True)
@@ -273,7 +273,7 @@ def test_non_english_message_blocked():
     # Should return the first substantive message (English)
     # and mark the second as unsupported language
     assert result["goal"] == "Implement feature X"
-    assert result["message_intent"] == "instruction"
+    assert result["message_intent"] == "directive"
 
     # Clean up
     transcript_path.unlink(missing_ok=True)
@@ -370,7 +370,7 @@ def test_malformed_transcript_entry_content_not_array():
 
     # System extracts text even from malformed content
     assert result["goal"] == "Implement feature X"
-    assert result["message_intent"] == "instruction"
+    assert result["message_intent"] == "directive"
 
     # Clean up
     transcript_path.unlink(missing_ok=True)
@@ -468,7 +468,7 @@ def test_question_then_instruction():
 
     # Should return the instruction (newest message)
     assert result["goal"] == "Implement feature X with proper error handling"
-    assert result["message_intent"] == "instruction"
+    assert result["message_intent"] == "directive"
 
     # Clean up
     transcript_path.unlink(missing_ok=True)
@@ -504,7 +504,7 @@ def test_clarification_then_task():
 
     # Should return the task (newest message)
     assert result["goal"] == "Implement feature X with proper error handling"
-    assert result["message_intent"] == "instruction"
+    assert result["message_intent"] == "directive"
 
     # Clean up
     transcript_path.unlink(missing_ok=True)

@@ -35,8 +35,8 @@ class TestDetectMessageIntent:
         assert detect_message_intent("What should I do") == "question"
 
     def test_instruction_default(self):
-        """Regular instructions should be classified as instruction."""
-        assert detect_message_intent("Fix the bug") == "instruction"
+        """Regular instructions should be classified as directive (imperative command)."""
+        assert detect_message_intent("Fix the bug") == "directive"
 
     def test_instruction_with_question_mark_polite_command(self):
         """Edge case: "Could you fix this?" has ? but is instruction.
@@ -109,11 +109,11 @@ class TestDetectMessageIntent:
         Regular ASCII punctuation should work fine.
         """
         # Standard ASCII punctuation
-        assert detect_message_intent("Fix the bug!") == "instruction"
+        assert detect_message_intent("Fix the bug!") == "directive"
         assert detect_message_intent("Is this working?") == "question"
         # Quotes and special ASCII characters
-        assert detect_message_intent("Fix the 'bug' in \"module\"") == "instruction"
-        # Numbers and symbols
+        assert detect_message_intent("Fix the 'bug' in \"module\"") == "directive"
+        # Symbols-only inputs return "instruction" (not directive) since directive patterns require letters
         assert detect_message_intent("Test @#$%^&*()") == "instruction"
 
 

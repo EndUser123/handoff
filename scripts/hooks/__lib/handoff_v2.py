@@ -48,6 +48,7 @@ VALID_MESSAGE_INTENTS = {
     "correction",
     "meta",
     "unsupported_language",
+    "directive",  # Added for imperative commands (detect_message_intent returns this)
 }
 OPTIONAL_DECISION_FIELDS = set()  # Optional fields allowed in decisions
 OPTIONAL_SNAPSHOT_FIELDS = {"quality_score"}  # Optional fields allowed in snapshot
@@ -615,31 +616,77 @@ def build_restore_message(payload: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def build_restore_message_dynamic(payload: dict[str, Any]) -> str:
-    """Format the V2 restore message using dynamic sections.
+def build_restore_message_compact(payload: dict[str, Any]) -> str:
+    """Format the V2 restore message as a compact machine-oriented continuation block.
 
-    This function maps V2 envelope data to the dynamic sections schema
-    and generates content based on what actually happened in the session.
+    This produces a structured <compact-restore> block that provides all necessary
+    state for task continuation without verbose prose or retrospective sections.
     """
     snapshot = payload["resume_snapshot"]
 
-    # Map V2 envelope data to dynamic sections schema
-    session_data = {
-        "session_id": snapshot.get("source_session_id", "unknown"),
-        "created_at": snapshot.get("created_at", "unknown"),
-        "goal": snapshot.get("goal", "No recorded intent"),
-        "active_files": snapshot.get("active_files", []),
-        "decision_register": payload.get("decision_register", []),
-        "known_issues": snapshot.get("blockers", []),
-        "final_actions": snapshot.get("pending_operations", []),
-        "has_errors": any(
-            b.get("type") == "awaiting_approval" for b in snapshot.get("blockers", [])
-        ),
-        "tasks_snapshot": snapshot.get("tasks_snapshot", []),
+    # Intent prefix mapping
+    message_intent = snapshot.get("message_intent", "instruction")
+    intent_prefix_map = {
+        "question": "User asked:",
+        "instruction": "User requested:",
+        "directive": "User requested:",
+        "correction": "User corrected:",
+        "meta": "User noted:",
+        "unsupported_language": "[NON-ENGLISH MESSAGE BLOCKED]:",
     }
+    intent_prefix = intent_prefix_map.get(message_intent, "User requested:")
 
-    # Generate dynamic content
-    return dynamic_sections.generate_handoff_content(session_data)
+    # Format blockers requiring user input
+    user_blockers = [
+        b.get("summary", "Unspecified")
+        for b in snapshot.get("blockers", [])
+        if b.get("type") == "awaiting_approval"
+    ]
+    blockers_str = "; ".join(user_blockers) if user_blockers else "none"
+
+    # Format active files
+    active_files = snapshot.get("active_files", [])
+    active_files_str = "\n".join(f"- {f}" for f in active_files) if active_files else "none"
+
+    # Format pending operations
+    pending_ops = snapshot.get("pending_operations", [])
+    pending_str = ""
+    if pending_ops:
+        pending_lines = []
+        for op in pending_ops[:5]:
+            op_type = op.get("type", "operation")
+            target = op.get("target", "unknown")
+            pending_lines.append(f"- {op_type}: {target}")
+        pending_str = "\n" + "\n".join(pending_lines)
+
+    lines = [
+        "<compact-restore>",
+        f"status: restored",
+        f"goal: {intent_prefix} {snapshot['goal']}",
+        f"current_task: {snapshot['current_task']}",
+        f"progress_state: {snapshot['progress_state']}",
+        f"progress_percent: {snapshot['progress_percent']}",
+        f"next_step: {snapshot['next_step']}",
+        f"blockers_requiring_user: {blockers_str}",
+        f"active_files:",
+        active_files_str,
+        f"pending_operations: {len(pending_ops)} pending",
+        pending_str,
+        "continuation_rule: Continue the current task. Do not ask the user to restate context. Ask only if blocked by missing user input.",
+        "</compact-restore>",
+    ]
+
+    return "\n".join(lines)
+
+
+def build_restore_message_dynamic(payload: dict[str, Any]) -> str:
+    """Format the V2 restore message using dynamic sections.
+
+    DEPRECATED: This produces Pre-Mortem format which is wrong for restore.
+    Use build_restore_message_compact() for continuation blocks instead.
+    """
+    # For now, delegate to compact format to avoid breaking existing callers
+    return build_restore_message_compact(payload)
 
 
 def build_stale_hint(payload: dict[str, Any], reason: str) -> str:

@@ -62,7 +62,7 @@ def test_build_restore_message_contains_core_sections():
     message = build_restore_message(_sample_payload())
 
     assert "SESSION HANDOFF V2" in message
-    assert "Goal: Finish the restore rewrite" in message
+    assert "Goal: User requested: Finish the restore rewrite" in message
     assert "Current Task: Patch SessionStart_handoff_restore.py" in message
     assert "Active Decisions:" in message
     assert "Never auto-restore stale snapshots" in message

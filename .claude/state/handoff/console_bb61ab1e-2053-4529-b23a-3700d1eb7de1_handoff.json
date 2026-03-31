@@ -1,0 +1,126 @@
+{
+  "resume_snapshot": {
+    "schema_version": 2,
+    "snapshot_id": "9cc85f53-cd25-4879-ba80-bb86fa5d4f00",
+    "terminal_id": "console_bb61ab1e-2053-4529-b23a-3700d1eb7de1",
+    "source_session_id": "a44b7e40-ef99-4b61-8de7-16bb64a921ad",
+    "created_at": "2026-03-31T00:06:15.344695+00:00",
+    "expires_at": "2026-03-31T00:26:15.344695+00:00",
+    "status": "rejected_stale",
+    "goal": "Does it align with the system we're already trying to use for skill enforcement via the skill guard package?  P:/packages/skill-guard",
+    "current_task": "Does it align with the system we're already trying to use for skill enforcement via the skill guard package? P:/packages",
+    "progress_percent": 35,
+    "progress_state": "ready",
+    "blockers": [],
+    "active_files": [
+      "P:\\.claude\\hooks\\StopHook_skill_execution_gate.py",
+      "P:\\.claude\\arch_decisions\\ADR-20260323-hook-friction-reduction.md",
+      "P:\\.claude\\hooks\\UserPromptSubmit_modules\\skill_enforcer.py",
+      "P:/packages/skill-guard/src/skill_guard/skill_execution_state.py",
+      "P:/packages/skill-guard/src/skill_guard/breadcrumb/tracker.py",
+      "P:\\.claude\\hooks\\__lib\\hook_ledger.py"
+    ],
+    "pending_operations": [],
+    "next_step": "Both files pass syntax check.",
+    "decision_refs": [
+      "dec_b7b0eab2351e4e878431fb50fb21123e",
+      "dec_df9b4b2ee21140fc8ff282a5b42c6055",
+      "dec_2c5c69b778d44f6e9282b589d46cebad"
+    ],
+    "evidence_refs": [
+      "ev_66210120260f4ce1a9130049486c1d2f",
+      "ev_d0050ff5c7c94172ac8d9df9f160344d",
+      "ev_b4af03748ca5487dab3462aeb71723b9",
+      "ev_5e3eaebe8a2e4bf78c86994c5364f58f",
+      "ev_c38fc1b630df4970920a8860ddada708",
+      "ev_49bcf9f029204ccc92cbabde872fcdd8"
+    ],
+    "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\a44b7e40-ef99-4b61-8de7-16bb64a921ad.jsonl",
+    "message_intent": "question",
+    "quality_score": 0.4,
+    "tasks_snapshot": [],
+    "rejected_at": "2026-03-31T00:07:44.345669+00:00",
+    "rejected_by_session_id": "a44b7e40-ef99-4b61-8de7-16bb64a921ad",
+    "rejection_reason": "snapshot evidence path outside project directory"
+  },
+  "decision_register": [
+    {
+      "id": "dec_b7b0eab2351e4e878431fb50fb21123e",
+      "kind": "constraint",
+      "summary": "Now I see the full picture. The break condition at line 415 (`if found_user and found_assistant: break`) combined with the reverse-scan means: if a system-reminder entry with `role: \"user\"` appears before the real slash-command user prompt in the reverse scan, the loop breaks on the system-reminder and never reaches the actual user prompt containing `/gto`. **Broader structural question**: Does the transcript path given to the Stop hook after a compact event point to the *new* session's transcript (with only the resume/handoff entries), or does it preserve entries from before the compact? If it's the new session's transcript only, then Skill calls from before the compact are genuinely lost to the Stop hook — and no transcript parsing will ever recover them. The hook ledger (SQLite) would survive compaction, but `tools_used` at line 959 represents *this turn's* tools, not prior turns. Let me check what the handoff/resume sends to the Stop hook.",
+      "details": "Now I see the full picture. The break condition at line 415 (`if found_user and found_assistant: break`) combined with the reverse-scan means: if a system-reminder entry with `role: \"user\"` appears before the real slash-command user prompt in the reverse scan, the loop breaks on the system-reminder and never reaches the actual user prompt containing `/gto`. **Broader structural question**: Does the transcript path given to the Stop hook after a compact event point to the *new* session's transcript (with only the resume/handoff entries), or does it preserve entries from before the compact? If it's the new session's transcript only, then Skill calls from before the compact are genuinely lost to the Stop hook — and no transcript parsing will ever recover them. The hook ledger (SQLite) would survive compaction, but `tools_used` at line 959 represents *this turn's* tools, not prior turns. Let me check what the handoff/resume sends to the Stop hook.",
+      "priority": "high",
+      "applies_when": "Continue the current task after compact.",
+      "source_refs": [
+        "ev_66210120260f4ce1a9130049486c1d2f"
+      ]
+    },
+    {
+      "id": "dec_df9b4b2ee21140fc8ff282a5b42c6055",
+      "kind": "constraint",
+      "summary": "**Correction**: My claim \"deleted on non-slash prompts\" was imprecise. The state files are deleted by `_clear_command_intent()` (line 216) which is called at lines 520, 526, 531 — but only when `skill_enforcer.py` runs. These are in the UserPromptSubmit hook, not PreToolUse. The actual deletion behavior is: files are cleared when a non-slash prompt is processed by that specific hook. The broader architectural distinction I was drawing remains valid — telemetry state files and skill progress state files serve different purposes and have different lifecycle constraints. But the specific claim about deletion on all non-slash prompts was imprecise and I should have said \"cleared by `_clear_command_intent()` in `skill_enforcer.py`\" rather than making a broad overgeneralization. On the proposed skill progress state approach: it's architecturally sound, but the Stop hook false positive only fires when the transcript parse *does* find a slash command but *doesn't* find Skill in tools_used. If the slash command itself is absent from the transcript (as in a post-compact resume), the Stop hook never even reaches that check. So the state file approach would solve the case where `/gto` is in the transcript but Skill isn't in tools_used — which is exactly the case we saw in the debug output.",
+      "details": "**Correction**: My claim \"deleted on non-slash prompts\" was imprecise. The state files are deleted by `_clear_command_intent()` (line 216) which is called at lines 520, 526, 531 — but only when `skill_enforcer.py` runs. These are in the UserPromptSubmit hook, not PreToolUse. The actual deletion behavior is: files are cleared when a non-slash prompt is processed by that specific hook. The broader architectural distinction I was drawing remains valid — telemetry state files and skill progress state files serve different purposes and have different lifecycle constraints. But the specific claim about deletion on all non-slash prompts was imprecise and I should have said \"cleared by `_clear_command_intent()` in `skill_enforcer.py`\" rather than making a broad overgeneralization. On the proposed skill progress state approach: it's architecturally sound, but the Stop hook false positive only fires when the transcript parse *does* find a slash command but *doesn't* find Skill in tools_used. If the slash command itself is absent from the transcript (as in a post-compact resume), the Stop hook never even reaches that check. So the state file approach would solve the case where `/gto` is in the transcript but Skill isn't in tools_used — which is exactly the case we saw in the debug output.",
+      "priority": "high",
+      "applies_when": "Continue the current task after compact.",
+      "source_refs": [
+        "ev_66210120260f4ce1a9130049486c1d2f"
+      ]
+    },
+    {
+      "id": "dec_2c5c69b778d44f6e9282b589d46cebad",
+      "kind": "constraint",
+      "summary": "Now I see the full picture. The ledger **already survives compaction** — and `set_skill_loaded()` writes `skill_loaded` events to it. But the Stop hook at line 1007 only queries `tool_invoked` and `tool_blocked`. It never checks for `skill_loaded` events. The fix is in the existing ledger check — we just need to also look for `skill_loaded` events. Let me verify the ledger stores the skill name in those events:",
+      "details": "Now I see the full picture. The ledger **already survives compaction** — and `set_skill_loaded()` writes `skill_loaded` events to it. But the Stop hook at line 1007 only queries `tool_invoked` and `tool_blocked`. It never checks for `skill_loaded` events. The fix is in the existing ledger check — we just need to also look for `skill_loaded` events. Let me verify the ledger stores the skill name in those events:",
+      "priority": "high",
+      "applies_when": "Continue the current task after compact.",
+      "source_refs": [
+        "ev_66210120260f4ce1a9130049486c1d2f"
+      ]
+    }
+  ],
+  "evidence_index": [
+    {
+      "id": "ev_66210120260f4ce1a9130049486c1d2f",
+      "type": "transcript",
+      "label": "Current compact transcript",
+      "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\a44b7e40-ef99-4b61-8de7-16bb64a921ad.jsonl",
+      "content_hash": "sha256:3d696dea52b65136d4eb5feec5f78038a192b38bc915183172d15284cdc94932"
+    },
+    {
+      "id": "ev_d0050ff5c7c94172ac8d9df9f160344d",
+      "type": "file",
+      "label": "StopHook_skill_execution_gate.py",
+      "path": "P:\\.claude\\hooks\\StopHook_skill_execution_gate.py",
+      "content_hash": "sha256:61f11f12b2fb6280da32dc8e68c5ed53446594f5b7db0e902d726515cb889d0e"
+    },
+    {
+      "id": "ev_b4af03748ca5487dab3462aeb71723b9",
+      "type": "file",
+      "label": "ADR-20260323-hook-friction-reduction.md",
+      "path": "P:\\.claude\\arch_decisions\\ADR-20260323-hook-friction-reduction.md",
+      "content_hash": "sha256:67615dbb1a83420f946a23caddb7f4e501726830dee05482ae8c15dc5335b487"
+    },
+    {
+      "id": "ev_5e3eaebe8a2e4bf78c86994c5364f58f",
+      "type": "file",
+      "label": "skill_enforcer.py",
+      "path": "P:\\.claude\\hooks\\UserPromptSubmit_modules\\skill_enforcer.py",
+      "content_hash": "sha256:030f770bb4457933c4b383d50df098eab099d7bcea5ac766a79af803e7cf6d16"
+    },
+    {
+      "id": "ev_c38fc1b630df4970920a8860ddada708",
+      "type": "file",
+      "label": "skill_execution_state.py",
+      "path": "P:\\packages\\skill-guard\\src\\skill_guard\\skill_execution_state.py",
+      "content_hash": "sha256:73f6e6386b3ad9566da1b65345cd730330bc5ebedd875d50c830ec7ec7afb1e6"
+    },
+    {
+      "id": "ev_49bcf9f029204ccc92cbabde872fcdd8",
+      "type": "file",
+      "label": "tracker.py",
+      "path": "P:\\packages\\skill-guard\\src\\skill_guard\\breadcrumb\\tracker.py",
+      "content_hash": "sha256:539ac4cf18460afc4631b593484535f075d3fbbf400f62e7590193882a6c3e34"
+    }
+  ],
+  "checksum": "sha256:15ae5783b897063925ebd6ad3f9dfdba985035ed8aa7a293376e84144b58ab48"
+}

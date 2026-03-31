@@ -45,6 +45,8 @@ def _make_envelope(
     pending_ops: list[dict] | None = None,
     next_step: str = "Do the next thing",
     transcript_path: str = "/tmp/session.jsonl",
+    progress_state: str = "in_progress",
+    progress_percent: int = 50,
 ) -> dict:
     return {
         "resume_snapshot": {
@@ -54,6 +56,10 @@ def _make_envelope(
             "pending_operations": pending_ops or [],
             "next_step": next_step,
             "transcript_path": transcript_path,
+            "progress_state": progress_state,
+            "progress_percent": progress_percent,
+            "blockers": [],
+            "message_intent": "instruction",
         }
     }
 
@@ -173,6 +179,8 @@ class TestSuccessfulRecovery:
 
         assert result.context is not None
         assert "Implement compaction recovery" in result.context
+        # Compact format uses "User requested:" prefix around goal
+        assert "User requested:" in result.context
 
     def test_marker_cleared_after_injection(self) -> None:
         """Marker must be deleted after injection — one-shot behaviour."""
@@ -192,8 +200,8 @@ class TestSuccessfulRecovery:
         assert result1.context is not None
         assert result2.context is None
 
-    def test_context_contains_transcript_placeholder(self) -> None:
-        """Injected context must include transcript placeholder (not raw path)."""
+    def test_context_uses_compact_format_no_raw_transcript_path(self) -> None:
+        """Injected context must use <compact-restore> format with no raw transcript path."""
         from UserPromptSubmit_modules.base import HookContext
 
         envelope = _make_envelope(transcript_path="/sessions/abc123.jsonl")
@@ -205,9 +213,11 @@ class TestSuccessfulRecovery:
                 result = _mod.handoff_task_injector_hook(ctx)
 
         assert result.context is not None
-        # Implementation uses generic placeholder for privacy, not raw path
-        assert "Transcript:" in result.context
-        assert "<session transcript>" in result.context
+        # Compact format: no transcript path leaked, no "Transcript:" placeholder
+        assert "<compact-restore>" in result.context
+        assert "status: restored" in result.context
+        # Raw path must not appear in output (privacy by omission)
+        assert "/sessions/abc123.jsonl" not in result.context
 
     def test_context_contains_current_task(self) -> None:
         """Injected context must include the current task."""

@@ -133,66 +133,12 @@ def _load_envelope(handoff_path: str) -> dict | None:
 
 def _build_recovery_message(envelope: dict) -> str:
     """Format a concise restoration context block from a Handoff V2 envelope."""
-    snapshot = envelope.get("resume_snapshot", {})
-    goal: str = snapshot.get("goal", "Unknown")
-    current_task: str = snapshot.get("current_task", "Unknown")
-    active_files: list[str] = snapshot.get("active_files", [])
-    pending_ops: list[dict] = snapshot.get("pending_operations", [])
-    next_step: str = snapshot.get("next_step", "")
-    transcript_path: str = snapshot.get("transcript_path", "")
+    # Delegate to shared compact formatter for contract consistency.
+    # Both SessionStart and UPS paths now emit the same <compact-restore> block.
+    # Richer transcript context is captured via conversation_summary (P1).
+    from scripts.hooks.__lib.handoff_v2 import build_restore_message_compact
 
-    lines = [
-        "CONTEXT RESTORED — mid-session compaction detected\n",
-        f"Goal: {goal}",
-        f"Current Task: {current_task}",
-    ]
-
-    if active_files:
-        lines.append("Active Files:")
-        for f in active_files[:5]:
-            lines.append(f"  - {f}")
-
-    if pending_ops:
-        lines.append("Pending Operations:")
-        for op in pending_ops[:3]:
-            op_type = op.get("type", "op")
-            target = op.get("target", "unknown")
-            lines.append(f"  - {op_type}: {target}")
-
-    if next_step:
-        lines.append(f"Next Step: {next_step}")
-
-    # CONTEXT-001: Inject recent user context from transcript
-    # This preserves user clarifications and refinements across compactions
-    # SEC-001 FIX: Validate envelope before using transcript_path to prevent path traversal
-    if transcript_path:
-        from scripts.hooks.__lib.handoff_v2 import (
-            HandoffValidationError,
-            _extract_and_format_user_context,
-            validate_envelope,
-        )
-
-        # Validate envelope before using any fields from it (path traversal protection)
-        try:
-            validate_envelope(envelope)
-        except HandoffValidationError:
-            # Invalid envelope - skip context injection, safe defaults only
-            pass
-        else:
-            user_context = _extract_and_format_user_context(
-                transcript_path, max_messages=15
-            )
-            if user_context:
-                lines.extend(["", user_context])
-
-        lines.append(
-            "Transcript: <session transcript> — read this for full pre-compaction context if needed"
-        )
-
-    lines.append(
-        "\n(Auto-injected from handoff snapshot. Continue from the state above.)"
-    )
-    return "\n".join(lines)
+    return build_restore_message_compact(envelope)
 
 
 # ---------------------------------------------------------------------------

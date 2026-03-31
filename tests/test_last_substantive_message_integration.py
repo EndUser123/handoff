@@ -287,7 +287,7 @@ def test_message_intent_present_in_result():
 
     # message_intent should be present and classified
     assert "message_intent" in result
-    assert result["message_intent"] in ["instruction", "question", "clarification"]
+    assert result["message_intent"] in ["instruction", "question", "clarification", "directive"]
 
     # Clean up
     transcript_path.unlink(missing_ok=True)

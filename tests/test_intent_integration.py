@@ -225,9 +225,9 @@ class TestPreCompactHookIntegration:
             # Extract goal with intent
             result = extract_last_substantive_user_message(transcript_file)
 
-            # Verify intent was classified as instruction
-            assert result["message_intent"] == "instruction", (
-                f"Expected 'instruction' intent but got '{result['message_intent']}'"
+            # Verify intent was classified as directive (imperative command)
+            assert result["message_intent"] == "directive", (
+                f"Expected 'directive' intent but got '{result['message_intent']}'"
             )
 
             # Build snapshot and verify restore message has "User requested:" prefix
@@ -277,9 +277,9 @@ class TestConcurrentHandoffCreation:
 
         # Test messages with different intents
         messages = [
-            ("Fix the bug", "instruction"),
+            ("Fix the bug", "directive"),
             ("Is this working?", "question"),
-            ("Update the component", "instruction"),
+            ("Update the component", "directive"),
             ("What is the status?", "question"),
         ]
 
