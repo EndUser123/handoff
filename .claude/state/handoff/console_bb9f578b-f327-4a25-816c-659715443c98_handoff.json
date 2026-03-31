@@ -1,11 +1,11 @@
 {
   "resume_snapshot": {
     "schema_version": 2,
-    "snapshot_id": "085b14ef-c20f-4b0e-9657-c454e04ba094",
+    "snapshot_id": "2864a911-7999-45ea-b2c4-1232353c2339",
     "terminal_id": "console_bb9f578b-f327-4a25-816c-659715443c98",
     "source_session_id": "84075f70-1cb3-4182-800d-e0029d0169e6",
-    "created_at": "2026-03-31T23:13:16.199515+00:00",
-    "expires_at": "2026-03-31T23:33:16.199515+00:00",
+    "created_at": "2026-03-31T23:28:52.057757+00:00",
+    "expires_at": "2026-03-31T23:48:52.057757+00:00",
     "status": "pending",
     "goal": "\"Gap 1 — pending_operations reliability (transcript.py:2284-2340):\", yes we need fix this otherwise it's useless and infact harmful.\n\n\"Gap 2: current_task is just the goal string truncated to 120 chars — not derived from what the assistant was actually\n  doing.\", we shouldn't have a character limit.  That's asking for problems.  Remove the limit.",
     "current_task": "\"Gap 1 — pending_operations reliability (transcript.py:2284-2340):\", yes we need fix this otherwise it's useless and infact harmful. \"Gap 2: current_task is just the goal string truncated to 120 chars — not derived from what the assistant was actually doing.\", we shouldn't have a character limit. That's asking for problems. Remove the limit.",
@@ -53,15 +53,15 @@
     ],
     "next_step": "Resume read on P:\\__csf\\arch_decisions\\ADR-20260329-llm-consultation-pattern-fix.md.",
     "decision_refs": [
-      "dec_50cd98de08354f41bbe21a53fa8f174f"
+      "dec_252145224cfe456499a0f95c7cab2ff7"
     ],
     "evidence_refs": [
-      "ev_18e087cca4424d5981f8240743beed78",
-      "ev_56721d61a32e45a38745c9d7eb65acf4",
-      "ev_77c9da14169849d3b9ffcb3d770931ed",
-      "ev_2f3b2fb53ebe4b779052fe9718765667",
-      "ev_2b2220cceab24c7ea65b589562fd514f",
-      "ev_8890331adfb742828ad734d036a5f9bb"
+      "ev_20d94e9ee0854ecbb54ebbd2ee222ca8",
+      "ev_26319b53b6054b1bae3d5ebb0a11cb0d",
+      "ev_94620803f4134be2a6a71237316e3ccc",
+      "ev_69094bf55a5246f2a43a910da884b232",
+      "ev_6e1b8b18159f48eaa0e65ec6cfe25a0d",
+      "ev_915be377d6e64e9dbe4daf5055bd9d80"
     ],
     "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\84075f70-1cb3-4182-800d-e0029d0169e6.jsonl",
     "message_intent": "unsupported_language",
@@ -70,60 +70,60 @@
   },
   "decision_register": [
     {
-      "id": "dec_50cd98de08354f41bbe21a53fa8f174f",
+      "id": "dec_252145224cfe456499a0f95c7cab2ff7",
       "kind": "constraint",
-      "summary": "I now understand both issues completely: **Issue 1 (`extract_pending_operations`)**: The code checks `entry.get(\"type\") == \"tool_use\"` but in real transcripts, `tool_use` is nested inside `entry[\"message\"][\"content\"]`. Pass 1 never matches, so it always falls through to the unreliable keyword-based Pass 2. Additionally, even when tools are detected, there's no check for whether they completed. **Issue 2 (`short_task_name`)**: `cleaned[:120]` truncates to 120 chars. Let me fix both:",
-      "details": "I now understand both issues completely: **Issue 1 (`extract_pending_operations`)**: The code checks `entry.get(\"type\") == \"tool_use\"` but in real transcripts, `tool_use` is nested inside `entry[\"message\"][\"content\"]`. Pass 1 never matches, so it always falls through to the unreliable keyword-based Pass 2. Additionally, even when tools are detected, there's no check for whether they completed. **Issue 2 (`short_task_name`)**: `cleaned[:120]` truncates to 120 chars. Let me fix both:",
+      "summary": "The conftest fixture `make_transcript_entry` exists but tests don't use it. The right fix: update tests to use nested format (matching production reality). Let me update the failing tests.",
+      "details": "The conftest fixture `make_transcript_entry` exists but tests don't use it. The right fix: update tests to use nested format (matching production reality). Let me update the failing tests.",
       "priority": "high",
       "applies_when": "Continue the current task after compact.",
       "source_refs": [
-        "ev_18e087cca4424d5981f8240743beed78"
+        "ev_20d94e9ee0854ecbb54ebbd2ee222ca8"
       ]
     }
   ],
   "evidence_index": [
     {
-      "id": "ev_18e087cca4424d5981f8240743beed78",
+      "id": "ev_20d94e9ee0854ecbb54ebbd2ee222ca8",
       "type": "transcript",
       "label": "Current compact transcript",
       "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\84075f70-1cb3-4182-800d-e0029d0169e6.jsonl",
-      "content_hash": "sha256:5e9d41282d6ebd505fedc42602db5692f410d8c33f180c7a282b38040dc0c798"
+      "content_hash": "sha256:855b13936df8b1c40a4d00b6a03fedf622d07fbaccf4418183e4ecdd0c45e06c"
     },
     {
-      "id": "ev_56721d61a32e45a38745c9d7eb65acf4",
+      "id": "ev_26319b53b6054b1bae3d5ebb0a11cb0d",
       "type": "file",
       "label": "ADR-20260329-llm-consultation-pattern-fix.md",
       "path": "P:\\__csf\\arch_decisions\\ADR-20260329-llm-consultation-pattern-fix.md",
       "content_hash": "sha256:d4a542de019b41900e81f5018bdd77c93e7a1c55f1cc0a03a966b8e4dab1bafd"
     },
     {
-      "id": "ev_77c9da14169849d3b9ffcb3d770931ed",
+      "id": "ev_94620803f4134be2a6a71237316e3ccc",
       "type": "file",
       "label": "plan-adr-20260329-llm-consultation-pattern-fix.md",
       "path": "C:\\Users\\brsth\\.claude\\plans\\plan-adr-20260329-llm-consultation-pattern-fix.md",
       "content_hash": "sha256:1acdf666948485071e9009d93f2ef08d7524ab898b1deecaecffc012082f9e4b"
     },
     {
-      "id": "ev_2f3b2fb53ebe4b779052fe9718765667",
+      "id": "ev_69094bf55a5246f2a43a910da884b232",
       "type": "file",
       "label": "Stop_good_question_gate.py",
       "path": "P:\\.claude\\hooks\\Stop_good_question_gate.py",
       "content_hash": "sha256:b398df20cd9934244affea3158d56f2e5d8a0ed3a5594e6fcdcab67c4fd04dea"
     },
     {
-      "id": "ev_2b2220cceab24c7ea65b589562fd514f",
+      "id": "ev_6e1b8b18159f48eaa0e65ec6cfe25a0d",
       "type": "file",
       "label": "skill_autonomy_registry.py",
       "path": "P:\\.claude\\skills\\__lib\\skill_autonomy_registry.py",
       "content_hash": "sha256:58c89f71c78878a36d410faab1356e0e0d5c278a81a094881bcf0793440e19d2"
     },
     {
-      "id": "ev_8890331adfb742828ad734d036a5f9bb",
+      "id": "ev_915be377d6e64e9dbe4daf5055bd9d80",
       "type": "file",
       "label": "PreToolUse.py",
       "path": "P:\\.claude\\hooks\\PreToolUse.py",
       "content_hash": "sha256:7fda808ed4894df97efb4cb2d7303698766e9fd12bd977d596b5ebf5b3c0b9bd"
     }
   ],
-  "checksum": "sha256:a658517d1ffa511454341eca571a11d4858bf37b64b6c5a402d016b4e9518f08"
+  "checksum": "sha256:ea9499ebef75e0f76e91af197fef8f9cd29397c3cde15431398ec47cae752157"
 }
