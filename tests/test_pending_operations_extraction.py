@@ -236,16 +236,9 @@ class TestPendingOperationsLimits:
 
     def test_max_five_operations(self, tmp_path):
         """Test that only 5 pending operations are returned."""
-
         transcript_file = tmp_path / "test.jsonl"
         lines = [
-            json.dumps(
-                {
-                    "type": "tool_use",
-                    "name": "Read",
-                    "input": {"file_path": f"file{i}.py"},
-                }
-            )
+            json.dumps(make_tool_use_entry("Read", {"file_path": f"file{i}.py"}))
             for i in range(10)
         ]
         transcript_file.write_text("\n".join(lines) + "\n")
