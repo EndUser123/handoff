@@ -27,6 +27,27 @@ _handler.setFormatter(
 logger.addHandler(_handler)
 logger.setLevel(logging.DEBUG)
 
+
+def _find_project_root(start: Path) -> Path:
+    """Walk up from start to find the project root (directory containing .claude).
+
+    Args:
+        start: Starting directory (typically Path.cwd())
+
+    Returns:
+        Project root directory. Falls back to start if no .claude found.
+    """
+    current = start.resolve()
+    for _ in range(10):  # Walk up at most 10 levels
+        if (current / ".claude").is_dir():
+            return current
+        parent = current.parent
+        if parent == current:  # Reached filesystem root
+            break
+        current = parent
+    return start  # Fallback: return original start
+
+
 PACKAGE_ROOT = Path(__file__).resolve().parents[2]
 if str(PACKAGE_ROOT) not in sys.path:
     sys.path.insert(0, str(PACKAGE_ROOT))
