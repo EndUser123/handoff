@@ -89,7 +89,6 @@ def detect_project_root(
 
     # Find where we are in the directory hierarchy
     project_root = current_dir
-    traversal_start = project_root
 
     # If we're inside .claude/hooks/, navigate to parent of .claude
     for hooks_marker in hooks_markers:
