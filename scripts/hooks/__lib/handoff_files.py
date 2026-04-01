@@ -274,7 +274,7 @@ class HandoffFileStorage:
                         session_id="system",
                         reason=reject_reason,
                     )
-                    self.save_handoff(meted)
+                    self.save_handoff(marked)
                     return None
 
             snapshot_terminal = snapshot["terminal_id"]
