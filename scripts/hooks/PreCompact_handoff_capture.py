@@ -51,6 +51,7 @@ from scripts.hooks.__lib.handoff_v2 import (
     short_task_name,
 )
 from scripts.hooks.__lib.dynamic_sections import calculate_quality_score_dynamic
+from scripts.hooks.__lib.project_root import detect_project_root
 from scripts.hooks.__lib.hook_input_validation import (
     HookInputError,
     validate_hook_input,
