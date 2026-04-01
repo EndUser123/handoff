@@ -13,8 +13,12 @@ from typing import Any
 from scripts.hooks.__lib.handoff_store import FileLock, atomic_write_with_retry
 from scripts.hooks.__lib.handoff_v2 import (
     HandoffValidationError,
+    SNAPSHOT_PENDING,
+    SNAPSHOT_REJECTED_STALE,
     compute_checksum,
     mark_snapshot_status,
+    parse_iso8601,
+    utcnow,
     validate_envelope,
 )
 
