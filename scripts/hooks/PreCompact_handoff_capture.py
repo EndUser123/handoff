@@ -545,7 +545,11 @@ def main() -> None:
         terminal_id = resolve_terminal_key(input_data.get("terminal_id"))
 
         # CRITICAL: For handoff package, detect project root with testing support
-        # Priority: 1) HANDOFF_PROJECT_ROOT env var (for testing), 2) hook file location (production)
+        # Priority: 1) HANDOFF_PROJECT_ROOT env var (for testing), 2) cwd (production)
+        # Use Path.cwd() instead of __file__-derived path because Claude Code
+        # invokes hooks as plugin commands from the project root (cwd = P:/), while
+        # __file__ resolves to P:/packages/handoff/scripts/hooks/. This ensures
+        # state files are written to P:/.claude/ (project root) not P:/packages/handoff/.claude/
         env_project_root = os.environ.get("HANDOFF_PROJECT_ROOT")
         if env_project_root:
             project_root = Path(env_project_root)
@@ -553,18 +557,9 @@ def main() -> None:
                 f"[PreCompact V2] Using project root from environment: {project_root}"
             )
         else:
-            # Production: derive from hook file location to store in handoff package directory
-            hook_file = Path(__file__).resolve()
-            # hooks/ -> scripts/ -> handoff/
-            project_root = hook_file.parent.parent.parent
+            project_root = Path.cwd()
             logger.info(
-                f"[PreCompact V2] Detected project root from hook file: {project_root}"
-            )
-
-        # Optional: Validate it looks like the handoff package
-        if not (project_root / "scripts" / "hooks").exists():
-            logger.warning(
-                f"[PreCompact V2] Hook file location doesn't look like handoff package, using it anyway: {project_root}"
+                f"[PreCompact V2] Using project root from cwd: {project_root}"
             )
 
         # CRITICAL: Validate transcript_path exists and is readable
