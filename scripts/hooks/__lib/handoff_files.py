@@ -244,8 +244,23 @@ class HandoffFileStorage:
                                 reason,
                             )
                             return None
-                    except Exception:
-                        pass  # If time parsing fails, fall through to terminal check
+                    except Exception as exc:
+                        # Malformed expires_at — reject as stale rather than silently
+                        # bypassing the expiration check and leaking expired handoffs.
+                        reject_reason = f"expires_at parse failed: {exc}"
+                        logger.warning(
+                            "[HandoffFileStorage] Failed to parse expires_at %r: %s — rejecting as stale",
+                            expires_at,
+                            exc,
+                        )
+                        marked = mark_snapshot_status(
+                            payload,
+                            status=SNAPSHOT_REJECTED_STALE,
+                            session_id="system",
+                            reason=reject_reason,
+                        )
+                        self.save_handoff(marked)
+                        return None
 
             snapshot_terminal = snapshot["terminal_id"]
             if snapshot_terminal != self.terminal_id:
