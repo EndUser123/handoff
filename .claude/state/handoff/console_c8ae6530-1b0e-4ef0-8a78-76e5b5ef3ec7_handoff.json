@@ -1,14 +1,14 @@
 {
   "resume_snapshot": {
     "schema_version": 2,
-    "snapshot_id": "cdf09980-2de5-4a19-9e84-e64b56342794",
+    "snapshot_id": "69969cb9-bf7d-4dd2-a9e5-a32900a55b1c",
     "terminal_id": "console_c8ae6530-1b0e-4ef0-8a78-76e5b5ef3ec7",
     "source_session_id": "556ff55f-d210-48c5-8135-997f2ebdf964",
-    "created_at": "2026-03-31T23:55:37.887902+00:00",
-    "expires_at": "2026-04-01T00:15:37.887902+00:00",
+    "created_at": "2026-04-01T02:26:12.514779+00:00",
+    "expires_at": "2026-04-01T02:46:12.514779+00:00",
     "status": "pending",
-    "goal": "writting to the log for skill coverage is useful, but it shouldn't block actually using the /planning skill properly.",
-    "current_task": "writting to the log for skill coverage is useful, but it shouldn't block actually using the /planning skill properly.",
+    "goal": "you really need to follow the skill next time.  update the plan to address the findings.",
+    "current_task": "you really need to follow the skill next time. update the plan to address the findings.",
     "progress_percent": 100,
     "progress_state": "blocked",
     "blockers": [
@@ -26,7 +26,8 @@
       "P:\\packages\\search-research\\core\\cks\\hybrid_search_patch.py",
       "P:\\__csf\\arch_decisions\\ADR-20260331-cks-hybrid-search-restoration.md",
       "P:\\.claude\\plans\\plan-adr-20260331-cks-hybrid-search-restoration.md",
-      "P:\\.claude\\skills\\planning\\__lib\\auto_verify.py"
+      "P:\\.claude\\skills\\planning\\__lib\\auto_verify.py",
+      "C:/Users/brsth/.claude/projects/P--/556ff55f-d210-48c5-8135-997f2ebdf964/subagents/agent-a23069d0f3869b302.jsonl"
     ],
     "pending_operations": [
       {
@@ -56,64 +57,78 @@
       }
     ],
     "next_step": "Resume skill on skill: arch.",
-    "decision_refs": [],
+    "decision_refs": [
+      "dec_e2a8705a38bb41698e89c280799bc3e6"
+    ],
     "evidence_refs": [
-      "ev_e35d663529754fbd9d981f59793ec7c3",
-      "ev_ddc6c6866c704f9e9ebc9809c9a65def",
-      "ev_14863037005544039c8dc2c9c49a6638",
-      "ev_4a1349d05dc74b3f87cb25f50a9b00a7",
-      "ev_2616b0ba3b7d4fa693db55d3475f64be",
-      "ev_bd6b41168d07418693da3f9367ae94cc"
+      "ev_eb7f0ae3820147c78982eac7381d0bfe",
+      "ev_8def1f8d14a54a85a23fce2c6cd7be97",
+      "ev_9dc246510a3147c2aba645500e7c5216",
+      "ev_32895ddc0c2549fa84f533bfc07a201c",
+      "ev_72e75fb0ae294e9598f737c1d67a56a6",
+      "ev_f44d0968a1a44c4e84d5c4287eb27cf6"
     ],
     "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\556ff55f-d210-48c5-8135-997f2ebdf964.jsonl",
     "message_intent": "instruction",
     "quality_score": 0.9,
     "tasks_snapshot": []
   },
-  "decision_register": [],
+  "decision_register": [
+    {
+      "id": "dec_e2a8705a38bb41698e89c280799bc3e6",
+      "kind": "constraint",
+      "summary": "All 6 adversarial agents have now completed. The plan has been updated with the findings. **plan:** `P:\\.claude\\plans\\plan-adr-20260331-cks-hybrid-search-restoration.md` **status:** draft **unresolved_blockers:** 8 The plan is ready for your review. The 8 critical/high blockers must be addressed before implementation can proceed. Would you like me to implement the fixes to the plan, or do you have guidance on how to proceed?",
+      "details": "All 6 adversarial agents have now completed. The plan has been updated with the findings. **plan:** `P:\\.claude\\plans\\plan-adr-20260331-cks-hybrid-search-restoration.md` **status:** draft **unresolved_blockers:** 8 The plan is ready for your review. The 8 critical/high blockers must be addressed before implementation can proceed. Would you like me to implement the fixes to the plan, or do you have guidance on how to proceed?",
+      "priority": "high",
+      "applies_when": "Continue the current task after compact.",
+      "source_refs": [
+        "ev_eb7f0ae3820147c78982eac7381d0bfe"
+      ]
+    }
+  ],
   "evidence_index": [
     {
-      "id": "ev_e35d663529754fbd9d981f59793ec7c3",
+      "id": "ev_eb7f0ae3820147c78982eac7381d0bfe",
       "type": "transcript",
       "label": "Current compact transcript",
       "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\556ff55f-d210-48c5-8135-997f2ebdf964.jsonl",
-      "content_hash": "sha256:38390b2cfb802278e7b4ae724b887a562462cef25c9d810a7e4fcca4d6de67b2"
+      "content_hash": "sha256:938d862774627e0f57fa9525e8f298f82867c0fcc4b8bad80936c82465d546be"
     },
     {
-      "id": "ev_ddc6c6866c704f9e9ebc9809c9a65def",
+      "id": "ev_8def1f8d14a54a85a23fce2c6cd7be97",
       "type": "file",
       "label": "ancient-forging-kahan.md",
       "path": "C:\\Users\\brsth\\.claude\\plans\\ancient-forging-kahan.md",
       "content_hash": "sha256:7ce272cd7f02a6c8f26c4cdb1a8a45d0318b480538bb416effbe29785d7ecb57"
     },
     {
-      "id": "ev_14863037005544039c8dc2c9c49a6638",
+      "id": "ev_9dc246510a3147c2aba645500e7c5216",
       "type": "file",
       "label": "precedent.md",
       "path": "P:\\.claude\\skills\\arch\\resources\\precedent.md",
       "content_hash": "sha256:14846d67330517a84d2ba4361d2adba478da738a9e4d6236e20743e260734672"
     },
     {
-      "id": "ev_4a1349d05dc74b3f87cb25f50a9b00a7",
+      "id": "ev_32895ddc0c2549fa84f533bfc07a201c",
       "type": "file",
       "label": "shared_frameworks.md",
       "path": "P:\\.claude\\skills\\arch\\resources\\shared_frameworks.md",
       "content_hash": "sha256:b6c8d01f18abb02e7167861d9fa28318ff90138842d64600da4820e21b521985"
     },
     {
-      "id": "ev_2616b0ba3b7d4fa693db55d3475f64be",
+      "id": "ev_72e75fb0ae294e9598f737c1d67a56a6",
       "type": "file",
       "label": "storage.py",
       "path": "P:\\packages\\search-research\\core\\cks\\storage.py",
       "content_hash": "sha256:99f360fea5ca37baf91fb5b82a608e6df78501c4d6b1d83c4868309dc780d7fa"
     },
     {
-      "id": "ev_bd6b41168d07418693da3f9367ae94cc",
+      "id": "ev_f44d0968a1a44c4e84d5c4287eb27cf6",
       "type": "file",
       "label": "unified.py",
       "path": "P:\\packages\\search-research\\core\\cks\\unified.py",
       "content_hash": "sha256:54d15ae4b347da03b8fcfe00129658bb4bd29fa289512f34f569e7da15c1ebfc"
     }
   ],
-  "checksum": "sha256:afb555110bbddaa28348a6e7f29695ed33ca240c2a12d18152f924f13570c071"
+  "checksum": "sha256:f0f16619dd931fdebd84755a81278fdc2616590c56f9a2fb2ad14319f52b0267"
 }
