@@ -1,11 +1,11 @@
 {
   "resume_snapshot": {
     "schema_version": 2,
-    "snapshot_id": "55414256-e814-4b80-a225-83e1f037f465",
+    "snapshot_id": "9d2f16e1-ca6f-4eee-bca6-82c986ee2a85",
     "terminal_id": "console_e56dc484-0a80-4880-a9cb-c4c0a8472d51",
     "source_session_id": "2044f719-d9ed-4a25-bd5f-1effd1fbf2e2",
-    "created_at": "2026-03-31T23:55:16.185771+00:00",
-    "expires_at": "2026-04-01T00:15:16.185771+00:00",
+    "created_at": "2026-04-01T02:50:00.951152+00:00",
+    "expires_at": "2026-04-01T03:10:00.951152+00:00",
     "status": "pending",
     "goal": "no we can commit after.  update the skills so that the past sessions are used in their analysis.",
     "current_task": "no we can commit after. update the skills so that the past sessions are used in their analysis.",
@@ -52,113 +52,63 @@
       }
     ],
     "next_step": "Resume skill on skill: usm.",
-    "decision_refs": [
-      "dec_862befdfcc8b4f71bd454732f0646138",
-      "dec_f1868b6fc80747e8a7bff3f4d100c31e",
-      "dec_e9c53998b06c4ca98fb025a8d49dc19d",
-      "dec_3dfe72992800402484c0013459f0f4b4"
-    ],
+    "decision_refs": [],
     "evidence_refs": [
-      "ev_07d99fb2964548b4a4393874e2fbfe53",
-      "ev_0157f6fe602a48cdb7b2c4288fe64df5",
-      "ev_6993fa739e13443cbda39edbe824db79",
-      "ev_5e6cc888d2514393b132c9dc13283b74",
-      "ev_574b14408ef040409e5fdbada8b00a49",
-      "ev_dd15e95a57e54fa89c158a243e5612b5"
+      "ev_e18c019a889340ebb59a94c70cbac09a",
+      "ev_3d4dee92ecb24e348ed54c3c99399577",
+      "ev_594335fd8b72491ab1b255704ba9de90",
+      "ev_d1ead9d1692e41ea97ed831b408ce662",
+      "ev_3acbfa5b029c4772bd11d860af71a686",
+      "ev_61b76c09df234bd2ac6b067adf478bdd"
     ],
     "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\2044f719-d9ed-4a25-bd5f-1effd1fbf2e2.jsonl",
     "message_intent": "instruction",
     "quality_score": 0.4,
     "tasks_snapshot": []
   },
-  "decision_register": [
-    {
-      "id": "dec_862befdfcc8b4f71bd454732f0646138",
-      "kind": "constraint",
-      "summary": "[ASUM] User is asking about adding session_chain.py and session_graph.py as MCP resources or skill resources to three skills (/chs, /search, /all). [ANCH] The question is whether these utilities are useful as on-demand resources for those skills. [INV] Risk: adding resources that aren't actually used wastes context; resources must be referenced by the skills' logic to matter. Let me check how resources work in these skills:",
-      "details": "[ASUM] User is asking about adding session_chain.py and session_graph.py as MCP resources or skill resources to three skills (/chs, /search, /all). [ANCH] The question is whether these utilities are useful as on-demand resources for those skills. [INV] Risk: adding resources that aren't actually used wastes context; resources must be referenced by the skills' logic to matter. Let me check how resources work in these skills:",
-      "priority": "high",
-      "applies_when": "Continue the current task after compact.",
-      "source_refs": [
-        "ev_07d99fb2964548b4a4393874e2fbfe53"
-      ]
-    },
-    {
-      "id": "dec_f1868b6fc80747e8a7bff3f4d100c31e",
-      "kind": "constraint",
-      "summary": "[ASUM] The user wants these as CLI utilities callable by the skills — not library imports. Skills shell out to commands for specific tasks. [ANCH] The question is whether to wire `session_chain.py` and `session_graph.py` as CLI commands in `core/cli.py` that `/chs`, `/search`, `/all` can invoke. [INV] Risk: adding commands nobody calls = dead code. **My answer: No, not as-is.** Here's why: `session_graph.py` is output-only (PNG/HTML). It's not a subroutine — it generates a visualization and exits. No skill would call it as a utility. `session_chain.py` is a library, not a CLI. It has no `main()` / `argparse` entry point. Its functions (`get_all_chain_files`, `walk_session_chain`) are designed to be imported and called directly. **What would actually be useful:** For `/chs` / `/search` / `/all` to use session chain data, you'd need **CLI wrappers** in `core/cli.py` that output structured data (JSON), not visualizations. For example: ```bash # Hypothetical CLI additions python -m core.cli --session-chain <session_id> # → JSON chain data python -m core.cli --session-graph --html # → generates HTML ``` **Recommendation:** Don't wire them yet. The scripts are useful for you (the AI) to understand session relationships during conversation. To make them *skills utilities*, you'd first need to define what task/question from those skills would trigger calling them. What's the concrete use case — \"show me related sessions when searching for X\"?",
-      "details": "[ASUM] The user wants these as CLI utilities callable by the skills — not library imports. Skills shell out to commands for specific tasks. [ANCH] The question is whether to wire `session_chain.py` and `session_graph.py` as CLI commands in `core/cli.py` that `/chs`, `/search`, `/all` can invoke. [INV] Risk: adding commands nobody calls = dead code. **My answer: No, not as-is.** Here's why: `session_graph.py` is output-only (PNG/HTML). It's not a subroutine — it generates a visualization and exits. No skill would call it as a utility. `session_chain.py` is a library, not a CLI. It has no `main()` / `argparse` entry point. Its functions (`get_all_chain_files`, `walk_session_chain`) are designed to be imported and called directly. **What would actually be useful:** For `/chs` / `/search` / `/all` to use session chain data, you'd need **CLI wrappers** in `core/cli.py` that output structured data (JSON), not visualizations. For example: ```bash # Hypothetical CLI additions python -m core.cli --session-chain <session_id> # → JSON chain data python -m core.cli --session-graph --html # → generates HTML ``` **Recommendation:** Don't wire them yet. The scripts are useful for you (the AI) to understand session relationships during conversation. To make them *skills utilities*, you'd first need to define what task/question from those skills would trigger calling them. What's the concrete use case — \"show me related sessions when searching for X\"?",
-      "priority": "high",
-      "applies_when": "Continue the current task after compact.",
-      "source_refs": [
-        "ev_07d99fb2964548b4a4393874e2fbfe53"
-      ]
-    },
-    {
-      "id": "dec_e9c53998b06c4ca98fb025a8d49dc19d",
-      "kind": "constraint",
-      "summary": "**Answer: Not yet — commit now, integrate on-demand.** `session_chain.py` is already a clean, importable Python module. The question of *how* to wire it depends on the specific skill's architecture (Python import vs subprocess CLI), which would become clear when that skill actually needs session chain data. Don't scaffold integrations for hypothetical use cases. **What to do right now:** Commit the 3 staged files. Done.",
-      "details": "**Answer: Not yet — commit now, integrate on-demand.** `session_chain.py` is already a clean, importable Python module. The question of *how* to wire it depends on the specific skill's architecture (Python import vs subprocess CLI), which would become clear when that skill actually needs session chain data. Don't scaffold integrations for hypothetical use cases. **What to do right now:** Commit the 3 staged files. Done.",
-      "priority": "high",
-      "applies_when": "Continue the current task after compact.",
-      "source_refs": [
-        "ev_07d99fb2964548b4a4393874e2fbfe53"
-      ]
-    },
-    {
-      "id": "dec_3dfe72992800402484c0013459f0f4b4",
-      "kind": "constraint",
-      "summary": "\"On-demand\" means: don't pre-wire integrations that may never be used. Instead, when a specific skill (`/recap`, `/gto`, `/why`) actually needs session chain data, *then* add the import/command — with the concrete use case driving exactly what interface is needed. Example of what NOT to do: ``` # Premature scaffolding - don't do this # /recap SKILL.md says \"uses session_chain.py\" before /recap even calls it ``` Example of what on-demand looks like: ``` # When /gto actually needs to show \"related sessions in this chain\": # 1. /gto script does: from core.session_chain import walk_session_chain # 2. Calls it with the session_id being investigated # 3. Gets back SessionChainResult with file paths and timestamps ``` It's the opposite of big-up-front design — just-in-time integration when the concrete call site exists.",
-      "details": "\"On-demand\" means: don't pre-wire integrations that may never be used. Instead, when a specific skill (`/recap`, `/gto`, `/why`) actually needs session chain data, *then* add the import/command — with the concrete use case driving exactly what interface is needed. Example of what NOT to do: ``` # Premature scaffolding - don't do this # /recap SKILL.md says \"uses session_chain.py\" before /recap even calls it ``` Example of what on-demand looks like: ``` # When /gto actually needs to show \"related sessions in this chain\": # 1. /gto script does: from core.session_chain import walk_session_chain # 2. Calls it with the session_id being investigated # 3. Gets back SessionChainResult with file paths and timestamps ``` It's the opposite of big-up-front design — just-in-time integration when the concrete call site exists.",
-      "priority": "high",
-      "applies_when": "Continue the current task after compact.",
-      "source_refs": [
-        "ev_07d99fb2964548b4a4393874e2fbfe53"
-      ]
-    }
-  ],
+  "decision_register": [],
   "evidence_index": [
     {
-      "id": "ev_07d99fb2964548b4a4393874e2fbfe53",
+      "id": "ev_e18c019a889340ebb59a94c70cbac09a",
       "type": "transcript",
       "label": "Current compact transcript",
       "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\2044f719-d9ed-4a25-bd5f-1effd1fbf2e2.jsonl",
-      "content_hash": "sha256:f6b559f4eb92575babc261b357d060fecebce3813863e44da7d8208f8d0a2b10"
+      "content_hash": "sha256:c488002a57299aaa9db53590186cc8651dc4c08406b4ffeba5399625d313f1fc"
     },
     {
-      "id": "ev_0157f6fe602a48cdb7b2c4288fe64df5",
+      "id": "ev_3d4dee92ecb24e348ed54c3c99399577",
       "type": "file",
       "label": "config.json",
       "path": "C:\\Users\\brsth\\.claude\\skills\\usm\\config.json"
     },
     {
-      "id": "ev_6993fa739e13443cbda39edbe824db79",
+      "id": "ev_594335fd8b72491ab1b255704ba9de90",
       "type": "file",
       "label": "repos-template.yaml",
       "path": "P:\\.claude\\skills\\gitingest\\references\\repos-template.yaml",
       "content_hash": "sha256:f9397d5ebe99e5d96ebb0f0b2bc097a2959849856ea933970009bebed4e01221"
     },
     {
-      "id": "ev_5e6cc888d2514393b132c9dc13283b74",
+      "id": "ev_d1ead9d1692e41ea97ed831b408ce662",
       "type": "file",
       "label": "github-urls.md",
       "path": "P:\\.claude\\skills\\gitingest\\references\\github-urls.md",
       "content_hash": "sha256:5953f1674ad09dfc93c6be37475dfe6f78882a06f803a3bd87aa8740db02b500"
     },
     {
-      "id": "ev_574b14408ef040409e5fdbada8b00a49",
+      "id": "ev_3acbfa5b029c4772bd11d860af71a686",
       "type": "file",
       "label": "gitingest_runner.py",
       "path": "P:\\.claude\\skills\\gitingest\\scripts\\gitingest_runner.py",
       "content_hash": "sha256:63e591f54cd443845b9012868eeb4516ce27c6c7e974ed0d601482b67b70ea63"
     },
     {
-      "id": "ev_dd15e95a57e54fa89c158a243e5612b5",
+      "id": "ev_61b76c09df234bd2ac6b067adf478bdd",
       "type": "file",
       "label": "gitingest_ext-gemini-jules-codex.yaml",
       "path": "P:\\tmp\\gitingest_ext-gemini-jules-codex.yaml",
       "content_hash": "sha256:2b662d1e467d92eb33722873fe36f110a8436708667fc6d285c31d0d9a62448e"
     }
   ],
-  "checksum": "sha256:65407f9f7a1be86b65e488cd236066a9a5fff38f7bc2a6ac70ccd1a5ae8e3d3d"
+  "checksum": "sha256:f42e4523a498e21a57f4e72a10bfcaa9fd80db66b512d106daa6e806ace998f1"
 }
