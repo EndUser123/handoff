@@ -226,41 +226,56 @@ class HandoffFileStorage:
             snapshot_status = snapshot.get("status")
             if snapshot_status == SNAPSHOT_PENDING:
                 expires_at = snapshot.get("expires_at")
-                if expires_at:
-                    try:
-                        if parse_iso8601(expires_at) < utcnow():
-                            # Expired pending snapshot — mark as rejected_stale
-                            reason = "snapshot expired while pending (auto-rejected at load time)"
-                            marked = mark_snapshot_status(
-                                payload,
-                                status=SNAPSHOT_REJECTED_STALE,
-                                session_id="system",
-                                reason=reason,
-                            )
-                            self.save_handoff(marked)
-                            logger.info(
-                                "[HandoffFileStorage] Auto-rejected stale pending handoff: %s (%s)",
-                                self.handoff_file.name,
-                                reason,
-                            )
-                            return None
-                    except Exception as exc:
-                        # Malformed expires_at — reject as stale rather than silently
-                        # bypassing the expiration check and leaking expired handoffs.
-                        reject_reason = f"expires_at parse failed: {exc}"
-                        logger.warning(
-                            "[HandoffFileStorage] Failed to parse expires_at %r: %s — rejecting as stale",
-                            expires_at,
-                            exc,
-                        )
+                if not expires_at:
+                    # Pending snapshot with no expires_at — treat as immediately stale.
+                    # A snapshot without temporal bounds is invalid for restore.
+                    reason = "pending snapshot has no expires_at (auto-rejected at load time)"
+                    marked = mark_snapshot_status(
+                        payload,
+                        status=SNAPSHOT_REJECTED_STALE,
+                        session_id="system",
+                        reason=reason,
+                    )
+                    self.save_handoff(marked)
+                    logger.info(
+                        "[HandoffFileStorage] Auto-rejected pending handoff with no expires_at: %s",
+                        self.handoff_file.name,
+                    )
+                    return None
+                try:
+                    if parse_iso8601(expires_at) < utcnow():
+                        # Expired pending snapshot — mark as rejected_stale
+                        reason = "snapshot expired while pending (auto-rejected at load time)"
                         marked = mark_snapshot_status(
                             payload,
                             status=SNAPSHOT_REJECTED_STALE,
                             session_id="system",
-                            reason=reject_reason,
+                            reason=reason,
                         )
                         self.save_handoff(marked)
+                        logger.info(
+                            "[HandoffFileStorage] Auto-rejected stale pending handoff: %s (%s)",
+                            self.handoff_file.name,
+                            reason,
+                        )
                         return None
+                except Exception as exc:
+                    # Malformed expires_at — reject as stale rather than silently
+                    # bypassing the expiration check and leaking expired handoffs.
+                    reject_reason = f"expires_at parse failed: {exc}"
+                    logger.warning(
+                        "[HandoffFileStorage] Failed to parse expires_at %r: %s — rejecting as stale",
+                        expires_at,
+                        exc,
+                    )
+                    marked = mark_snapshot_status(
+                        payload,
+                        status=SNAPSHOT_REJECTED_STALE,
+                        session_id="system",
+                        reason=reject_reason,
+                    )
+                    self.save_handoff(meted)
+                    return None
 
             snapshot_terminal = snapshot["terminal_id"]
             if snapshot_terminal != self.terminal_id:
