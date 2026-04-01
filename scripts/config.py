@@ -165,7 +165,7 @@ def cleanup_old_handoffs(project_root: Path | None = None) -> int:
     Automatically clean up old handoff files based on retention policy.
 
     Implements COMP-001: Automatic cleanup during compaction.
-    Deletes task files older than CLEANUP_DAYS (default 90 days).
+    Deletes task tracker files and handoff envelope files older than CLEANUP_DAYS (default 90 days).
     This runs on EVERY compaction, not just when --cleanup flag is used.
 
     Args:
@@ -175,46 +175,62 @@ def cleanup_old_handoffs(project_root: Path | None = None) -> int:
         Number of files deleted
 
     Note:
-        - Only deletes *_tasks.json files from .claude/state/task_tracker
+        - Deletes *_tasks.json files from .claude/state/task_tracker
+        - Deletes *_handoff.json files from .claude/state/handoff
+        - Also deletes V1-format handoff files (fallback_*, unknown_handoff)
         - Uses file modification time (mtime) to determine age
         - Respects CLEANUP_DAYS configuration (default 90 days)
     """
     from datetime import UTC, datetime
 
     if project_root is None:
-        project_root = PROJECT_ROOT
+        project_root = _cleanup_resolve_project_root()
 
-    task_tracker_dir = project_root / ".claude" / "state" / "task_tracker"
-    if not task_tracker_dir.exists():
-        return 0
+    deleted_count = 0
 
-    # Calculate cutoff time
-    cutoff_time = datetime.now(UTC).timestamp() - (CLEANUP_DAYS * 86400)
-
-    # Find old files
-    to_delete = []
-    for task_file in task_tracker_dir.glob("*_tasks.json"):
-        try:
-            mtime = task_file.stat().st_mtime
-            if mtime < cutoff_time:
-                to_delete.append(task_file)
-        except OSError:
+    # CRIT-007 FIX: Also clean up expired _handoff.json files, not just _tasks.json
+    for state_subdir, pattern in [
+        (".claude" / "state" / "task_tracker", "*_tasks.json"),
+        (".claude" / "state" / "handoff", "*_handoff.json"),
+    ]:
+        state_dir = project_root / state_subdir
+        if not state_dir.exists():
             continue
 
-    # Delete old files
-    deleted_count = 0
-    for task_file in to_delete:
-        try:
-            task_file.unlink()
-            deleted_count += 1
-            logger.debug(
-                f"[Config] Auto-deleted old handoff: {task_file.name} "
-                f"(age: {(datetime.now(UTC).timestamp() - mtime) // 86400} days)"
-            )
-        except OSError as e:
-            logger.warning(
-                f"[Config] Failed to delete old handoff {task_file.name}: {e}"
-            )
+        cutoff_time = datetime.now(UTC).timestamp() - (CLEANUP_DAYS * 86400)
+
+        for file_path in state_dir.glob(pattern):
+            try:
+                mtime = file_path.stat().st_mtime
+                if mtime < cutoff_time:
+                    file_path.unlink()
+                    deleted_count += 1
+                    age_days = (datetime.now(UTC).timestamp() - mtime) // 86400
+                    logger.debug(
+                        "[Config] Auto-deleted old handoff: %s (age: %d days)",
+                        file_path.name,
+                        age_days,
+                    )
+            except OSError:
+                continue
+
+    # Also clean up V1/legacy handoff files regardless of age (these have no checksum)
+    handoff_dir = project_root / ".claude" / "state" / "handoff"
+    if handoff_dir.exists():
+        for file_path in handoff_dir.glob("*"):
+            if not file_path.is_file():
+                continue
+            # Clean up known non-V2 files: fallback_*, unknown_handoff, env_* without checksum
+            name = file_path.name
+            if name.startswith("fallback_") or name.startswith("unknown_"):
+                try:
+                    file_path.unlink()
+                    deleted_count += 1
+                    logger.debug(
+                        "[Config] Auto-deleted legacy handoff: %s", file_path.name
+                    )
+                except OSError:
+                    continue
 
     if deleted_count > 0:
         logger.info(
@@ -223,3 +239,21 @@ def cleanup_old_handoffs(project_root: Path | None = None) -> int:
         )
 
     return deleted_count
+
+
+def _cleanup_resolve_project_root() -> Path:
+    """Resolve project root for cleanup, walking up from cwd to find .claude.
+
+    When invoked from a skill subdirectory, Path.cwd() would return that
+    subdirectory. Walk up to find the actual project root.
+    """
+    cwd = Path.cwd()
+    current = cwd.resolve()
+    for _ in range(10):
+        if (current / ".claude").is_dir():
+            return current
+        parent = current.parent
+        if parent == current:
+            break
+        current = parent
+    return cwd  # Fallback
