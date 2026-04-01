@@ -18,9 +18,10 @@ from pathlib import Path
 from typing import Any
 
 # Allow importing from scripts/hooks/__lib/ for shared utilities
-_HOOKS_LIB = Path(__file__).resolve().parents[1] / "hooks" / "__lib"
-if str(_HOOKS_LIB.parent) not in sys.path:
-    sys.path.insert(0, str(_HOOKS_LIB.parent))
+if str(Path(__file__).resolve().parents[1]) not in sys.path:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1])))
+
+from scripts.hooks.__lib.project_root import detect_project_root
 
 logger = logging.getLogger(__name__)
 
