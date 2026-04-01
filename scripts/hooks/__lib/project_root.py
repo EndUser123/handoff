@@ -18,6 +18,7 @@ def detect_project_root(
     transcript_path: str | None = None,
     current_dir: Path | None = None,
     max_depth: int = 10,
+    strict: bool = True,
 ) -> Path:
     """Detect project root using multiple strategies with fallbacks.
 
