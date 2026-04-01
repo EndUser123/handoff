@@ -253,13 +253,6 @@ def _cleanup_resolve_project_root() -> Path:
     When invoked from a skill subdirectory, Path.cwd() would return that
     subdirectory. Walk up to find the actual project root.
     """
-    cwd = Path.cwd()
-    current = cwd.resolve()
-    for _ in range(10):
-        if (current / ".claude").is_dir():
-            return current
-        parent = current.parent
-        if parent == current:
-            break
-        current = parent
-    return cwd  # Fallback
+    from scripts.hooks.__lib.project_root import detect_project_root
+
+    return detect_project_root(current_dir=Path.cwd(), strict=False)
