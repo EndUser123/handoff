@@ -124,7 +124,11 @@ def main() -> None:
         source = _normalize_session_start_source(input_data)
 
         # CRITICAL: For handoff package, detect project root with testing support
-        # Priority: 1) HANDOFF_PROJECT_ROOT env var (for testing), 2) hook file location (production)
+        # Priority: 1) HANDOFF_PROJECT_ROOT env var (for testing), 2) cwd (production)
+        # Use Path.cwd() instead of __file__-derived path because Claude Code
+        # invokes hooks as plugin commands from the project root (cwd = P:/), while
+        # __file__ resolves to P:/packages/handoff/scripts/hooks/. This ensures
+        # state files are read from P:/.claude/ (project root) not P:/packages/handoff/.claude/
         env_project_root = os.environ.get("HANDOFF_PROJECT_ROOT")
         if env_project_root:
             project_root = Path(env_project_root)
@@ -132,12 +136,9 @@ def main() -> None:
                 f"[SessionStart V2] Using project root from environment: {project_root}"
             )
         else:
-            # Production: derive from hook file location to restore from handoff package directory
-            hook_file = Path(__file__).resolve()
-            # hooks/ -> scripts/ -> handoff/
-            project_root = hook_file.parent.parent.parent
+            project_root = Path.cwd()
             logger.info(
-                f"[SessionStart V2] Detected project root from hook file: {project_root}"
+                f"[SessionStart V2] Using project root from cwd: {project_root}"
             )
         storage = HandoffFileStorage(project_root, terminal_id)
         raw_payload = storage.load_raw_handoff()
