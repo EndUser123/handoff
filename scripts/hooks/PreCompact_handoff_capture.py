@@ -557,7 +557,9 @@ def main() -> None:
             )
         else:
             project_root = _find_project_root(Path.cwd())
-            logger.info(f"[PreCompact V2] Using project root from walk-up: {project_root}")
+            logger.info(
+                f"[PreCompact V2] Using project root from walk-up: {project_root}"
+            )
 
         # CRITICAL: Validate transcript_path exists and is readable
         transcript_file = Path(transcript_path)
