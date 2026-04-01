@@ -13,12 +13,8 @@ from typing import Any
 from scripts.hooks.__lib.handoff_store import FileLock, atomic_write_with_retry
 from scripts.hooks.__lib.handoff_v2 import (
     HandoffValidationError,
-    SNAPSHOT_PENDING,
-    SNAPSHOT_REJECTED_STALE,
     compute_checksum,
     mark_snapshot_status,
-    parse_iso8601,
-    utcnow,
     validate_envelope,
 )
 
@@ -217,7 +213,37 @@ class HandoffFileStorage:
             if not payload:
                 return None
             validate_envelope(payload)
-            snapshot_terminal = payload["resume_snapshot"]["terminal_id"]
+
+            # CRIT-006 FIX: Guard against stale pending handoffs.
+            # Snapshots only get rejected at restore time, so expired pending handoffs
+            # can accumulate in the state directory indefinitely. Mark them stale here
+            # so they won't be returned as valid for restore.
+            snapshot = payload["resume_snapshot"]
+            snapshot_status = snapshot.get("status")
+            if snapshot_status == SNAPSHOT_PENDING:
+                expires_at = snapshot.get("expires_at")
+                if expires_at:
+                    try:
+                        if parse_iso8601(expires_at) < utcnow():
+                            # Expired pending snapshot — mark as rejected_stale
+                            reason = "snapshot expired while pending (auto-rejected at load time)"
+                            marked = mark_snapshot_status(
+                                payload,
+                                status=SNAPSHOT_REJECTED_STALE,
+                                session_id="system",
+                                reason=reason,
+                            )
+                            self.save_handoff(marked)
+                            logger.info(
+                                "[HandoffFileStorage] Auto-rejected stale pending handoff: %s (%s)",
+                                self.handoff_file.name,
+                                reason,
+                            )
+                            return None
+                    except Exception:
+                        pass  # If time parsing fails, fall through to terminal check
+
+            snapshot_terminal = snapshot["terminal_id"]
             if snapshot_terminal != self.terminal_id:
                 logger.warning(
                     "[HandoffFileStorage] Terminal mismatch in %s: expected %s, got %s",
