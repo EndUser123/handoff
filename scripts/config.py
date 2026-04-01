@@ -21,6 +21,7 @@ from typing import Any
 if str(Path(__file__).resolve().parents[1]) not in sys.path:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from scripts.hooks.__lib.project_root import detect_project_root
 
 logger = logging.getLogger(__name__)
 
