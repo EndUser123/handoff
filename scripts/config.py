@@ -190,8 +190,8 @@ def cleanup_old_handoffs(project_root: Path | None = None) -> int:
 
     # CRIT-007 FIX: Also clean up expired _handoff.json files, not just _tasks.json
     for state_subdir, pattern in [
-        (".claude" / "state" / "task_tracker", "*_tasks.json"),
-        (".claude" / "state" / "handoff", "*_handoff.json"),
+        (Path(".claude") / "state" / "task_tracker", "*_tasks.json"),
+        (Path(".claude") / "state" / "handoff", "*_handoff.json"),
     ]:
         state_dir = project_root / state_subdir
         if not state_dir.exists():

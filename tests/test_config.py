@@ -1,6 +1,5 @@
 """Auto-scaffolded test for config."""
 
-import pytest
 from config import config
 
 
