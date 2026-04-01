@@ -218,7 +218,7 @@ def cleanup_old_handoffs(project_root: Path | None = None) -> int:
     handoff_dir = project_root / ".claude" / "state" / "handoff"
     if handoff_dir.exists():
         for file_path in handoff_dir.glob("*"):
-            if not file_path.is_file():
+            if not file_path.is_file() or file_path.suffix == ".lock":
                 continue
             # Clean up known non-V2 files: fallback_*, unknown_handoff, env_* without checksum
             name = file_path.name
