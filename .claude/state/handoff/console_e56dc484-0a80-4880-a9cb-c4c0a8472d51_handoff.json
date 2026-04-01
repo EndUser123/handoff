@@ -1,11 +1,11 @@
 {
   "resume_snapshot": {
     "schema_version": 2,
-    "snapshot_id": "9d2f16e1-ca6f-4eee-bca6-82c986ee2a85",
+    "snapshot_id": "3144f16a-2624-4c01-98cc-8fef116f2338",
     "terminal_id": "console_e56dc484-0a80-4880-a9cb-c4c0a8472d51",
     "source_session_id": "2044f719-d9ed-4a25-bd5f-1effd1fbf2e2",
-    "created_at": "2026-04-01T02:50:00.951152+00:00",
-    "expires_at": "2026-04-01T03:10:00.951152+00:00",
+    "created_at": "2026-04-01T03:01:14.427327+00:00",
+    "expires_at": "2026-04-01T03:21:14.427327+00:00",
     "status": "pending",
     "goal": "no we can commit after.  update the skills so that the past sessions are used in their analysis.",
     "current_task": "no we can commit after. update the skills so that the past sessions are used in their analysis.",
@@ -52,63 +52,89 @@
       }
     ],
     "next_step": "Resume skill on skill: usm.",
-    "decision_refs": [],
+    "decision_refs": [
+      "dec_0f30b7f86a554a8fa30eb166a5ff132d",
+      "dec_bfe6a9fe301148bf9fc873fb2245b889"
+    ],
     "evidence_refs": [
-      "ev_e18c019a889340ebb59a94c70cbac09a",
-      "ev_3d4dee92ecb24e348ed54c3c99399577",
-      "ev_594335fd8b72491ab1b255704ba9de90",
-      "ev_d1ead9d1692e41ea97ed831b408ce662",
-      "ev_3acbfa5b029c4772bd11d860af71a686",
-      "ev_61b76c09df234bd2ac6b067adf478bdd"
+      "ev_edede785bbfd483b9d235b6df6cdf75a",
+      "ev_723286da96b3434681ddc9a71a5f552d",
+      "ev_9fc88e21283644f1a7eca980c39f07ce",
+      "ev_7fd1567604694b64bec1692d3c38609c",
+      "ev_30216a8975534d179c1d946cdb5dca11",
+      "ev_b9891c7be2424c00bdd07ba9807c3481"
     ],
     "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\2044f719-d9ed-4a25-bd5f-1effd1fbf2e2.jsonl",
     "message_intent": "instruction",
     "quality_score": 0.4,
     "tasks_snapshot": []
   },
-  "decision_register": [],
+  "decision_register": [
+    {
+      "id": "dec_0f30b7f86a554a8fa30eb166a5ff132d",
+      "kind": "constraint",
+      "summary": "Confirmed. `walk_session_chain` is called at line 983 but never imported. Now fix it:",
+      "details": "Confirmed. `walk_session_chain` is called at line 983 but never imported. Now fix it:",
+      "priority": "high",
+      "applies_when": "Continue the current task after compact.",
+      "source_refs": [
+        "ev_edede785bbfd483b9d235b6df6cdf75a"
+      ]
+    },
+    {
+      "id": "dec_bfe6a9fe301148bf9fc873fb2245b889",
+      "kind": "constraint",
+      "summary": "Confirmed: `search_research/__init__.py` exists — the package IS NOT a namespace package (P-8 was wrong on that specific claim). The CRITICAL finding stands: `walk_session_chain` is called but never imported in gto_orchestrator.py. Fix it now.",
+      "details": "Confirmed: `search_research/__init__.py` exists — the package IS NOT a namespace package (P-8 was wrong on that specific claim). The CRITICAL finding stands: `walk_session_chain` is called but never imported in gto_orchestrator.py. Fix it now.",
+      "priority": "high",
+      "applies_when": "Continue the current task after compact.",
+      "source_refs": [
+        "ev_edede785bbfd483b9d235b6df6cdf75a"
+      ]
+    }
+  ],
   "evidence_index": [
     {
-      "id": "ev_e18c019a889340ebb59a94c70cbac09a",
+      "id": "ev_edede785bbfd483b9d235b6df6cdf75a",
       "type": "transcript",
       "label": "Current compact transcript",
       "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\2044f719-d9ed-4a25-bd5f-1effd1fbf2e2.jsonl",
-      "content_hash": "sha256:c488002a57299aaa9db53590186cc8651dc4c08406b4ffeba5399625d313f1fc"
+      "content_hash": "sha256:20bb408b38bdb38ff9b3563e3fb725e15977315267d5ba5f2bd658b1ea387aa7"
     },
     {
-      "id": "ev_3d4dee92ecb24e348ed54c3c99399577",
+      "id": "ev_723286da96b3434681ddc9a71a5f552d",
       "type": "file",
       "label": "config.json",
       "path": "C:\\Users\\brsth\\.claude\\skills\\usm\\config.json"
     },
     {
-      "id": "ev_594335fd8b72491ab1b255704ba9de90",
+      "id": "ev_9fc88e21283644f1a7eca980c39f07ce",
       "type": "file",
       "label": "repos-template.yaml",
       "path": "P:\\.claude\\skills\\gitingest\\references\\repos-template.yaml",
       "content_hash": "sha256:f9397d5ebe99e5d96ebb0f0b2bc097a2959849856ea933970009bebed4e01221"
     },
     {
-      "id": "ev_d1ead9d1692e41ea97ed831b408ce662",
+      "id": "ev_7fd1567604694b64bec1692d3c38609c",
       "type": "file",
       "label": "github-urls.md",
       "path": "P:\\.claude\\skills\\gitingest\\references\\github-urls.md",
       "content_hash": "sha256:5953f1674ad09dfc93c6be37475dfe6f78882a06f803a3bd87aa8740db02b500"
     },
     {
-      "id": "ev_3acbfa5b029c4772bd11d860af71a686",
+      "id": "ev_30216a8975534d179c1d946cdb5dca11",
       "type": "file",
       "label": "gitingest_runner.py",
       "path": "P:\\.claude\\skills\\gitingest\\scripts\\gitingest_runner.py",
       "content_hash": "sha256:63e591f54cd443845b9012868eeb4516ce27c6c7e974ed0d601482b67b70ea63"
     },
     {
-      "id": "ev_61b76c09df234bd2ac6b067adf478bdd",
+      "id": "ev_b9891c7be2424c00bdd07ba9807c3481",
       "type": "file",
       "label": "gitingest_ext-gemini-jules-codex.yaml",
       "path": "P:\\tmp\\gitingest_ext-gemini-jules-codex.yaml",
       "content_hash": "sha256:2b662d1e467d92eb33722873fe36f110a8436708667fc6d285c31d0d9a62448e"
     }
   ],
-  "checksum": "sha256:f42e4523a498e21a57f4e72a10bfcaa9fd80db66b512d106daa6e806ace998f1"
+  "checksum": "sha256:5599590be34d918301af5f22bac4319251e42787a0fff37c0d7365597de8435b"
 }
