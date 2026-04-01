@@ -140,8 +140,14 @@ def detect_project_root(
         project_root = project_root.parent
 
     # All strategies failed
-    raise ValueError(
-        f"Cannot detect project root from {current_dir}. "
-        f"Searched {max_depth} directories up. "
-        f"transcript_path was: {transcript_path}"
+    if strict:
+        raise ValueError(
+            f"Cannot detect project root from {current_dir}. "
+            f"Searched {max_depth} directories up. "
+            f"transcript_path was: {transcript_path}"
+        )
+    logger.warning(
+        "[ProjectRoot] Could not find .claude directory, using cwd as fallback: %s",
+        current_dir,
     )
+    return current_dir
