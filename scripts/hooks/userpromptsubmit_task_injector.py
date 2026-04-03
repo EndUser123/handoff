@@ -136,9 +136,9 @@ def _build_recovery_message(envelope: dict) -> str:
     # Delegate to shared compact formatter for contract consistency.
     # Both SessionStart and UPS paths now emit the same <compact-restore> block.
     # Richer transcript context is captured via conversation_summary (P1).
-    from scripts.hooks.handoff_v2 import build_restore_message_compact
-
-    return build_restore_message_compact(envelope)
+    import importlib
+    handoff_v2 = importlib.import_module("scripts.hooks.__lib.handoff_v2")
+    return handoff_v2.build_restore_message_compact(envelope)
 
 
 # ---------------------------------------------------------------------------
