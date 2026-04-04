@@ -748,7 +748,47 @@ def main() -> None:
         except Exception as exc:
             logger.warning("[PreCompact V2] Failed to read task state: %s", exc)
 
+        # FIX: Load the EXISTING terminal handoff to get S_OLD's transcript path.
+        # At PreCompact time, input_data.transcript_path is S_NEW's path (current session).
+        # The resume_snapshot.transcript_path should be S_OLD's path (prior session).
+        # S_NEW's path != S_OLD's path, so we must read the old handoff to get S_OLD.
+        storage = HandoffFileStorage(project_root, terminal_id)
+        old_handoff = storage.load_raw_handoff()
+        prior_transcript_path: str | None = None
+        if old_handoff:
+            prior_transcript_path = old_handoff.get("resume_snapshot", {}).get(
+                "transcript_path"
+            )
+            logger.info(
+                "[PreCompact V2] Loaded prior transcript from old handoff: %s",
+                prior_transcript_path,
+            )
+
         resume_snapshot = build_resume_snapshot(
+            terminal_id=terminal_id,
+            source_session_id=input_data.get("session_id", ""),
+            goal=goal,
+            current_task=current_task,
+            progress_percent=progress_percent,
+            progress_state=progress_state,
+            blockers=blockers,
+            active_files=active_files,
+            pending_operations=pending_operations,
+            next_step=next_step,
+            decision_refs=[decision["id"] for decision in decision_register],
+            evidence_refs=[item["id"] for item in evidence_index],
+            transcript_path=prior_transcript_path or transcript_path,
+            message_intent=message_intent,
+            quality_score=quality_score,
+            tasks_snapshot=tasks_snapshot,
+        )
+        envelope = build_envelope(
+            resume_snapshot=resume_snapshot,
+            decision_register=decision_register,
+            evidence_index=evidence_index,
+        )
+
+        # Diagnostic logging before save
             terminal_id=terminal_id,
             source_session_id=input_data.get("session_id", ""),
             goal=goal,
