@@ -774,6 +774,21 @@ def main() -> None:
 
         storage = HandoffFileStorage(project_root, terminal_id)
 
+        # FIX: Load the EXISTING terminal handoff to get S_OLD's transcript path.
+        # At PreCompact time, input_data.transcript_path is S_NEW's path (current session).
+        # The resume_snapshot.transcript_path should be S_OLD's path (prior session).
+        # S_NEW's path != S_OLD's path, so we must read the old handoff to get S_OLD.
+        old_handoff = storage.load_raw_handoff()
+        prior_transcript_path: str | None = None
+        if old_handoff:
+            prior_transcript_path = old_handoff.get("resume_snapshot", {}).get(
+                "transcript_path"
+            )
+            logger.info(
+                "[PreCompact V2] Loaded prior transcript from old handoff: %s",
+                prior_transcript_path,
+            )
+
         # Diagnostic logging before save
         logger.info(
             "[PreCompact V2] Attempting to save handoff: terminal=%s, handoff_file=%s",
