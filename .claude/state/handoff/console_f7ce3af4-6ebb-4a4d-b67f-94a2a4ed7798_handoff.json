@@ -1,17 +1,22 @@
 {
   "resume_snapshot": {
     "schema_version": 2,
-    "snapshot_id": "ef78a21b-386a-42ef-b136-64d741ac0404",
+    "snapshot_id": "3bdb7e52-8224-4c0a-af69-0afdf8bb01bb",
     "terminal_id": "console_f7ce3af4-6ebb-4a4d-b67f-94a2a4ed7798",
     "source_session_id": "3b058bac-43f1-4abb-acb5-978f1435fed1",
-    "created_at": "2026-04-04T23:29:48.778430+00:00",
-    "expires_at": "2026-04-04T23:49:48.778430+00:00",
+    "created_at": "2026-04-05T00:14:07.787166+00:00",
+    "expires_at": "2026-04-05T00:34:07.787166+00:00",
     "status": "pending",
-    "goal": "and we don't have to change anything in /chs export for the fallback to work properly?",
-    "current_task": "and we don't have to change anything in /chs export for the fallback to work properly?",
-    "progress_percent": 65,
-    "progress_state": "in_progress",
-    "blockers": [],
+    "goal": "The other explanation is that you've just not been doing the M-time heuristic, possibly because the instructions are not clear. Did you consider that possibility?",
+    "current_task": "The other explanation is that you've just not been doing the M-time heuristic, possibly because the instructions are not clear. Did you consider that possibility?",
+    "progress_percent": 100,
+    "progress_state": "blocked",
+    "blockers": [
+      {
+        "type": "awaiting_approval",
+        "summary": "Plan exists but requires user approval before implementation."
+      }
+    ],
     "active_files": [
       "C:\\Users\\brsth\\.claude\\projects\\P--\\memory\\hook_debugging_lessons.md",
       "P:\\.claude\\hooks\\PostToolUse_router.py",
@@ -53,76 +58,100 @@
     ],
     "next_step": "Resume skill on skill: rca.",
     "decision_refs": [
-      "dec_ebd799e3e5a84fbc899297818ba46c01"
+      "dec_0c13317f3c13461aa324ec60094d2e76",
+      "dec_a1a901e2bdbc4adb8102ca5857a7fdbf",
+      "dec_c0eb2199084241719d01db96127c0dd2"
     ],
     "evidence_refs": [
-      "ev_88e02b731d91469fa558c2d0d75b3245",
-      "ev_f8372cff9b944cd3abe314c994cae94a",
-      "ev_d983ade21ffd43aeb66042dc8d836dd6",
-      "ev_312c46c98ef44d3baee3099213546838",
-      "ev_1f7a55399431432993351000624bfc99",
-      "ev_69f35877faa749038ddb530159048f7a"
+      "ev_899698699c2f4606835b2ebaab01212b",
+      "ev_062aa0603707430289b85e2005b21ff8",
+      "ev_014336c48da24216b7fcfc204313f764",
+      "ev_aa759a155e444717a72378af55c394ba",
+      "ev_2c2d5c15a7d44811bf6d1d60a90368fc",
+      "ev_8668f4e2e15448028126fb8af7fa8173"
     ],
     "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\3b058bac-43f1-4abb-acb5-978f1435fed1.jsonl",
     "message_intent": "question",
-    "quality_score": 0.4,
+    "quality_score": 0.9,
     "tasks_snapshot": []
   },
   "decision_register": [
     {
-      "id": "dec_ebd799e3e5a84fbc899297818ba46c01",
+      "id": "dec_0c13317f3c13461aa324ec60094d2e76",
       "kind": "constraint",
-      "summary": "and we don't have to change anything in /chs export for the fallback to work properly?",
-      "details": "and we don't have to change anything in /chs export for the fallback to work properly?",
+      "summary": "I told you I'm not looking for a deterministic marker. OMG. THINK!!! Any semantic marker/idea/topic/file from the pre to post compact session can work as a match!!! I'm surprised our existing packages don't have appropriate functionality.",
+      "details": "I told you I'm not looking for a deterministic marker. OMG. THINK!!! Any semantic marker/idea/topic/file from the pre to post compact session can work as a match!!! I'm surprised our existing packages don't have appropriate functionality.",
       "priority": "high",
       "applies_when": "Continue the current task after compact.",
       "source_refs": [
-        "ev_88e02b731d91469fa558c2d0d75b3245"
+        "ev_899698699c2f4606835b2ebaab01212b"
+      ]
+    },
+    {
+      "id": "dec_a1a901e2bdbc4adb8102ca5857a7fdbf",
+      "kind": "constraint",
+      "summary": "I don't think you are reasoning properly. We have two kinds of heuristics, the m-time and the semantic. We don't have to use only one. We can use both. Why do we need to use the handoff envelope? Doesn't that create a dependency that we don't need?",
+      "details": "I don't think you are reasoning properly. We have two kinds of heuristics, the m-time and the semantic. We don't have to use only one. We can use both. Why do we need to use the handoff envelope? Doesn't that create a dependency that we don't need?",
+      "priority": "high",
+      "applies_when": "Continue the current task after compact.",
+      "source_refs": [
+        "ev_899698699c2f4606835b2ebaab01212b"
+      ]
+    },
+    {
+      "id": "dec_c0eb2199084241719d01db96127c0dd2",
+      "kind": "constraint",
+      "summary": "Don't forget, we have daemons, I think, that are supposed to do vectorization and semantic work.",
+      "details": "Don't forget, we have daemons, I think, that are supposed to do vectorization and semantic work.",
+      "priority": "high",
+      "applies_when": "Continue the current task after compact.",
+      "source_refs": [
+        "ev_899698699c2f4606835b2ebaab01212b"
       ]
     }
   ],
   "evidence_index": [
     {
-      "id": "ev_88e02b731d91469fa558c2d0d75b3245",
+      "id": "ev_899698699c2f4606835b2ebaab01212b",
       "type": "transcript",
       "label": "Current compact transcript",
       "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\3b058bac-43f1-4abb-acb5-978f1435fed1.jsonl",
-      "content_hash": "sha256:92b65601ffa2f14f34bfee4a335527bc6064b88a392a0fec9b8136edcbefda57"
+      "content_hash": "sha256:dc7af22ad0ff58f85a6c4f3cbb30c355b3f4c80fdd94c37c0e6478da175ff56c"
     },
     {
-      "id": "ev_f8372cff9b944cd3abe314c994cae94a",
+      "id": "ev_062aa0603707430289b85e2005b21ff8",
       "type": "file",
       "label": "hook_debugging_lessons.md",
       "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\memory\\hook_debugging_lessons.md",
       "content_hash": "sha256:63d261b1e34f45029ed84cda57b1649c00abd22be4461e32a92d9819d49ed6f1"
     },
     {
-      "id": "ev_d983ade21ffd43aeb66042dc8d836dd6",
+      "id": "ev_014336c48da24216b7fcfc204313f764",
       "type": "file",
       "label": "PostToolUse_router.py",
       "path": "P:\\.claude\\hooks\\PostToolUse_router.py",
       "content_hash": "sha256:c673b442bb26854319f9e9a04ff8715f06929583c49242b093cf5b24d5d55918"
     },
     {
-      "id": "ev_312c46c98ef44d3baee3099213546838",
+      "id": "ev_aa759a155e444717a72378af55c394ba",
       "type": "file",
       "label": "b0r2u5g39.txt",
       "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\3b058bac-43f1-4abb-acb5-978f1435fed1\\tool-results\\b0r2u5g39.txt",
       "content_hash": "sha256:62ed92875088702bcebfd1a54a155a97c5fecd89656cd1a975a3b34d2b3b6b4c"
     },
     {
-      "id": "ev_1f7a55399431432993351000624bfc99",
+      "id": "ev_2c2d5c15a7d44811bf6d1d60a90368fc",
       "type": "file",
       "label": "skill_forced_eval.py",
       "path": "P:\\.claude\\hooks\\UserPromptSubmit_modules\\skill_forced_eval.py",
       "content_hash": "sha256:e9de0faead2a19a3220b94407558641b57ea879175d24813cf652bf866d07ac5"
     },
     {
-      "id": "ev_69f35877faa749038ddb530159048f7a",
+      "id": "ev_8668f4e2e15448028126fb8af7fa8173",
       "type": "file",
       "label": "append_adr.py",
       "path": "P:\\.claude\\scripts\\append_adr.py"
     }
   ],
-  "checksum": "sha256:ff178f7a52f0fba9efdc5c8bb78503460c90ae26d58a32971ff3aa1cd5bd05bb"
+  "checksum": "sha256:0a3c4bc679d82029f23251315b5e93549089eb4cbaf8a215db44fbbdb51c0bed"
 }
