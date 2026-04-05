@@ -1,14 +1,14 @@
 {
   "resume_snapshot": {
     "schema_version": 2,
-    "snapshot_id": "3bdb7e52-8224-4c0a-af69-0afdf8bb01bb",
+    "snapshot_id": "d824b3ff-2c95-4fe4-b210-a48e2b183689",
     "terminal_id": "console_f7ce3af4-6ebb-4a4d-b67f-94a2a4ed7798",
     "source_session_id": "3b058bac-43f1-4abb-acb5-978f1435fed1",
-    "created_at": "2026-04-05T00:14:07.787166+00:00",
-    "expires_at": "2026-04-05T00:34:07.787166+00:00",
+    "created_at": "2026-04-05T00:50:44.910139+00:00",
+    "expires_at": "2026-04-05T01:10:44.910139+00:00",
     "status": "pending",
-    "goal": "The other explanation is that you've just not been doing the M-time heuristic, possibly because the instructions are not clear. Did you consider that possibility?",
-    "current_task": "The other explanation is that you've just not been doing the M-time heuristic, possibly because the instructions are not clear. Did you consider that possibility?",
+    "goal": "OK, invoke planning.",
+    "current_task": "OK, invoke planning.",
     "progress_percent": 100,
     "progress_state": "blocked",
     "blockers": [
@@ -58,100 +58,76 @@
     ],
     "next_step": "Resume skill on skill: rca.",
     "decision_refs": [
-      "dec_0c13317f3c13461aa324ec60094d2e76",
-      "dec_a1a901e2bdbc4adb8102ca5857a7fdbf",
-      "dec_c0eb2199084241719d01db96127c0dd2"
+      "dec_35ce65ddb472499fb1f3a273edf73f41"
     ],
     "evidence_refs": [
-      "ev_899698699c2f4606835b2ebaab01212b",
-      "ev_062aa0603707430289b85e2005b21ff8",
-      "ev_014336c48da24216b7fcfc204313f764",
-      "ev_aa759a155e444717a72378af55c394ba",
-      "ev_2c2d5c15a7d44811bf6d1d60a90368fc",
-      "ev_8668f4e2e15448028126fb8af7fa8173"
+      "ev_65f11f24d2f5455890cfff50bb181ce6",
+      "ev_79db8a2552344cbc9568729494dde11b",
+      "ev_22f68aedd15f4ce7a04fb948b8b496d4",
+      "ev_eb6e69b978df4e36b4198b45ed8c6f72",
+      "ev_692a6951442946a6a74400957ca30187",
+      "ev_201ba0da766d4d0cac05556d69a53a4b"
     ],
     "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\3b058bac-43f1-4abb-acb5-978f1435fed1.jsonl",
-    "message_intent": "question",
+    "message_intent": "instruction",
     "quality_score": 0.9,
     "tasks_snapshot": []
   },
   "decision_register": [
     {
-      "id": "dec_0c13317f3c13461aa324ec60094d2e76",
+      "id": "dec_35ce65ddb472499fb1f3a273edf73f41",
       "kind": "constraint",
-      "summary": "I told you I'm not looking for a deterministic marker. OMG. THINK!!! Any semantic marker/idea/topic/file from the pre to post compact session can work as a match!!! I'm surprised our existing packages don't have appropriate functionality.",
-      "details": "I told you I'm not looking for a deterministic marker. OMG. THINK!!! Any semantic marker/idea/topic/file from the pre to post compact session can work as a match!!! I'm surprised our existing packages don't have appropriate functionality.",
+      "summary": "The frontmatter key must be `stateful`, not `stateless`. The validator checks `frontmatter.get(\"stateful\", \"\")`.",
+      "details": "The frontmatter key must be `stateful`, not `stateless`. The validator checks `frontmatter.get(\"stateful\", \"\")`.",
       "priority": "high",
       "applies_when": "Continue the current task after compact.",
       "source_refs": [
-        "ev_899698699c2f4606835b2ebaab01212b"
-      ]
-    },
-    {
-      "id": "dec_a1a901e2bdbc4adb8102ca5857a7fdbf",
-      "kind": "constraint",
-      "summary": "I don't think you are reasoning properly. We have two kinds of heuristics, the m-time and the semantic. We don't have to use only one. We can use both. Why do we need to use the handoff envelope? Doesn't that create a dependency that we don't need?",
-      "details": "I don't think you are reasoning properly. We have two kinds of heuristics, the m-time and the semantic. We don't have to use only one. We can use both. Why do we need to use the handoff envelope? Doesn't that create a dependency that we don't need?",
-      "priority": "high",
-      "applies_when": "Continue the current task after compact.",
-      "source_refs": [
-        "ev_899698699c2f4606835b2ebaab01212b"
-      ]
-    },
-    {
-      "id": "dec_c0eb2199084241719d01db96127c0dd2",
-      "kind": "constraint",
-      "summary": "Don't forget, we have daemons, I think, that are supposed to do vectorization and semantic work.",
-      "details": "Don't forget, we have daemons, I think, that are supposed to do vectorization and semantic work.",
-      "priority": "high",
-      "applies_when": "Continue the current task after compact.",
-      "source_refs": [
-        "ev_899698699c2f4606835b2ebaab01212b"
+        "ev_65f11f24d2f5455890cfff50bb181ce6"
       ]
     }
   ],
   "evidence_index": [
     {
-      "id": "ev_899698699c2f4606835b2ebaab01212b",
+      "id": "ev_65f11f24d2f5455890cfff50bb181ce6",
       "type": "transcript",
       "label": "Current compact transcript",
       "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\3b058bac-43f1-4abb-acb5-978f1435fed1.jsonl",
-      "content_hash": "sha256:dc7af22ad0ff58f85a6c4f3cbb30c355b3f4c80fdd94c37c0e6478da175ff56c"
+      "content_hash": "sha256:08c8de84720fc4cd9f37accbadc0c8be9f94da561648401a5ec1dd432d28bcb8"
     },
     {
-      "id": "ev_062aa0603707430289b85e2005b21ff8",
+      "id": "ev_79db8a2552344cbc9568729494dde11b",
       "type": "file",
       "label": "hook_debugging_lessons.md",
       "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\memory\\hook_debugging_lessons.md",
       "content_hash": "sha256:63d261b1e34f45029ed84cda57b1649c00abd22be4461e32a92d9819d49ed6f1"
     },
     {
-      "id": "ev_014336c48da24216b7fcfc204313f764",
+      "id": "ev_22f68aedd15f4ce7a04fb948b8b496d4",
       "type": "file",
       "label": "PostToolUse_router.py",
       "path": "P:\\.claude\\hooks\\PostToolUse_router.py",
       "content_hash": "sha256:c673b442bb26854319f9e9a04ff8715f06929583c49242b093cf5b24d5d55918"
     },
     {
-      "id": "ev_aa759a155e444717a72378af55c394ba",
+      "id": "ev_eb6e69b978df4e36b4198b45ed8c6f72",
       "type": "file",
       "label": "b0r2u5g39.txt",
       "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\3b058bac-43f1-4abb-acb5-978f1435fed1\\tool-results\\b0r2u5g39.txt",
       "content_hash": "sha256:62ed92875088702bcebfd1a54a155a97c5fecd89656cd1a975a3b34d2b3b6b4c"
     },
     {
-      "id": "ev_2c2d5c15a7d44811bf6d1d60a90368fc",
+      "id": "ev_692a6951442946a6a74400957ca30187",
       "type": "file",
       "label": "skill_forced_eval.py",
       "path": "P:\\.claude\\hooks\\UserPromptSubmit_modules\\skill_forced_eval.py",
       "content_hash": "sha256:e9de0faead2a19a3220b94407558641b57ea879175d24813cf652bf866d07ac5"
     },
     {
-      "id": "ev_8668f4e2e15448028126fb8af7fa8173",
+      "id": "ev_201ba0da766d4d0cac05556d69a53a4b",
       "type": "file",
       "label": "append_adr.py",
       "path": "P:\\.claude\\scripts\\append_adr.py"
     }
   ],
-  "checksum": "sha256:0a3c4bc679d82029f23251315b5e93549089eb4cbaf8a215db44fbbdb51c0bed"
+  "checksum": "sha256:db21cb5a30e0089e34c368996eddf3c5264d5f1a6574c30d2fd3de12e8ae02f2"
 }
