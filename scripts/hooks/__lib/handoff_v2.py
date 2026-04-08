@@ -663,6 +663,7 @@ def build_restore_message_compact(payload: dict[str, Any]) -> str:
     lines = [
         "<compact-restore>",
         "status: restored",
+        f"previous_session: {snapshot.get('transcript_path', 'none')}",
         f"goal: {intent_prefix} {snapshot['goal']}",
         f"current_task: {snapshot['current_task']}",
         f"progress_state: {snapshot['progress_state']}",
@@ -673,7 +674,7 @@ def build_restore_message_compact(payload: dict[str, Any]) -> str:
         active_files_str,
         f"pending_operations: {len(pending_ops)} pending",
         pending_str,
-        "continuation_rule: Continue the current task. Do not ask the user to restate context. Ask only if blocked by missing user input.",
+        "continuation_rule: Present the restored goal as context to verify — say 'Based on the session handoff, we were working on X' not 'The task was X'. The captured goal is an inference, not a recording. Do not ask the user to re-explain context you already have. Ask only if blocked by missing user input.",
         "</compact-restore>",
     ]
 
