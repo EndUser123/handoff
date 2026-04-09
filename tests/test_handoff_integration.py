@@ -319,3 +319,77 @@ def test_changed_transcript_rejects_restore_as_stale_snapshot(tmp_path, monkeypa
     rejected = storage.load_handoff()
     assert rejected is not None
     assert rejected["resume_snapshot"]["status"] == "rejected_stale"
+
+
+def test_load_raw_handoff_exclude_session_id(tmp_path, monkeypatch):
+    """Test that exclude_session_id correctly skips S_NEW's handoff and returns S_OLD's.
+
+    Regression test for the prior_transcript_path=N/A bug: load_raw_handoff() was
+    returning S_NEW's own handoff (newest by mtime) instead of S_OLD's. The fix adds
+    exclude_session_id to skip S_NEW's handoff during the scan.
+    """
+    monkeypatch.setenv("HANDOFF_PROJECT_ROOT", str(tmp_path))
+    terminal_id = "console_exclude_test"
+    storage = HandoffFileStorage(tmp_path, terminal_id)
+
+    # Write handoff files directly to disk to bypass validate_envelope() in save_handoff().
+    # Files use timestamp-based naming: {terminal_id}_{timestamp}_handoff.json
+    # to match the glob pattern {terminal_id}_*_handoff.json.
+    import os
+    import time
+
+    handoff_dir = tmp_path / ".claude" / "state" / "handoff"
+    handoff_dir.mkdir(parents=True, exist_ok=True)
+
+    # S_OLD handoff: older mtime (simulates session-old wrote first)
+    old_file = handoff_dir / f"{terminal_id}_20260409T100000_handoff.json"
+    old_payload = {
+        "version": "2.0",
+        "resume_snapshot": {
+            "source_session_id": "session-old",
+            "transcript_path": str(tmp_path / "transcripts" / "old.jsonl"),
+            "status": "consumed",
+            "created_at": "2026-04-09T10:00:00.000000+00:00",
+        },
+        "decision_register": [],
+        "evidence_index": [],
+    }
+    with open(old_file, "w", encoding="utf-8") as f:
+        json.dump(old_payload, f)
+    # Set older mtime
+    old_mtime = time.mktime((2026, 4, 9, 10, 0, 0, 0, 0, 0))
+    os.utime(old_file, (old_mtime, old_mtime))
+
+    # S_NEW handoff: newer mtime (simulates session-new wrote after)
+    new_file = handoff_dir / f"{terminal_id}_20260409T110000_handoff.json"
+    new_payload = {
+        "version": "2.0",
+        "resume_snapshot": {
+            "source_session_id": "session-new",
+            "transcript_path": str(tmp_path / "transcripts" / "new.jsonl"),
+            "status": "pending",
+            "created_at": "2026-04-09T11:00:00.000000+00:00",
+        },
+        "decision_register": [],
+        "evidence_index": [],
+    }
+    with open(new_file, "w", encoding="utf-8") as f:
+        json.dump(new_payload, f)
+    # Set newer mtime
+    new_mtime = time.mktime((2026, 4, 9, 11, 0, 0, 0, 0, 0))
+    os.utime(new_file, (new_mtime, new_mtime))
+
+    # Without exclude: returns S_NEW (newest by mtime)
+    result_without_exclude = storage.load_raw_handoff()
+    assert result_without_exclude is not None
+    assert result_without_exclude["resume_snapshot"]["source_session_id"] == "session-new"
+
+    # With exclude_session_id="session-new": returns S_OLD (skips S_NEW)
+    result_with_exclude = storage.load_raw_handoff(exclude_session_id="session-new")
+    assert result_with_exclude is not None
+    assert result_with_exclude["resume_snapshot"]["source_session_id"] == "session-old"
+
+    # Exclude a non-existent session: returns newest valid candidate (S_NEW)
+    result_exclude_nonexistent = storage.load_raw_handoff(exclude_session_id="session-nonexistent")
+    assert result_exclude_nonexistent is not None
+    assert result_exclude_nonexistent["resume_snapshot"]["source_session_id"] == "session-new"

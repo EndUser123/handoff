@@ -752,8 +752,12 @@ def main() -> None:
         # At PreCompact time, input_data.transcript_path is S_NEW's path (current session).
         # The resume_snapshot.transcript_path should be S_OLD's path (prior session).
         # S_NEW's path != S_OLD's path, so we must read the old handoff to get S_OLD.
+        # Pass exclude_session_id to skip S_NEW's own handoff (already written to disk
+        # with a recent mtime; without exclusion load_raw_handoff() returns S_NEW).
         storage = HandoffFileStorage(project_root, terminal_id)
-        old_handoff = storage.load_raw_handoff()
+        old_handoff = storage.load_raw_handoff(
+            exclude_session_id=input_data.get("session_id")
+        )
         prior_transcript_path: str | None = None
         if old_handoff:
             prior_transcript_path = old_handoff.get("resume_snapshot", {}).get(
@@ -803,28 +807,28 @@ def main() -> None:
             list(envelope.get("resume_snapshot", {}).keys()),
         )
 
-        if not storage.save_handoff(envelope):
+        saved_path = storage.save_handoff(envelope)
+        if not saved_path:
             logger.error(
-                "[PreCompact V2] save_handoff returned False: terminal=%s, file=%s",
+                "[PreCompact V2] save_handoff returned False: terminal=%s",
                 terminal_id,
-                storage.handoff_file,
             )
             raise HandoffValidationError("failed to persist V2 handoff envelope")
 
         # Verify file was actually created
-        if not storage.handoff_file.exists():
+        if not saved_path.exists():
             logger.error(
                 "[PreCompact V2] File does not exist after save: %s",
-                storage.handoff_file,
+                saved_path,
             )
             raise HandoffValidationError(
-                f"handoff file not created after save: {storage.handoff_file}"
+                f"handoff file not created after save: {saved_path}"
             )
 
         logger.info(
             "[PreCompact V2] Handoff saved successfully: %s (%d bytes)",
-            storage.handoff_file.name,
-            storage.handoff_file.stat().st_size,
+            saved_path.name,
+            saved_path.stat().st_size,
         )
 
         # Write compaction marker so UserPromptSubmit hook can detect intra-session compaction

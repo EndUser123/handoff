@@ -60,13 +60,44 @@ class HandoffFileStorage:
         if terminal_id.startswith("/") or terminal_id.startswith("\\"):
             raise ValueError("terminal_id cannot be an absolute path")
 
-    def save_handoff(self, payload: dict[str, Any]) -> bool:
-        """Validate and persist the V2 payload."""
+    def _handoff_file_for_payload(self, payload: dict[str, Any]) -> Path:
+        """Compute the handoff file path for a payload.
+
+        Uses timestamp-based naming to support append semantics:
+        Each PreCompact creates a new file rather than overwriting.
+        File is named: {terminal_id}_{timestamp}_handoff.json
+
+        The timestamp is extracted from the payload's created_at field
+        (written at PreCompact time) so files sort correctly by mtime.
+        """
+        resume_snapshot = payload.get("resume_snapshot", {})
+        created_at = resume_snapshot.get("created_at")
+
+        if created_at:
+            # ISO8601 timestamp -> filesystem-safe filename
+            # 2026-04-09T12:00:00.000000 -> 20260409T120000
+            ts_part = created_at.replace("-", "").replace(":", "").split(".")[0]
+        else:
+            import time
+
+            ts_part = time.strftime("%Y%m%dT%H%M%S")
+
+        return self.handoff_dir / f"{self.terminal_id}_{ts_part}_handoff.json"
+
+    def save_handoff(self, payload: dict[str, Any]) -> Path | bool:
+        """Validate and persist the V2 payload.
+
+        Returns:
+            Path: the path the envelope was saved to (truthy, boolean-compatible)
+            False: if the save failed
+        """
         try:
+            # Resolve target file path from payload (timestamp-based for append semantics)
+            target_file = self._handoff_file_for_payload(payload)
             logger.debug(
                 "[HandoffFileStorage] save_handoff called: terminal_id=%s, file=%s",
                 self.terminal_id,
-                self.handoff_file,
+                target_file,
             )
 
             validate_envelope(payload)
@@ -83,12 +114,12 @@ class HandoffFileStorage:
                 len(serialized),
             )
 
-            lock_file = self.handoff_file.with_suffix(".lock")
+            lock_file = target_file.with_suffix(".lock")
             with FileLock(lock_file, timeout=5.0) as lock:
                 if not lock:
                     logger.warning(
                         "[HandoffFileStorage] Failed to acquire lock for %s",
-                        self.handoff_file.name,
+                        target_file.name,
                     )
                     return False
 
@@ -161,29 +192,29 @@ class HandoffFileStorage:
                         return False
 
                     # Atomic move (now safe because we verified within FileLock context)
-                    atomic_write_with_retry(temp_path, self.handoff_file)
+                    atomic_write_with_retry(temp_path, target_file)
                     logger.info(
                         "[HandoffFileStorage] Handoff saved successfully: %s -> %s",
                         temp_path,
-                        self.handoff_file,
+                        target_file,
                     )
 
                     # Verify file was actually created
-                    if not self.handoff_file.exists():
+                    if not target_file.exists():
                         logger.error(
                             "[HandoffFileStorage] File does not exist after atomic_write: %s",
-                            self.handoff_file,
+                            target_file,
                         )
                         return False
 
-                    file_size = self.handoff_file.stat().st_size
+                    file_size = target_file.stat().st_size
                     logger.info(
                         "[HandoffFileStorage] File verified: %s (%d bytes)",
-                        self.handoff_file.name,
+                        target_file.name,
                         file_size,
                     )
 
-                    return True
+                    return target_file
                 except Exception as inner_exc:
                     logger.error(
                         "[HandoffFileStorage] Exception during file write: %s",
@@ -305,24 +336,80 @@ class HandoffFileStorage:
             logger.error("[HandoffFileStorage] Exception loading handoff: %s", exc)
             return None
 
-    def load_raw_handoff(self) -> dict[str, Any] | None:
-        """Load the current payload without validation."""
-        try:
-            if not self.handoff_file.exists():
+    def load_raw_handoff(
+        self, exclude_session_id: str | None = None
+    ) -> dict[str, Any] | None:
+        """Load the most recent handoff payload without validation.
+
+        Finds the latest handoff file for this terminal by mtime, since
+        PreCompact overwrites the same file on each compaction. Uses the
+        most-recently-modified file rather than a fixed filename to handle
+        the append-by-mtime pattern.
+
+        Args:
+            exclude_session_id: If provided, skip any handoff whose
+                source_session_id matches this value. This is needed when
+                PreCompact calls load_raw_handoff() to find S_OLD's handoff
+                — at that point S_NEW's handoff already exists on disk (just
+                written), so mtime-sort would return S_NEW instead of S_OLD.
+                Passing S_NEW's session_id excludes it from the result.
+        """
+        if not self.handoff_dir.exists():
+            return None
+        # Find all handoff files for this terminal, sorted by mtime descending
+        pattern = f"{self.terminal_id}_*_handoff.json"
+        candidates = list(self.handoff_dir.glob(pattern))
+        if not candidates:
+            # Fallback: try exact match (for HandoffFileStorage used without append semantics)
+            if self.handoff_file.exists():
+                candidates = [self.handoff_file]
+            else:
                 return None
-            with open(self.handoff_file, encoding="utf-8") as handle:
+        # Sort by mtime, newest first
+        def _get_mtime(p: Path) -> float:
+            try:
+                return p.stat().st_mtime
+            except OSError:
+                return -1.0
+
+        candidates.sort(key=_get_mtime, reverse=True)
+
+        # If excluding, scan for the first handoff whose session_id differs.
+        # This ensures we get S_OLD even when S_NEW's handoff was just written.
+        if exclude_session_id is not None:
+            for p in candidates:
+                try:
+                    with open(p, encoding="utf-8") as handle:
+                        payload = json.load(handle)
+                    sid = payload.get("resume_snapshot", {}).get("source_session_id", "")
+                    if sid is not None and sid != exclude_session_id:
+                        return payload
+                except Exception as exc:
+                    logger.warning(
+                        "[HandoffFileStorage] Skipped handoff %s during exclude scan: %s",
+                        p.name,
+                        exc,
+                    )
+                    continue
+            # No prior handoff found — fall through to return None (edge case:
+            # truly first session, or all handoffs belong to the excluded session)
+            return None
+
+        newest = candidates[0]
+        try:
+            with open(newest, encoding="utf-8") as handle:
                 payload = json.load(handle)
             if not isinstance(payload, dict):
                 logger.error(
                     "[HandoffFileStorage] Raw handoff payload is not a dict in %s",
-                    self.handoff_file.name,
+                    newest.name,
                 )
                 return None
             return payload
         except json.JSONDecodeError as exc:
             logger.error(
                 "[HandoffFileStorage] JSON parse error in %s: %s",
-                self.handoff_file.name,
+                newest.name,
                 exc,
             )
             return None
