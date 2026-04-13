@@ -65,6 +65,7 @@ from scripts.hooks.__lib.transcript import (  # noqa: F401
     is_meta_discussion,
     is_clarification_message,
     extract_preceding_message,
+    is_meta_instruction,
 )
 
 SESSION_PATTERNS = {
@@ -626,6 +627,43 @@ def main() -> None:
         # Check if the last substantive action was a skill invocation
         # If so, capture skill output instead of skill definition
         skill_output = parser.extract_last_skill_output(max_length=800)
+
+        # DEFENSIVE: If the goal is still a Skill invocation (edge case — e.g., slash command
+        # args captured before skip filter ran), fall back to the preceding user message.
+        # The META_PATTERNS skip filter handles most cases, but this is a safety net.
+        goal_origin = "user_message"  # Default; degraded paths override this
+        import re as _re
+        if _re.match(r"^/[a-z][a-z0-9_-]*(?:\s+|\s*--?\s*)", goal.strip()):
+            preceding = parser.extract_preceding_message(transcript_path, goal)
+            if preceding is None:
+                # String normalization caused exact-match to fail — degraded path, log it
+                goal_origin = "skill_args_unfiltered"
+                logger.warning(
+                    "Defensive fallback: extract_preceding_message returned None for goal=%r. "
+                    "Skill args may propagate as goal.",
+                    goal[:100],
+                )
+            elif not preceding.strip():
+                # Empty or whitespace-only preceding message — do not use as fallback
+                goal_origin = "skill_args_unfiltered"
+                logger.warning(
+                    "Defensive fallback: preceding message is empty/whitespace for goal=%r. "
+                    "Skill args may propagate as goal.",
+                    goal[:100],
+                )
+            elif is_meta_instruction(preceding.strip()):
+                # Preceding message is itself a meta-invocation — not a valid goal
+                goal_origin = "skill_args_unfiltered"
+                logger.warning(
+                    "Defensive fallback: preceding message is meta-invocation=%r. "
+                    "Skill args may propagate as goal.",
+                    preceding[:100],
+                )
+            else:
+                goal = preceding.strip()
+                goal_origin = "preceding_message"
+                message_intent = "instruction"
+
         skill_name_for_decision = None
         if skill_output:
             skill_name_for_decision = skill_output.get("skill_name", "unknown")
@@ -781,10 +819,12 @@ def main() -> None:
             next_step=next_step,
             decision_refs=[decision["id"] for decision in decision_register],
             evidence_refs=[item["id"] for item in evidence_index],
-            transcript_path=prior_transcript_path or transcript_path,
+            transcript_path=transcript_path,
+            prior_transcript_path=prior_transcript_path,
             message_intent=message_intent,
             quality_score=quality_score,
             tasks_snapshot=tasks_snapshot,
+            goal_origin=goal_origin,
         )
         envelope = build_envelope(
             resume_snapshot=resume_snapshot,

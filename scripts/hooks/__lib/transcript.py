@@ -47,8 +47,14 @@ META_PATTERNS = [
     re.compile(r"^(revert|rollback)([\s,;!]+it)?[\s,;!]*$"),
     # Session continuation
     re.compile(r"^this session is being continued from a previous conversation"),
-    # Command invocation
+    # Command invocation (XML marker)
     re.compile(r"^<command-"),
+    # Slash-command Skill invocations (e.g., "/pre-mortem args", "/gto --flag")
+    # These are in-flight Skills, not user-level goals — skip and continue scanning.
+    # Requires space OR --flag delimiter — bare /plan or /skill alone are NOT skipped
+    # (they may be genuine bare skill calls the user wants as the goal).
+    # Unix paths like /home/user/... won't match because they lack a trailing space/flag.
+    re.compile(r"^/[a-z][a-z0-9_-]*(?:\s+|--?\s)"),
     # Verification and meta-questions
     re.compile(r"^do we (have|need)"),
     re.compile(r"^do you (have|need)"),

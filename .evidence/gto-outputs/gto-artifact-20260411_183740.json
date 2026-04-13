@@ -4,11 +4,11 @@
       "id": "GAP-0000-SUSPICION",
       "type": "suspicion_misalignment",
       "severity": "medium",
-      "message": "[Conversational Misalignment] We need to follow our constitution tree.  How can we make sure the suba",
+      "message": "[Conversational Misalignment] We need to follow our constitution tree.  How can we make sure the subagents comply with it?",
       "file_path": null,
       "line_number": null,
       "source": "SuspicionDetector",
-      "timestamp": "2026-04-01T09:06:27.465079",
+      "timestamp": "2026-04-11T18:33:55.495328",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 10,
@@ -23,7 +23,7 @@
       "file_path": "scripts\\checkpoint_ops.py",
       "line_number": 183,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465178",
+      "timestamp": "2026-04-11T18:33:55.495455",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -38,7 +38,7 @@
       "file_path": "scripts\\migrate.py",
       "line_number": 41,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465181",
+      "timestamp": "2026-04-11T18:33:55.495460",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -46,14 +46,29 @@
       "recurrence_count": 1
     },
     {
-      "id": "GAP-c1b71380",
+      "id": "GAP-9dab374c",
+      "type": "code_quality",
+      "severity": "low",
+      "message": "Code quality issue: # TODO: Add more tests based on actual functionality",
+      "file_path": "tests\\test_config.py",
+      "line_number": 11,
+      "source": "GapFinderSubagent",
+      "timestamp": "2026-04-11T18:33:55.495463",
+      "metadata": {},
+      "confidence": 0.8,
+      "effort_estimate_minutes": 5,
+      "theme": null,
+      "recurrence_count": 1
+    },
+    {
+      "id": "GAP-331c9c66",
       "type": "import_issue",
       "severity": "medium",
       "message": "Import or type issue: from scripts.hooks.__lib.transcript import (  # type: ignore",
       "file_path": "scripts\\hooks\\PreCompact_handoff_capture.py",
-      "line_number": 53,
+      "line_number": 60,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465183",
+      "timestamp": "2026-04-11T18:33:55.495465",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -68,7 +83,7 @@
       "file_path": "scripts\\hooks\\__lib\\handover.py",
       "line_number": 141,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465185",
+      "timestamp": "2026-04-11T18:33:55.495467",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -83,7 +98,7 @@
       "file_path": "scripts\\hooks\\__lib\\task_identity_manager.py",
       "line_number": 37,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465186",
+      "timestamp": "2026-04-11T18:33:55.495468",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -98,7 +113,7 @@
       "file_path": "examples\\basic_usage.py",
       "line_number": 1,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465187",
+      "timestamp": "2026-04-11T18:33:55.495470",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -113,7 +128,7 @@
       "file_path": "scripts\\checkpoint_chain.py",
       "line_number": 1,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465188",
+      "timestamp": "2026-04-11T18:33:55.495472",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -128,7 +143,7 @@
       "file_path": "scripts\\checkpoint_ops.py",
       "line_number": 1,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465190",
+      "timestamp": "2026-04-11T18:33:55.495474",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -143,22 +158,7 @@
       "file_path": "scripts\\cli.py",
       "line_number": 1,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465191",
-      "metadata": {},
-      "confidence": 0.8,
-      "effort_estimate_minutes": 5,
-      "theme": null,
-      "recurrence_count": 1
-    },
-    {
-      "id": "GAP-2a38baf5",
-      "type": "missing_test",
-      "severity": "high",
-      "message": "No test file found for config.py",
-      "file_path": "scripts\\config.py",
-      "line_number": 1,
-      "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465192",
+      "timestamp": "2026-04-11T18:33:55.495476",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -173,7 +173,7 @@
       "file_path": "scripts\\fix_test_imports.py",
       "line_number": 1,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465194",
+      "timestamp": "2026-04-11T18:33:55.495478",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -188,7 +188,7 @@
       "file_path": "scripts\\migrate.py",
       "line_number": 1,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465195",
+      "timestamp": "2026-04-11T18:33:55.495480",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -203,7 +203,7 @@
       "file_path": "scripts\\models.py",
       "line_number": 1,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465196",
+      "timestamp": "2026-04-11T18:33:55.495482",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -218,7 +218,7 @@
       "file_path": "scripts\\protocol.py",
       "line_number": 1,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465197",
+      "timestamp": "2026-04-11T18:33:55.495483",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -233,7 +233,7 @@
       "file_path": "scripts\\hooks\\PreCompact_handoff_capture.py",
       "line_number": 1,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465199",
+      "timestamp": "2026-04-11T18:33:55.495485",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -248,7 +248,7 @@
       "file_path": "scripts\\hooks\\precompact_imports_patch.py",
       "line_number": 1,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465200",
+      "timestamp": "2026-04-11T18:33:55.495487",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -263,7 +263,7 @@
       "file_path": "scripts\\hooks\\SessionStart_handoff_restore.py",
       "line_number": 1,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465201",
+      "timestamp": "2026-04-11T18:33:55.495489",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -278,7 +278,7 @@
       "file_path": "scripts\\hooks\\userpromptsubmit_task_injector.py",
       "line_number": 1,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465202",
+      "timestamp": "2026-04-11T18:33:55.495491",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -293,7 +293,7 @@
       "file_path": "scripts\\hooks\\__lib\\architecture_capture.py",
       "line_number": 1,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465204",
+      "timestamp": "2026-04-11T18:33:55.495493",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -308,7 +308,7 @@
       "file_path": "scripts\\hooks\\__lib\\capture_cache.py",
       "line_number": 1,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465205",
+      "timestamp": "2026-04-11T18:33:55.495495",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -323,7 +323,7 @@
       "file_path": "scripts\\hooks\\__lib\\dynamic_sections.py",
       "line_number": 1,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465206",
+      "timestamp": "2026-04-11T18:33:55.495496",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -338,7 +338,7 @@
       "file_path": "scripts\\hooks\\__lib\\error_capture.py",
       "line_number": 1,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465207",
+      "timestamp": "2026-04-11T18:33:55.495498",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -353,7 +353,7 @@
       "file_path": "scripts\\hooks\\__lib\\handoff_accumulator.py",
       "line_number": 1,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465209",
+      "timestamp": "2026-04-11T18:33:55.495502",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -368,7 +368,7 @@
       "file_path": "scripts\\hooks\\__lib\\handoff_files.py",
       "line_number": 1,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465210",
+      "timestamp": "2026-04-11T18:33:55.495504",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -383,7 +383,7 @@
       "file_path": "scripts\\hooks\\__lib\\handoff_store.py",
       "line_number": 1,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465211",
+      "timestamp": "2026-04-11T18:33:55.495506",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -398,7 +398,7 @@
       "file_path": "scripts\\hooks\\__lib\\handoff_v2.py",
       "line_number": 1,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465212",
+      "timestamp": "2026-04-11T18:33:55.495508",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -413,7 +413,7 @@
       "file_path": "scripts\\hooks\\__lib\\handover.py",
       "line_number": 1,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465214",
+      "timestamp": "2026-04-11T18:33:55.495510",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -428,7 +428,7 @@
       "file_path": "scripts\\hooks\\__lib\\hook_input_validation.py",
       "line_number": 1,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465215",
+      "timestamp": "2026-04-11T18:33:55.495512",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -443,7 +443,7 @@
       "file_path": "scripts\\hooks\\__lib\\hook_schema.py",
       "line_number": 1,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465216",
+      "timestamp": "2026-04-11T18:33:55.495514",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -458,7 +458,7 @@
       "file_path": "scripts\\hooks\\__lib\\parallel_capture.py",
       "line_number": 1,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465217",
+      "timestamp": "2026-04-11T18:33:55.495515",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -473,7 +473,7 @@
       "file_path": "scripts\\hooks\\__lib\\project_root.py",
       "line_number": 1,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465218",
+      "timestamp": "2026-04-11T18:33:55.495517",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -488,7 +488,7 @@
       "file_path": "scripts\\hooks\\__lib\\task_identity_manager.py",
       "line_number": 1,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465220",
+      "timestamp": "2026-04-11T18:33:55.495519",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -503,7 +503,7 @@
       "file_path": "scripts\\hooks\\__lib\\terminal_detection.py",
       "line_number": 1,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465221",
+      "timestamp": "2026-04-11T18:33:55.495521",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -518,7 +518,7 @@
       "file_path": "scripts\\hooks\\__lib\\terminal_file_registry.py",
       "line_number": 1,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465222",
+      "timestamp": "2026-04-11T18:33:55.495523",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -533,7 +533,7 @@
       "file_path": "scripts\\hooks\\__lib\\transcript.py",
       "line_number": 1,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465223",
+      "timestamp": "2026-04-11T18:33:55.495524",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -548,7 +548,7 @@
       "file_path": "scripts\\hooks\\__lib\\user_intent.py",
       "line_number": 1,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465224",
+      "timestamp": "2026-04-11T18:33:55.495526",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -563,7 +563,7 @@
       "file_path": "assets\\banners\\generate_banner.py",
       "line_number": 1,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465226",
+      "timestamp": "2026-04-11T18:33:55.495528",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -578,7 +578,7 @@
       "file_path": "scripts\\hooks\\precompact_imports_patch.py",
       "line_number": 1,
       "source": "GapFinderSubagent",
-      "timestamp": "2026-04-01T09:06:27.465227",
+      "timestamp": "2026-04-11T18:33:55.495530",
       "metadata": {},
       "confidence": 0.8,
       "effort_estimate_minutes": 5,
@@ -588,14 +588,14 @@
   ],
   "total_gap_count": 39,
   "critical_count": 0,
-  "high_count": 32,
+  "high_count": 31,
   "medium_count": 7,
-  "low_count": 0,
-  "timestamp": "2026-04-01T09:09:15.157608",
+  "low_count": 1,
+  "timestamp": "2026-04-11T18:37:40.120286",
   "metadata": {
-    "timestamp": "2026-04-01T09:06:26.728644",
+    "timestamp": "2026-04-11T18:30:04.301114",
     "project_root": "P:\\packages\\handoff",
-    "terminal_id": "cf9b54973d27",
+    "terminal_id": "72e9bb3c202b",
     "viability_check": {
       "is_viable": true,
       "failure_reason": null
@@ -612,6 +612,14 @@
       "goal": null,
       "confidence": 0.0,
       "source_turn": null
+    },
+    "chain_analysis": {
+      "focus": "",
+      "phase": "",
+      "next_steps": [],
+      "confidence": 0.0,
+      "error": "timeout",
+      "transcripts_processed": 1
     },
     "subagent_results": {
       "gap_finder": [
@@ -638,11 +646,22 @@
           }
         },
         {
-          "id": "GAP-c1b71380",
+          "id": "GAP-9dab374c",
+          "type": "code_quality",
+          "message": "Code quality issue: # TODO: Add more tests based on actual functionality",
+          "file_path": "tests\\test_config.py",
+          "line_number": 11,
+          "severity": "low",
+          "metadata": {
+            "matched_text": "# TODO: Add more tests based on actual functionality"
+          }
+        },
+        {
+          "id": "GAP-331c9c66",
           "type": "import_issue",
           "message": "Import or type issue: from scripts.hooks.__lib.transcript import (  # type: ignore",
           "file_path": "scripts\\hooks\\PreCompact_handoff_capture.py",
-          "line_number": 53,
+          "line_number": 60,
           "severity": "medium",
           "metadata": {
             "matched_text": "from scripts.hooks.__lib.transcript import (  # type: ignore"
@@ -702,15 +721,6 @@
           "type": "missing_test",
           "message": "No test file found for cli.py",
           "file_path": "scripts\\cli.py",
-          "line_number": 1,
-          "severity": "high",
-          "metadata": {}
-        },
-        {
-          "id": "GAP-2a38baf5",
-          "type": "missing_test",
-          "message": "No test file found for config.py",
-          "file_path": "scripts\\config.py",
           "line_number": 1,
           "severity": "high",
           "metadata": {}
@@ -973,178 +983,6 @@
       "resolved_count": 0,
       "new_count": 39,
       "credited_skill": null
-    },
-    "health_report": {
-      "overall_score": 0.89,
-      "status": "healthy",
-      "metrics": [
-        {
-          "name": "test_coverage",
-          "score": 1.0,
-          "weight": 0.3,
-          "description": "Test coverage ratio",
-          "details": {
-            "source_files": 34,
-            "test_files": 79,
-            "ratio": 2.32
-          }
-        },
-        {
-          "name": "documentation",
-          "score": 0.9705882352941176,
-          "weight": 0.2,
-          "description": "Documentation coverage",
-          "details": {
-            "source_files": 34,
-            "documented": 33,
-            "ratio": 0.97
-          }
-        },
-        {
-          "name": "dependencies",
-          "score": 0.5,
-          "weight": 0.2,
-          "description": "Dependency management health",
-          "details": {
-            "has_requirements": false,
-            "declared_packages": 0,
-            "installed_packages": 607
-          }
-        },
-        {
-          "name": "code_quality",
-          "score": 1.0,
-          "weight": 0.3,
-          "description": "Code quality (fewer TODO/HACK markers)",
-          "details": {
-            "files_scanned": 85,
-            "todo_count": 0,
-            "hack_count": 0,
-            "fixme_count": 0,
-            "xxx_count": 0,
-            "type_ignore_count": 5,
-            "total_markers": 0
-          }
-        }
-      ],
-      "timestamp": "2026-04-01T09:09:15.103070"
     }
-  },
-  "health_report": {
-    "overall_score": 0.89,
-    "status": "healthy",
-    "metrics": [
-      {
-        "name": "test_coverage",
-        "score": 1.0,
-        "weight": 0.3,
-        "description": "Test coverage ratio",
-        "details": {
-          "source_files": 34,
-          "test_files": 79,
-          "ratio": 2.32
-        }
-      },
-      {
-        "name": "documentation",
-        "score": 0.9705882352941176,
-        "weight": 0.2,
-        "description": "Documentation coverage",
-        "details": {
-          "source_files": 34,
-          "documented": 33,
-          "ratio": 0.97
-        }
-      },
-      {
-        "name": "dependencies",
-        "score": 0.5,
-        "weight": 0.2,
-        "description": "Dependency management health",
-        "details": {
-          "has_requirements": false,
-          "declared_packages": 0,
-          "installed_packages": 607
-        }
-      },
-      {
-        "name": "code_quality",
-        "score": 1.0,
-        "weight": 0.3,
-        "description": "Code quality (fewer TODO/HACK markers)",
-        "details": {
-          "files_scanned": 85,
-          "todo_count": 0,
-          "hack_count": 0,
-          "fixme_count": 0,
-          "xxx_count": 0,
-          "type_ignore_count": 5,
-          "total_markers": 0
-        }
-      }
-    ],
-    "timestamp": "2026-04-01T09:09:15.103070"
-  },
-  "overall": 0.89,
-  "dimensions": {
-    "test_coverage": 1.0,
-    "documentation": 0.9705882352941176,
-    "dependencies": 0.5,
-    "code_quality": 1.0
-  },
-  "health": {
-    "overall_score": 0.89,
-    "status": "healthy",
-    "metrics": [
-      {
-        "name": "test_coverage",
-        "score": 1.0,
-        "weight": 0.3,
-        "description": "Test coverage ratio",
-        "details": {
-          "source_files": 34,
-          "test_files": 79,
-          "ratio": 2.32
-        }
-      },
-      {
-        "name": "documentation",
-        "score": 0.9705882352941176,
-        "weight": 0.2,
-        "description": "Documentation coverage",
-        "details": {
-          "source_files": 34,
-          "documented": 33,
-          "ratio": 0.97
-        }
-      },
-      {
-        "name": "dependencies",
-        "score": 0.5,
-        "weight": 0.2,
-        "description": "Dependency management health",
-        "details": {
-          "has_requirements": false,
-          "declared_packages": 0,
-          "installed_packages": 607
-        }
-      },
-      {
-        "name": "code_quality",
-        "score": 1.0,
-        "weight": 0.3,
-        "description": "Code quality (fewer TODO/HACK markers)",
-        "details": {
-          "files_scanned": 85,
-          "todo_count": 0,
-          "hack_count": 0,
-          "fixme_count": 0,
-          "xxx_count": 0,
-          "type_ignore_count": 5,
-          "total_markers": 0
-        }
-      }
-    ],
-    "timestamp": "2026-04-01T09:09:15.103070"
   }
 }

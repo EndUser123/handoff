@@ -10,6 +10,11 @@ import sys
 from pathlib import Path
 from typing import Any
 
+# sys.path must be set up BEFORE importing scripts.hooks modules
+PACKAGE_ROOT = Path(__file__).resolve().parents[2]
+if str(PACKAGE_ROOT) not in sys.path:
+    sys.path.insert(0, str(PACKAGE_ROOT))
+
 from scripts.hooks.userpromptsubmit_task_injector import _clear_marker
 
 logger = logging.getLogger(__name__)
@@ -27,10 +32,6 @@ if not logger.handlers:
     )
     logger.addHandler(_handler)
 logger.setLevel(logging.DEBUG)
-
-PACKAGE_ROOT = Path(__file__).resolve().parents[2]
-if str(PACKAGE_ROOT) not in sys.path:
-    sys.path.insert(0, str(PACKAGE_ROOT))
 
 from scripts.hooks.__lib.handoff_files import HandoffFileStorage
 from scripts.hooks.__lib.handoff_v2 import (

@@ -341,10 +341,12 @@ def build_resume_snapshot(
     decision_refs: list[str],
     evidence_refs: list[str],
     transcript_path: str,
+    prior_transcript_path: str | None = None,
     message_intent: str,  # Intent classification of the goal (required)
     freshness_minutes: int = DEFAULT_FRESHNESS_MINUTES,
     quality_score: float | None = None,
     tasks_snapshot: list[dict[str, Any]] | None = None,
+    goal_origin: str | None = None,  # Source of the goal value (user_message, preceding_message, skill_args_unfiltered)
 ) -> dict[str, Any]:
     """Build the V2 resume snapshot."""
     # QUAL-005: Validate message_intent is a recognized value
@@ -375,7 +377,9 @@ def build_resume_snapshot(
         "decision_refs": decision_refs,
         "evidence_refs": evidence_refs,
         "transcript_path": transcript_path,
+        "prior_transcript_path": prior_transcript_path,
         "message_intent": message_intent,  # Required field
+        "goal_origin": goal_origin,  # Source of goal value (for downstream consumers)
     }
     if quality_score is not None:
         snapshot["quality_score"] = quality_score
@@ -652,18 +656,39 @@ def build_restore_message_compact(payload: dict[str, Any]) -> str:
     # Format pending operations
     pending_ops = snapshot.get("pending_operations", [])
     pending_str = ""
+    interrupted_skills = []
     if pending_ops:
         pending_lines = []
         for op in pending_ops[:5]:
             op_type = op.get("type", "operation")
             target = op.get("target", "unknown")
             pending_lines.append(f"- {op_type}: {target}")
+            # Track interrupted Skill invocations for the continuation warning
+            if op_type == "skill" and op.get("state") == "in_progress":
+                interrupted_skills.append(target)
         pending_str = "\n" + "\n".join(pending_lines)
+
+    # Build continuation rule — warn if Skills were interrupted during compaction
+    continuation_rule = (
+        "PRESENT AS INFERENCE ONLY. "
+        "A Skill was in-progress when the session compacted. "
+        "The goal above was captured from the Skill invocation arguments — "
+        "it may represent an interrupted action, not a user-level goal. "
+        "Verify: ask 'What work was in progress before compaction?' "
+        "rather than assuming the captured goal is current intent."
+    )
+    if not interrupted_skills:
+        continuation_rule = (
+            "Present the restored goal as context to verify — say 'Based on the session handoff, "
+            "we were working on X' not 'The task was X'. The captured goal is an inference, not "
+            "a recording. Do not ask the user to re-explain context you already have. "
+            "Ask only if blocked by missing user input."
+        )
 
     lines = [
         "<compact-restore>",
         "status: restored",
-        f"previous_session: {snapshot.get('transcript_path', 'none')}",
+        "previous_session: <session transcript>",
         f"goal: {intent_prefix} {snapshot['goal']}",
         f"current_task: {snapshot['current_task']}",
         f"progress_state: {snapshot['progress_state']}",
@@ -674,7 +699,7 @@ def build_restore_message_compact(payload: dict[str, Any]) -> str:
         active_files_str,
         f"pending_operations: {len(pending_ops)} pending",
         pending_str,
-        "continuation_rule: Present the restored goal as context to verify — say 'Based on the session handoff, we were working on X' not 'The task was X'. The captured goal is an inference, not a recording. Do not ask the user to re-explain context you already have. Ask only if blocked by missing user input.",
+        f"continuation_rule: {continuation_rule}",
         "</compact-restore>",
     ]
 

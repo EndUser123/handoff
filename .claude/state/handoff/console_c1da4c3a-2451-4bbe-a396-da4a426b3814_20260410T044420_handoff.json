@@ -1,0 +1,130 @@
+{
+  "resume_snapshot": {
+    "schema_version": 2,
+    "snapshot_id": "f4624ae7-cfeb-441b-8165-ed60c4da8742",
+    "terminal_id": "console_c1da4c3a-2451-4bbe-a396-da4a426b3814",
+    "source_session_id": "59ba4da6-8417-4c06-9dc8-f5647591ad3e",
+    "created_at": "2026-04-10T04:44:20.378032+00:00",
+    "expires_at": "2026-04-10T05:04:20.378032+00:00",
+    "status": "pending",
+    "goal": "Okay, implement the fixes.",
+    "current_task": "Okay, implement the fixes.",
+    "progress_percent": 65,
+    "progress_state": "in_progress",
+    "blockers": [],
+    "active_files": [
+      "P:\\.claude\\skills\\arch\\resources\\deep.md",
+      "P:\\.claude\\skills\\arch\\resources\\python.md",
+      "P:\\.claude\\skills\\arch\\resources\\shared_frameworks.md",
+      "P:\\.claude\\hooks\\verification\\engine.py",
+      "P:\\.claude\\hooks\\StopHook_unverified_stance.py",
+      "C:\\Users\\brsth\\.claude\\plans\\harmonic-drifting-dawn.md",
+      "P:\\.claude\\hooks\\tests\\test_verification_engine.py",
+      "P:\\__csf\\src\\csf\\cli\\nip\\apply_safety_patterns.md",
+      "C:\\Users\\brsth\\.claude\\projects\\P--\\59ba4da6-8417-4c06-9dc8-f5647591ad3e\\tool-results\\brr72dc5d.txt",
+      "P:/packages/handoff/scripts/hooks/PreCompact_handoff_capture.py"
+    ],
+    "pending_operations": [
+      {
+        "type": "skill",
+        "target": "skill: arch",
+        "state": "in_progress"
+      },
+      {
+        "type": "read",
+        "target": "P:\\.claude\\skills\\arch\\resources\\deep.md",
+        "state": "in_progress"
+      },
+      {
+        "type": "read",
+        "target": "P:\\.claude\\skills\\arch\\resources\\python.md",
+        "state": "in_progress"
+      },
+      {
+        "type": "read",
+        "target": "P:\\.claude\\skills\\arch\\resources\\shared_frameworks.md",
+        "state": "in_progress"
+      },
+      {
+        "type": "read",
+        "target": "P:\\.claude\\hooks\\verification\\engine.py",
+        "state": "in_progress"
+      }
+    ],
+    "next_step": "Resume skill on skill: arch.",
+    "decision_refs": [
+      "dec_df69ade8ce584fba9b60f582b6273b52"
+    ],
+    "evidence_refs": [
+      "ev_510e69620ef34f0b963b91ae2c8b91e7",
+      "ev_dd68a00b6e2f4996b742f7795523da35",
+      "ev_02ecdd188cb34091b7adc018f9ca30f2",
+      "ev_afed825108de4bd98b30f7d6ac71c463",
+      "ev_2ded1ee783454c27a7e6b76bcd45d474",
+      "ev_e069d6383a3a4995b7257d565386a72d"
+    ],
+    "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\59ba4da6-8417-4c06-9dc8-f5647591ad3e.jsonl",
+    "prior_transcript_path": null,
+    "message_intent": "instruction",
+    "quality_score": 0.9,
+    "tasks_snapshot": []
+  },
+  "decision_register": [
+    {
+      "id": "dec_df69ade8ce584fba9b60f582b6273b52",
+      "kind": "constraint",
+      "summary": "The bug: `_find_handoff_referencing` is `async` but callers don't await it. I'll make it synchronous since the file I/O is fast enough:",
+      "details": "The bug: `_find_handoff_referencing` is `async` but callers don't await it. I'll make it synchronous since the file I/O is fast enough:",
+      "priority": "high",
+      "applies_when": "Continue the current task after compact.",
+      "source_refs": [
+        "ev_510e69620ef34f0b963b91ae2c8b91e7"
+      ]
+    }
+  ],
+  "evidence_index": [
+    {
+      "id": "ev_510e69620ef34f0b963b91ae2c8b91e7",
+      "type": "transcript",
+      "label": "Current compact transcript",
+      "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\59ba4da6-8417-4c06-9dc8-f5647591ad3e.jsonl",
+      "content_hash": "sha256:fe09ebe892230f20725860f865a758b6ee96814e6206f335a9adf4c3289c4a4b"
+    },
+    {
+      "id": "ev_dd68a00b6e2f4996b742f7795523da35",
+      "type": "file",
+      "label": "deep.md",
+      "path": "P:\\packages\\sdlc\\skills\\arch\\resources\\deep.md",
+      "content_hash": "sha256:e09a83d09c5333abdc5a95eab2cc5be6d6238d20e581260e0355645bd3f7a14b"
+    },
+    {
+      "id": "ev_02ecdd188cb34091b7adc018f9ca30f2",
+      "type": "file",
+      "label": "python.md",
+      "path": "P:\\packages\\sdlc\\skills\\arch\\resources\\python.md",
+      "content_hash": "sha256:95cf21d899613fb759205afb87a2f4a11d356ca9cb68f0f6655b65963399c6fc"
+    },
+    {
+      "id": "ev_afed825108de4bd98b30f7d6ac71c463",
+      "type": "file",
+      "label": "shared_frameworks.md",
+      "path": "P:\\packages\\sdlc\\skills\\arch\\resources\\shared_frameworks.md",
+      "content_hash": "sha256:b6c8d01f18abb02e7167861d9fa28318ff90138842d64600da4820e21b521985"
+    },
+    {
+      "id": "ev_2ded1ee783454c27a7e6b76bcd45d474",
+      "type": "file",
+      "label": "engine.py",
+      "path": "P:\\.claude\\hooks\\verification\\engine.py",
+      "content_hash": "sha256:701f3b6bf5200b2df024e725037ee3304e3cf7a1d8c89a3e26e0fc7e2997beb5"
+    },
+    {
+      "id": "ev_e069d6383a3a4995b7257d565386a72d",
+      "type": "file",
+      "label": "StopHook_unverified_stance.py",
+      "path": "P:\\.claude\\hooks\\StopHook_unverified_stance.py",
+      "content_hash": "sha256:006ab1332c18143b4cb350dd0656636d03f6e3916281320a0402500c28c5ee23"
+    }
+  ],
+  "checksum": "sha256:1f8842f7c7b06d4aa9b3e4539864b07d97263d8ee2c822174858899c05d490d1"
+}
