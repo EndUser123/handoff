@@ -70,7 +70,11 @@ def cmd_restore(args: argparse.Namespace) -> int:
 
     # Evaluate for restore
     result = evaluate_for_restore(
-        handoff, terminal_id=terminal_id, source="compact", now=None
+        handoff,
+        terminal_id=terminal_id,
+        source="compact",
+        project_root=project_root,
+        now=None,
     )
 
     if result.ok:
@@ -150,7 +154,7 @@ def cmd_debug(args: argparse.Namespace) -> int:
         return 1
 
     # Verify transcript still exists
-    transcript_path = handoff["resume_snapshot"].get("transcript_path")
+    transcript_path = handoff["resume_snapshot"]["n_1_transcript_path"]
     if transcript_path:
         transcript_file = Path(transcript_path)
         if transcript_file.exists():
@@ -205,7 +209,7 @@ def cmd_health(args: argparse.Namespace) -> int:
         issues.append(f"checksum mismatch (stored={stored}, computed={computed})")
 
     # Check transcript exists
-    transcript_path = handoff.get("resume_snapshot", {}).get("transcript_path")
+    transcript_path = handoff["resume_snapshot"]["n_1_transcript_path"]
     if transcript_path:
         if not Path(transcript_path).exists():
             issues.append(f"transcript missing: {transcript_path}")

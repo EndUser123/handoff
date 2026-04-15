@@ -65,12 +65,13 @@ class TestRestoreMessageSkillWarning:
                 "message_intent": "instruction",
                 "progress_state": "in_progress",
                 "progress_percent": 50,
-                "next_step": "Run pre-mortem review",
-                "blockers": [],
-                "active_files": [],
-                "pending_operations": pending_operations,
-                "transcript_path": "P:/tmp/transcript.jsonl",
-            }
+            "next_step": "Run pre-mortem review",
+            "blockers": [],
+            "active_files": [],
+            "pending_operations": pending_operations,
+            "n_1_transcript_path": "P:/tmp/transcript.jsonl",
+            "n_2_transcript_path": None,
+        }
         }
 
     def test_in_progress_skill_triggers_warning_continuation(self):

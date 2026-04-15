@@ -21,6 +21,10 @@ SNAPSHOT_PENDING = "pending"
 SNAPSHOT_CONSUMED = "consumed"
 SNAPSHOT_REJECTED_STALE = "rejected_stale"
 SNAPSHOT_REJECTED_INVALID = "rejected_invalid"
+SNAPSHOT_N_1_TRANSCRIPT_PATH = "n_1_transcript_path"
+SNAPSHOT_N_2_TRANSCRIPT_PATH = "n_2_transcript_path"
+SNAPSHOT_OPEN_QUESTIONS = "open_questions"
+SNAPSHOT_TASKS_SNAPSHOT = "tasks_snapshot"
 VALID_SNAPSHOT_STATUSES = {
     SNAPSHOT_PENDING,
     SNAPSHOT_CONSUMED,
@@ -50,7 +54,11 @@ VALID_MESSAGE_INTENTS = {
     "directive",  # Added for imperative commands (detect_message_intent returns this)
 }
 OPTIONAL_DECISION_FIELDS = set()  # Optional fields allowed in decisions
-OPTIONAL_SNAPSHOT_FIELDS = {"quality_score"}  # Optional fields allowed in snapshot
+OPTIONAL_SNAPSHOT_FIELDS = {
+    "quality_score",
+    SNAPSHOT_OPEN_QUESTIONS,
+    SNAPSHOT_TASKS_SNAPSHOT,
+}  # Optional fields allowed in snapshot
 MUTABLE_METADATA_FIELDS = {
     "consumed_at",
     "consumed_by_session_id",
@@ -136,6 +144,198 @@ def compute_file_content_hash(path: str | Path) -> str | None:
         return None
 
 
+def _format_snapshot_item(entry: Any, *, default_label: str) -> str:
+    if isinstance(entry, dict):
+        label = (
+            entry.get("question")
+            or entry.get("title")
+            or entry.get("name")
+            or entry.get("summary")
+            or default_label
+        )
+        status = entry.get("status")
+        if isinstance(label, str) and label:
+            if isinstance(status, str) and status:
+                return f"- {label} ({status})"
+            return f"- {label}"
+        return f"- {default_label}"
+    if isinstance(entry, str) and entry:
+        return f"- {entry}"
+    return f"- {default_label}"
+
+
+def _build_restore_state(
+    snapshot: dict[str, Any],
+    decisions_by_id: dict[str, dict[str, Any]],
+    *,
+    restore_session_id: str | None,
+    include_user_context: bool,
+) -> dict[str, Any]:
+    n_1_transcript_path = snapshot["n_1_transcript_path"]
+    n_2_transcript_path = snapshot["n_2_transcript_path"]
+    source_session_id = snapshot.get("source_session_id", "<unknown>")
+    terminal_id = snapshot.get("terminal_id", "<unknown>")
+    message_intent = snapshot.get("message_intent", "instruction")
+    intent_prefix = intent_prefixes.get(message_intent, "User requested:")
+
+    blockers_str = "; ".join(
+        blocker.get("summary", "Unspecified blocker")
+        for blocker in snapshot.get("blockers", [])[:3]
+        if blocker.get("type") == "awaiting_approval"
+    ) or "none"
+
+    active_files = snapshot.get("active_files", [])
+    active_files_str = (
+        "\n".join(f"- {path}" for path in active_files) if active_files else "none"
+    )
+
+    pending_ops = snapshot.get("pending_operations", [])
+    pending_str = ""
+    interrupted_skills: list[str] = []
+    if pending_ops:
+        pending_lines = []
+        for op in pending_ops[:5]:
+            op_type = op.get("type", "operation")
+            target = op.get("target", "unknown")
+            pending_lines.append(f"- {op_type}: {target}")
+            if op_type == "skill" and op.get("state") == "in_progress":
+                interrupted_skills.append(target)
+        pending_str = "\n" + "\n".join(pending_lines)
+
+    continuation_rule = (
+        "PRESENT AS INFERENCE ONLY. "
+        "A Skill was in-progress when the session compacted. "
+        "The goal above was captured from the Skill invocation arguments — "
+        "it may represent an interrupted action, not a user-level goal. "
+        "Verify: ask 'What work was in progress before compaction?' "
+        "rather than assuming the captured goal is current intent."
+    )
+    if not interrupted_skills:
+        continuation_rule = (
+            "Present the restored goal as context to verify — say 'Based on the session handoff, "
+            "we were working on X' not 'The task was X'. The captured goal is an inference, not "
+            "a recording. Do not ask the user to re-explain context you already have. "
+            "Ask only if blocked by missing user input."
+        )
+
+    task_snapshot = (
+        [
+            _format_snapshot_item(task, default_label="Untitled task")
+            for task in snapshot.get("tasks_snapshot", [])[:5]
+        ]
+        if snapshot.get("tasks_snapshot")
+        else ["none"]
+    )
+    open_questions = (
+        [
+            _format_snapshot_item(question, default_label="Unspecified question")
+            for question in snapshot.get("open_questions", [])[:5]
+        ]
+        if snapshot.get("open_questions")
+        else ["none"]
+    )
+    active_decisions = (
+        [
+            f"- [{decision['kind']}] {decision['summary']}"
+            for decision in (
+                decisions_by_id.get(ref)
+                for ref in snapshot.get("decision_refs", [])[:5]
+            )
+            if decision
+        ]
+        if snapshot.get("decision_refs")
+        else ["none"]
+    )
+
+    if include_user_context and n_1_transcript_path:
+        user_context = _extract_and_format_user_context(
+            n_1_transcript_path, max_messages=15
+        )
+    else:
+        user_context = None
+
+    return {
+        "session_identity": {
+            "current_session_id": restore_session_id or "<unknown>",
+            "source_session_id": source_session_id,
+            "terminal_id": terminal_id,
+        },
+        "transcript_chain": {
+            "n_1_transcript_path": "<session transcript>",
+            "n_2_transcript_path": (
+                "<previous session transcript>"
+                if n_2_transcript_path
+                else "<none>"
+            ),
+        },
+        "work_state": {
+            "goal": f"{intent_prefix} {snapshot['goal']}",
+            "current_task": snapshot["current_task"],
+            "progress_state": snapshot["progress_state"],
+            "progress_percent": snapshot["progress_percent"],
+            "next_step": snapshot["next_step"],
+        },
+        "open_loops": {
+            "blockers_requiring_user": blockers_str,
+        },
+        "working_set": active_files_str,
+        "tool_queue": {
+            "pending_count": len(pending_ops),
+            "items": pending_str,
+        },
+        "task_snapshot": task_snapshot,
+        "open_questions": open_questions,
+        "active_decisions": active_decisions,
+        "continuation_rule": continuation_rule,
+        "user_context": user_context,
+    }
+
+
+def _render_restore_state_lines(state: dict[str, Any]) -> list[str]:
+    lines = [
+        "session_identity:",
+        f"current_session_id: {state['session_identity']['current_session_id']}",
+        f"source_session_id: {state['session_identity']['source_session_id']}",
+        f"terminal_id: {state['session_identity']['terminal_id']}",
+        "transcript_chain:",
+        f"n_1_transcript_path: {state['transcript_chain']['n_1_transcript_path']}",
+        f"n_2_transcript_path: {state['transcript_chain']['n_2_transcript_path']}",
+        "work_state:",
+        f"goal: {state['work_state']['goal']}",
+        f"current_task: {state['work_state']['current_task']}",
+        f"progress_state: {state['work_state']['progress_state']}",
+        f"progress_percent: {state['work_state']['progress_percent']}",
+        f"next_step: {state['work_state']['next_step']}",
+        "open_loops:",
+        f"blockers_requiring_user: {state['open_loops']['blockers_requiring_user']}",
+        "working_set:",
+        state["working_set"],
+        "tool_queue:",
+        f"{state['tool_queue']['pending_count']} pending",
+        state["tool_queue"]["items"],
+        "task_snapshot:",
+        "\n".join(state["task_snapshot"]),
+        "open_questions:",
+        "\n".join(state["open_questions"]),
+        "active_decisions:",
+        "\n".join(state["active_decisions"]),
+        f"continuation_rule: {state['continuation_rule']}",
+    ]
+    if state["user_context"]:
+        lines.extend(["", state["user_context"]])
+    return lines
+
+
+def _render_restore_message_verbose(state: dict[str, Any]) -> str:
+    return "\n".join(["SESSION HANDOFF V2", "", *_render_restore_state_lines(state)])
+
+
+def _render_restore_message_compact(state: dict[str, Any]) -> str:
+    return "\n".join(
+        ["<compact-restore>", "status: restored", *_render_restore_state_lines(state), "</compact-restore>"]
+    )
+
+
 def _require_fields(obj: dict[str, Any], fields: list[str], prefix: str) -> None:
     missing = [field for field in fields if field not in obj]
     if missing:
@@ -184,7 +384,8 @@ def validate_envelope(payload: dict[str, Any]) -> None:
             "next_step",
             "decision_refs",
             "evidence_refs",
-            "transcript_path",
+            "n_1_transcript_path",
+            "n_2_transcript_path",
         ],
         "resume_snapshot",
     )
@@ -219,6 +420,10 @@ def validate_envelope(payload: dict[str, Any]) -> None:
         if not isinstance(snapshot[field], list):
             raise HandoffValidationError(f"resume_snapshot.{field} must be a list")
 
+    for field in [SNAPSHOT_TASKS_SNAPSHOT, SNAPSHOT_OPEN_QUESTIONS]:
+        if field in snapshot and not isinstance(snapshot[field], list):
+            raise HandoffValidationError(f"resume_snapshot.{field} must be a list")
+
     if not isinstance(snapshot["progress_percent"], int):
         raise HandoffValidationError(
             "resume_snapshot.progress_percent must be an integer"
@@ -231,48 +436,60 @@ def validate_envelope(payload: dict[str, Any]) -> None:
     parse_iso8601(snapshot["created_at"])
     parse_iso8601(snapshot["expires_at"])
 
-    # Validate transcript_path exists and is safe (SEC-001: Path traversal protection)
-    transcript_path = snapshot.get("transcript_path")
-    if isinstance(transcript_path, str) and transcript_path:
-        transcript_file = Path(transcript_path).resolve()
+    # Validate the source-session transcript path exists and is safe
+    # (SEC-001: Path traversal protection).
+    transcript_path = snapshot["n_1_transcript_path"]
+    if not isinstance(transcript_path, str) or not transcript_path:
+        raise HandoffValidationError(
+            "resume_snapshot.n_1_transcript_path must be a string"
+        )
+    n_2_transcript_path = snapshot["n_2_transcript_path"]
+    if n_2_transcript_path is not None and (
+        not isinstance(n_2_transcript_path, str) or not n_2_transcript_path
+    ):
+        raise HandoffValidationError(
+            "resume_snapshot.n_2_transcript_path must be a string or null"
+        )
 
-        # SEC-001: Find project root by locating .claude directory in path hierarchy
-        # This is more flexible than using cwd() and works in test environments
-        project_root = None
-        current = transcript_file
-        for _ in range(5):  # Check up to 5 levels up
-            if (current / ".claude").exists():
-                project_root = current
-                break
-            parent = current.parent
-            if parent == current:  # Reached filesystem root
-                break
-            current = parent
+    transcript_file = Path(transcript_path).resolve()
 
-        # If no .claude directory found, reject the path as unsafe
-        # SEC-001: Path security requires project boundary verification
-        if project_root is None:
-            raise HandoffValidationError(
-                "resume_snapshot.transcript_path must be within project directory (no .claude boundary found)"
-            )
+    # SEC-001: Find project root by locating .claude directory in path hierarchy
+    # This is more flexible than using cwd() and works in test environments
+    project_root = None
+    current = transcript_file
+    for _ in range(5):  # Check up to 5 levels up
+        if (current / ".claude").exists():
+            project_root = current
+            break
+        parent = current.parent
+        if parent == current:  # Reached filesystem root
+            break
+        current = parent
 
-        # SEC-001: Verify path is within project root to prevent traversal attacks
-        try:
-            transcript_file.relative_to(project_root)
-        except ValueError:
-            raise HandoffValidationError(
-                "resume_snapshot.transcript_path must be within project directory"
-            )
+    # If no .claude directory found, reject the path as unsafe
+    # SEC-001: Path security requires project boundary verification
+    if project_root is None:
+        raise HandoffValidationError(
+            "resume_snapshot.n_1_transcript_path must be within project directory (no .claude boundary found)"
+        )
 
-        # SEC-002: Sanitized error messages (don't leak actual paths)
-        if not transcript_file.exists():
-            raise HandoffValidationError(
-                "resume_snapshot.transcript_path file does not exist"
-            )
-        if not transcript_file.is_file():
-            raise HandoffValidationError(
-                "resume_snapshot.transcript_path is not a file"
-            )
+    # SEC-001: Verify path is within project root to prevent traversal attacks
+    try:
+        transcript_file.relative_to(project_root)
+    except ValueError:
+        raise HandoffValidationError(
+            "resume_snapshot.n_1_transcript_path must be within project directory"
+        )
+
+    # SEC-002: Sanitized error messages (don't leak actual paths)
+    if not transcript_file.exists():
+        raise HandoffValidationError(
+            "resume_snapshot.n_1_transcript_path file does not exist"
+        )
+    if not transcript_file.is_file():
+        raise HandoffValidationError(
+            "resume_snapshot.n_1_transcript_path is not a file"
+        )
 
     decision_ids = set()
     for index, decision in enumerate(decisions):
@@ -346,6 +563,7 @@ def build_resume_snapshot(
     freshness_minutes: int = DEFAULT_FRESHNESS_MINUTES,
     quality_score: float | None = None,
     tasks_snapshot: list[dict[str, Any]] | None = None,
+    open_questions: list[Any] | None = None,
     goal_origin: str | None = None,  # Source of the goal value (user_message, preceding_message, skill_args_unfiltered)
 ) -> dict[str, Any]:
     """Build the V2 resume snapshot."""
@@ -376,8 +594,8 @@ def build_resume_snapshot(
         "next_step": next_step,
         "decision_refs": decision_refs,
         "evidence_refs": evidence_refs,
-        "transcript_path": transcript_path,
-        "prior_transcript_path": prior_transcript_path,
+        SNAPSHOT_N_1_TRANSCRIPT_PATH: transcript_path,
+        SNAPSHOT_N_2_TRANSCRIPT_PATH: prior_transcript_path,
         "message_intent": message_intent,  # Required field
         "goal_origin": goal_origin,  # Source of goal value (for downstream consumers)
     }
@@ -385,6 +603,8 @@ def build_resume_snapshot(
         snapshot["quality_score"] = quality_score
     if tasks_snapshot is not None:
         snapshot["tasks_snapshot"] = tasks_snapshot
+    if open_questions is not None:
+        snapshot["open_questions"] = open_questions
     return snapshot
 
 
@@ -455,6 +675,7 @@ def evaluate_for_restore(
     *,
     terminal_id: str,
     source: str | None,
+    project_root: Path | None = None,
     now: datetime | None = None,
 ) -> RestoreDecision:
     """Evaluate whether the snapshot is safe to auto-restore."""
@@ -479,32 +700,34 @@ def evaluate_for_restore(
     if parse_iso8601(snapshot["expires_at"]) < current_time:
         return RestoreDecision(ok=False, reason="snapshot expired")
 
-    evidence_failure = verify_evidence_freshness(payload)
+    evidence_failure = verify_evidence_freshness(payload, project_root=project_root)
     if evidence_failure:
         return RestoreDecision(ok=False, reason=evidence_failure)
 
     return RestoreDecision(ok=True, envelope=payload)
 
 
-def verify_evidence_freshness(payload: dict[str, Any]) -> str | None:
+def verify_evidence_freshness(
+    payload: dict[str, Any],
+    *,
+    project_root: Path | None = None,
+) -> str | None:
     """Reject restore when captured evidence no longer matches current disk state."""
-    # SEC-001: Extract project root from validated transcript_path
-    # The transcript_path has already been validated by validate_envelope()
     snapshot = payload.get("resume_snapshot", {})
-    transcript_path = snapshot.get("transcript_path")
+    transcript_path = snapshot.get("n_1_transcript_path")
 
-    # Derive project root from validated transcript_path
-    project_root = None
-    if isinstance(transcript_path, str) and transcript_path:
+    # Prefer the actual workspace root used by capture/restore. Fall back to the
+    # transcript-derived boundary only when no caller context is available.
+    effective_project_root = project_root
+    if effective_project_root is None and isinstance(transcript_path, str) and transcript_path:
         transcript_file = Path(transcript_path).resolve()
-        # Find project root by locating .claude directory
         current = transcript_file
-        for _ in range(5):  # Check up to 5 levels up
+        for _ in range(5):
             if (current / ".claude").exists():
-                project_root = current
+                effective_project_root = current
                 break
             parent = current.parent
-            if parent == current:  # Reached filesystem root
+            if parent == current:
                 break
             current = parent
 
@@ -527,10 +750,12 @@ def verify_evidence_freshness(payload: dict[str, Any]) -> str | None:
         label = item.get("label") if isinstance(item.get("label"), str) else path
         current_hash = compute_file_content_hash(str(evidence_file))
 
-        # Validate resolved path is still within project root AFTER hash computation
-        if project_root is not None:
+        # Validate repo file evidence against the workspace root. Transcript evidence
+        # is stored in Claude's archive tree and is intentionally allowed outside the
+        # project root, so it is excluded from this boundary check.
+        if effective_project_root is not None and item.get("type") == "file":
             try:
-                evidence_file.relative_to(project_root)
+                evidence_file.relative_to(effective_project_root)
             except ValueError:
                 # Path traversal detected - return safe error message
                 return "snapshot evidence path outside project directory"
@@ -555,165 +780,50 @@ def build_restore_message(payload: dict[str, Any]) -> str:
     """Format the V2 automatic restore prompt."""
     snapshot = payload["resume_snapshot"]
     decisions_by_id = {
-        decision["id"]: decision for decision in payload["decision_register"]
+        decision["id"]: decision for decision in payload.get("decision_register", [])
     }
-
-    # Get intent prefix from message_intent field
-    # TEST-001: Backward compatibility - old handoffs may not have message_intent
-    message_intent = snapshot.get("message_intent", "instruction")
-    intent_prefix = intent_prefixes.get(message_intent, "User requested:")
-
-    lines = [
-        "SESSION HANDOFF V2",
-        "",
-        f"Goal: {intent_prefix} {snapshot['goal']}",
-        f"Current Task: {snapshot['current_task']}",
-        f"Progress: {snapshot['progress_percent']}% ({snapshot['progress_state']})",
-    ]
-
-    if snapshot["blockers"]:
-        lines.append("Blockers:")
-        for blocker in snapshot["blockers"][:3]:
-            summary = blocker.get("summary", "Unspecified blocker")
-            btype = blocker.get("type", "blocker")
-            lines.append(f"- {btype}: {summary}")
-
-    if snapshot["active_files"]:
-        lines.append("Active Files:")
-        for path in snapshot["active_files"][:5]:
-            lines.append(f"- {path}")
-
-    if snapshot["pending_operations"]:
-        lines.append("Pending Operations:")
-        for operation in snapshot["pending_operations"][:3]:
-            op_type = operation.get("type", "operation")
-            target = operation.get("target", "unknown")
-            state = operation.get("state", "in_progress")
-            lines.append(f"- {op_type}: {target} ({state})")
-
-    lines.extend(
-        [
-            f"Next Step: {snapshot['next_step']}",
-            f"Transcript: {snapshot['transcript_path']}",
-        ]
+    state = _build_restore_state(
+        snapshot,
+        decisions_by_id,
+        restore_session_id=payload.get("restore_session_id"),
+        include_user_context=True,
     )
-
-    if snapshot["decision_refs"]:
-        lines.append("Active Decisions:")
-        for ref in snapshot["decision_refs"][:5]:
-            decision = decisions_by_id.get(ref)
-            if not decision:
-                continue
-            lines.append(f"- [{decision['kind']}] {decision['summary']}")
-
-    # CONTEXT-001: Inject recent user context from transcript
-    # This preserves user clarifications and refinements across compactions
-    transcript_path = snapshot.get("transcript_path")
-    if transcript_path:
-        user_context = _extract_and_format_user_context(
-            transcript_path, max_messages=15
-        )
-        if user_context:
-            lines.extend(["", user_context])
-
-    return "\n".join(lines)
+    return _render_restore_message_verbose(state)
 
 
-def build_restore_message_compact(payload: dict[str, Any]) -> str:
+def build_restore_message_compact(
+    payload: dict[str, Any], *, restore_session_id: str | None = None
+) -> str:
     """Format the V2 restore message as a compact machine-oriented continuation block.
 
     This produces a structured <compact-restore> block that provides all necessary
     state for task continuation without verbose prose or retrospective sections.
     """
     snapshot = payload["resume_snapshot"]
-
-    # Intent prefix mapping
-    message_intent = snapshot.get("message_intent", "instruction")
-    intent_prefix_map = {
-        "question": "User asked:",
-        "instruction": "User requested:",
-        "directive": "User requested:",
-        "correction": "User corrected:",
-        "meta": "User noted:",
-        "unsupported_language": "[NON-ENGLISH MESSAGE BLOCKED]:",
+    decisions_by_id = {
+        decision["id"]: decision for decision in payload.get("decision_register", [])
     }
-    intent_prefix = intent_prefix_map.get(message_intent, "User requested:")
-
-    # Format blockers requiring user input
-    user_blockers = [
-        b.get("summary", "Unspecified")
-        for b in snapshot.get("blockers", [])
-        if b.get("type") == "awaiting_approval"
-    ]
-    blockers_str = "; ".join(user_blockers) if user_blockers else "none"
-
-    # Format active files
-    active_files = snapshot.get("active_files", [])
-    active_files_str = (
-        "\n".join(f"- {f}" for f in active_files) if active_files else "none"
+    state = _build_restore_state(
+        snapshot,
+        decisions_by_id,
+        restore_session_id=restore_session_id,
+        include_user_context=False,
     )
-
-    # Format pending operations
-    pending_ops = snapshot.get("pending_operations", [])
-    pending_str = ""
-    interrupted_skills = []
-    if pending_ops:
-        pending_lines = []
-        for op in pending_ops[:5]:
-            op_type = op.get("type", "operation")
-            target = op.get("target", "unknown")
-            pending_lines.append(f"- {op_type}: {target}")
-            # Track interrupted Skill invocations for the continuation warning
-            if op_type == "skill" and op.get("state") == "in_progress":
-                interrupted_skills.append(target)
-        pending_str = "\n" + "\n".join(pending_lines)
-
-    # Build continuation rule — warn if Skills were interrupted during compaction
-    continuation_rule = (
-        "PRESENT AS INFERENCE ONLY. "
-        "A Skill was in-progress when the session compacted. "
-        "The goal above was captured from the Skill invocation arguments — "
-        "it may represent an interrupted action, not a user-level goal. "
-        "Verify: ask 'What work was in progress before compaction?' "
-        "rather than assuming the captured goal is current intent."
-    )
-    if not interrupted_skills:
-        continuation_rule = (
-            "Present the restored goal as context to verify — say 'Based on the session handoff, "
-            "we were working on X' not 'The task was X'. The captured goal is an inference, not "
-            "a recording. Do not ask the user to re-explain context you already have. "
-            "Ask only if blocked by missing user input."
-        )
-
-    lines = [
-        "<compact-restore>",
-        "status: restored",
-        "previous_session: <session transcript>",
-        f"goal: {intent_prefix} {snapshot['goal']}",
-        f"current_task: {snapshot['current_task']}",
-        f"progress_state: {snapshot['progress_state']}",
-        f"progress_percent: {snapshot['progress_percent']}",
-        f"next_step: {snapshot['next_step']}",
-        f"blockers_requiring_user: {blockers_str}",
-        "active_files:",
-        active_files_str,
-        f"pending_operations: {len(pending_ops)} pending",
-        pending_str,
-        f"continuation_rule: {continuation_rule}",
-        "</compact-restore>",
-    ]
-
-    return "\n".join(lines)
+    return _render_restore_message_compact(state)
 
 
-def build_restore_message_dynamic(payload: dict[str, Any]) -> str:
+def build_restore_message_dynamic(
+    payload: dict[str, Any], *, restore_session_id: str | None = None
+) -> str:
     """Format the V2 restore message using dynamic sections.
 
     DEPRECATED: This produces Pre-Mortem format which is wrong for restore.
     Use build_restore_message_compact() for continuation blocks instead.
     """
     # For now, delegate to compact format to avoid breaking existing callers
-    return build_restore_message_compact(payload)
+    return build_restore_message_compact(
+        payload, restore_session_id=restore_session_id
+    )
 
 
 def build_stale_hint(payload: dict[str, Any], reason: str) -> str:

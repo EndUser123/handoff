@@ -23,6 +23,8 @@ from scripts.hooks.__lib.handoff_v2 import (
     HandoffValidationError,
     build_envelope,
     build_resume_snapshot,
+    compute_file_content_hash,
+    evaluate_for_restore,
     validate_envelope,
 )
 
@@ -277,6 +279,71 @@ class TestSEC001_PathTraversal:
 
         # Should pass validation (transcript is within .claude boundary)
         validate_envelope(valid_v2_payload)
+
+
+    def test_restore_uses_explicit_project_root_for_evidence_validation(
+        self, temp_project_root: Path
+    ) -> None:
+        """Verify restore accepts evidence under the caller's workspace root."""
+        evidence_file = temp_project_root / "core" / "cli.py"
+        evidence_file.parent.mkdir(parents=True, exist_ok=True)
+        evidence_file.write_text("print('workspace evidence')\n", encoding="utf-8")
+
+        archive_root = temp_project_root.parent / ".claude" / "projects" / "P--"
+        archive_root.mkdir(parents=True, exist_ok=True)
+        transcript_path = archive_root / "session.jsonl"
+        transcript_path.write_text(
+            json.dumps({"type": "user", "message": {"content": []}}) + "\n",
+            encoding="utf-8",
+        )
+
+        snapshot = build_resume_snapshot(
+            terminal_id="test_terminal",
+            source_session_id="session_123",
+            goal="Test goal",
+            current_task="Test current task",
+            progress_percent=50,
+            progress_state="in_progress",
+            blockers=[],
+            active_files=[str(evidence_file)],
+            pending_operations=[],
+            next_step="Test next step",
+            decision_refs=[],
+            evidence_refs=[],
+            transcript_path=str(transcript_path),
+            message_intent="instruction",
+        )
+
+        envelope = build_envelope(
+            resume_snapshot=snapshot,
+            decision_register=[],
+            evidence_index=[
+                {
+                    "id": "ev_transcript",
+                    "type": "transcript",
+                    "label": "Current compact transcript",
+                    "path": str(transcript_path),
+                    "content_hash": compute_file_content_hash(transcript_path),
+                },
+                {
+                    "id": "ev_cli",
+                    "type": "file",
+                    "label": "cli.py",
+                    "path": str(evidence_file),
+                    "content_hash": compute_file_content_hash(evidence_file),
+                },
+            ],
+        )
+
+        result = evaluate_for_restore(
+            envelope,
+            terminal_id="test_terminal",
+            source="compact",
+            project_root=temp_project_root,
+        )
+
+        assert result.ok
+        assert result.envelope is not None
 
 
 class TestSEC002_SanitizedErrorMessages:

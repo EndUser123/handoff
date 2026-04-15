@@ -350,7 +350,8 @@ class TestChecksumExclusionIntegration:
             "next_step": "Complete test",
             "decision_refs": [],
             "evidence_refs": [],
-            "transcript_path": "test_transcript.jsonl",
+            "n_1_transcript_path": "test_transcript.jsonl",
+            "n_2_transcript_path": None,
             "message_intent": "instruction",
         }
 
@@ -412,7 +413,8 @@ class TestMessageTypeValidation:
             "next_step": "Complete test",
             "decision_refs": [],
             "evidence_refs": [],
-            "transcript_path": "test_transcript.jsonl",
+            "n_1_transcript_path": "test_transcript.jsonl",
+            "n_2_transcript_path": None,
             "message_intent": "unsupported_language",  # Non-English detected
         }
 

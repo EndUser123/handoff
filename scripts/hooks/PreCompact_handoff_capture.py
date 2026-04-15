@@ -788,7 +788,7 @@ def main() -> None:
 
         # FIX: Load the EXISTING terminal handoff to get S_OLD's transcript path.
         # At PreCompact time, input_data.transcript_path is S_NEW's path (current session).
-        # The resume_snapshot.transcript_path should be S_OLD's path (prior session).
+        # The resume_snapshot.n_1_transcript_path should be S_OLD's path (prior session).
         # S_NEW's path != S_OLD's path, so we must read the old handoff to get S_OLD.
         # Pass exclude_session_id to skip S_NEW's own handoff (already written to disk
         # with a recent mtime; without exclusion load_raw_handoff() returns S_NEW).
@@ -796,14 +796,13 @@ def main() -> None:
         old_handoff = storage.load_raw_handoff(
             exclude_session_id=input_data.get("session_id")
         )
-        prior_transcript_path: str | None = None
+        n_2_transcript_path: str | None = None
         if old_handoff:
-            prior_transcript_path = old_handoff.get("resume_snapshot", {}).get(
-                "transcript_path"
-            )
+            old_snapshot = old_handoff["resume_snapshot"]
+            n_2_transcript_path = old_snapshot["n_1_transcript_path"]
             logger.info(
-                "[PreCompact V2] Loaded prior transcript from old handoff: %s",
-                prior_transcript_path,
+                "[PreCompact V2] Loaded n-2 transcript from old handoff: %s",
+                n_2_transcript_path,
             )
 
         resume_snapshot = build_resume_snapshot(
@@ -820,7 +819,7 @@ def main() -> None:
             decision_refs=[decision["id"] for decision in decision_register],
             evidence_refs=[item["id"] for item in evidence_index],
             transcript_path=transcript_path,
-            prior_transcript_path=prior_transcript_path,
+            prior_transcript_path=n_2_transcript_path,
             message_intent=message_intent,
             quality_score=quality_score,
             tasks_snapshot=tasks_snapshot,

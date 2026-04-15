@@ -199,11 +199,15 @@ def main() -> None:
             sys.exit(0)
 
         restore_decision = evaluate_for_restore(
-            raw_payload, terminal_id=terminal_id, source=source
+            raw_payload,
+            terminal_id=terminal_id,
+            source=source,
+            project_root=storage.project_root,
         )
         if restore_decision.ok and restore_decision.envelope:
             restoration_message = build_restore_message_dynamic(
-                restore_decision.envelope
+                restore_decision.envelope,
+                restore_session_id=session_id,
             )
             storage.update_snapshot_status(
                 status=SNAPSHOT_CONSUMED,

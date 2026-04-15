@@ -44,7 +44,8 @@ def _make_envelope(
     active_files: list[str] | None = None,
     pending_ops: list[dict] | None = None,
     next_step: str = "Do the next thing",
-    transcript_path: str = "/tmp/session.jsonl",
+    n_1_transcript_path: str = "/tmp/session.jsonl",
+    n_2_transcript_path: str | None = None,
     progress_state: str = "in_progress",
     progress_percent: int = 50,
 ) -> dict:
@@ -55,10 +56,12 @@ def _make_envelope(
             "active_files": active_files or [],
             "pending_operations": pending_ops or [],
             "next_step": next_step,
-            "transcript_path": transcript_path,
+            "n_1_transcript_path": n_1_transcript_path,
+            "n_2_transcript_path": n_2_transcript_path,
             "progress_state": progress_state,
             "progress_percent": progress_percent,
             "blockers": [],
+            "status": "pending",
             "message_intent": "instruction",
         }
     }
@@ -204,7 +207,7 @@ class TestSuccessfulRecovery:
         """Injected context must use <compact-restore> format with no raw transcript path."""
         from UserPromptSubmit_modules.base import HookContext
 
-        envelope = _make_envelope(transcript_path="/sessions/abc123.jsonl")
+        envelope = _make_envelope(n_1_transcript_path="/sessions/abc123.jsonl")
         ctx = HookContext(prompt="continue", data={"terminal_id": "t_tp"})
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp = Path(tmpdir)
@@ -216,6 +219,9 @@ class TestSuccessfulRecovery:
         # Compact format: no transcript path leaked, no "Transcript:" placeholder
         assert "<compact-restore>" in result.context
         assert "status: restored" in result.context
+        assert "transcript_chain:" in result.context
+        assert "n_1_transcript_path:" in result.context
+        assert "n_2_transcript_path:" in result.context
         # Raw path must not appear in output (privacy by omission)
         assert "/sessions/abc123.jsonl" not in result.context
 

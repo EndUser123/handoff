@@ -33,6 +33,8 @@ def test_continuation_rule_frames_goal_as_inference():
             "blockers": [],
             "active_files": ["packages/handoff/scripts/hooks/__lib/handoff_v2.py"],
             "pending_operations": [],
+            "n_1_transcript_path": "C:\\transcripts\\session_a.jsonl",
+            "n_2_transcript_path": None,
         }
     }
 
@@ -78,6 +80,8 @@ def test_continuation_rule_prevents_passive_aggressive_deflection():
             "blockers": [],
             "active_files": [],
             "pending_operations": [],
+            "n_1_transcript_path": "C:\\transcripts\\session_a.jsonl",
+            "n_2_transcript_path": None,
         }
     }
 
@@ -92,7 +96,7 @@ def test_continuation_rule_prevents_passive_aggressive_deflection():
 
 
 def test_previous_session_does_not_leak_path():
-    """previous_session must use placeholder, never raw transcript_path.
+    """n_1 and n_2 chain fields must use placeholders, never raw transcript paths.
 
     SEC-004: Path traversal vulnerability — internal directory structure
     must not be exposed in restore messages.
@@ -107,7 +111,8 @@ def test_previous_session_does_not_leak_path():
             "blockers": [],
             "active_files": [],
             "pending_operations": [],
-            "transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\very-long-session-id.jsonl",
+            "n_1_transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\very-long-session-id.jsonl",
+            "n_2_transcript_path": None,
         }
     }
 
@@ -115,17 +120,20 @@ def test_previous_session_does_not_leak_path():
 
     # Must use placeholder, not raw path
     assert "<session transcript>" in message, (
-        "previous_session must use placeholder '<session transcript>', "
-        "not raw transcript_path"
+        "n_1_transcript_path must use placeholder '<session transcript>', "
+        "not raw path"
     )
-    # Must NOT contain any actual path components from the transcript_path
+    assert "transcript_chain:" in message
+    assert "n_1_transcript_path:" in message
+    assert "n_2_transcript_path:" in message
+    # Must NOT contain any actual path components from the transcript path
     assert "C:\\Users" not in message, "Must not leak Windows user path"
     assert ".jsonl" not in message, "Must not leak transcript file extension"
-    assert "brsth" not in message, "Must not leak username from transcript_path"
+    assert "brsth" not in message, "Must not leak username from transcript path"
 
 
-def test_prior_transcript_path_none_is_handled():
-    """prior_transcript_path=None is handled gracefully (first session, no chain)."""
+def test_n_2_transcript_path_none_is_handled():
+    """n_2_transcript_path=None is handled gracefully (first session, no chain)."""
     payload = {
         "resume_snapshot": {
             "goal": "first session",
@@ -136,23 +144,62 @@ def test_prior_transcript_path_none_is_handled():
             "blockers": [],
             "active_files": [],
             "pending_operations": [],
-            "transcript_path": "C:\\transcripts\\first.jsonl",
-            "prior_transcript_path": None,
+            "n_1_transcript_path": "C:\\transcripts\\first.jsonl",
+            "n_2_transcript_path": None,
         }
     }
 
     message = build_restore_message_compact(payload)
 
-    # Must still use placeholder (SEC-004 applies regardless of prior_transcript_path)
+    # Must still use placeholder (SEC-004 applies regardless of n_2_transcript_path)
     assert "<session transcript>" in message
-    # prior_transcript_path=None must not cause any formatting issues
+    # n_2_transcript_path=None must not cause any formatting issues
     assert "</compact-restore>" in message
 
 
-def test_transcript_chain_preserves_full_path_in_envelope():
-    """Full transcript_path is preserved in envelope for chain walking.
+def test_restore_message_surfaces_session_identity_work_state_and_questions():
+    """The compact restore message should surface session identity, tasks, and queued questions."""
+    payload = {
+        "resume_snapshot": {
+            "goal": "test goal",
+            "current_task": "test task",
+            "progress_state": "in_progress",
+            "progress_percent": 50,
+            "next_step": "continue",
+            "blockers": [],
+            "active_files": ["P:/workspace/foo.py"],
+            "pending_operations": [{"type": "edit", "target": "foo.py"}],
+            "tasks_snapshot": [
+                {"title": "Review handoff", "status": "in_progress"}
+            ],
+            "open_questions": ["Should we keep the current terminal scope?"],
+            "n_1_transcript_path": "C:\\transcripts\\session_b.jsonl",
+            "n_2_transcript_path": "C:\\transcripts\\session_a.jsonl",
+            "source_session_id": "session-b",
+            "terminal_id": "console-test",
+        }
+    }
 
-    The transcript_path field must be stored in the envelope (not masked) so that
+    message = build_restore_message_compact(
+        payload, restore_session_id="session-c"
+    )
+
+    assert "session_identity:" in message
+    assert "current_session_id: session-c" in message
+    assert "source_session_id: session-b" in message
+    assert "terminal_id: console-test" in message
+    assert "working_set:" in message
+    assert "tool_queue:" in message
+    assert "task_snapshot:" in message
+    assert "open_questions:" in message
+    assert "Review handoff" in message
+    assert "Should we keep the current terminal scope?" in message
+
+
+def test_transcript_chain_preserves_full_path_in_envelope():
+    """Full n_1/n_2 transcript chain is preserved in envelope for chain walking.
+
+    The transcript chain fields must be stored in the envelope (not masked) so that
     chain-walking code can read actual transcripts. Only the restore message output
     is masked with '<session transcript>' placeholder.
     """
@@ -181,14 +228,13 @@ def test_transcript_chain_preserves_full_path_in_envelope():
         evidence_index=[],
     )
 
-    # transcript_path must be present for chain walking
-    assert envelope["resume_snapshot"]["transcript_path"] == "C:\\transcripts\\session_b.jsonl"
-    # prior_transcript_path link must be present for chain traversal
-    assert envelope["resume_snapshot"]["prior_transcript_path"] == "C:\\transcripts\\session_a.jsonl"
+    # n_1/n_2 transcript chain must be present for chain walking
+    assert envelope["resume_snapshot"]["n_1_transcript_path"] == "C:\\transcripts\\session_b.jsonl"
+    assert envelope["resume_snapshot"]["n_2_transcript_path"] == "C:\\transcripts\\session_a.jsonl"
 
 
-def test_transcript_chain_walks_via_prior_transcript_path():
-    """Walking a 3-session chain via prior_transcript_path links.
+def test_transcript_chain_walks_via_n_2_transcript_path():
+    """Walking a 3-session chain via n_2_transcript_path links.
 
     Chain: session_c → prior → session_b → prior → session_a → None
     Walking should produce: [session_c.jsonl, session_b.jsonl, session_a.jsonl]
@@ -253,14 +299,14 @@ def test_transcript_chain_walks_via_prior_transcript_path():
     )
     envelope_c = build_envelope(resume_snapshot=snapshot_c, decision_register=[], evidence_index=[])
 
-    # Simulate chain walking: resolve prior_transcript_path → load that transcript → repeat
-    # In production this is done by reading the prior handoff file and extracting transcript_path
+    # Simulate chain walking: resolve n_2_transcript_path → load that transcript → repeat
+    # In production this is done by reading the prior handoff file and extracting n_1_transcript_path
     chain_paths = []
     current = envelope_c
     for _ in range(3):  # max 3 hops to prevent infinite loop
         snap = current["resume_snapshot"]
-        chain_paths.append(snap["transcript_path"])
-        prior = snap.get("prior_transcript_path")
+        chain_paths.append(snap["n_1_transcript_path"])
+        prior = snap.get("n_2_transcript_path")
         if prior is None:
             break
         # In production: load next envelope from prior path
@@ -269,7 +315,7 @@ def test_transcript_chain_walks_via_prior_transcript_path():
             "C:\\transcripts\\session_b.jsonl": envelope_b,
             "C:\\transcripts\\session_a.jsonl": envelope_a,
         }
-        current = prior_map.get(prior, {"resume_snapshot": {"prior_transcript_path": None}})
+        current = prior_map.get(prior, {"resume_snapshot": {"n_2_transcript_path": None}})
 
     assert chain_paths == [
         "C:\\transcripts\\session_c.jsonl",
@@ -281,7 +327,7 @@ def test_transcript_chain_walks_via_prior_transcript_path():
 def test_compact_restore_format_unchanged():
     """The overall compact-restore format must remain stable.
 
-    Only the continuation_rule line changes — all other structure stays the same.
+    Only the continuation_rule and transcript_chain lines change — all other structure stays the same.
     """
     payload = {
         "resume_snapshot": {
@@ -293,6 +339,8 @@ def test_compact_restore_format_unchanged():
             "blockers": [],
             "active_files": ["test.py"],
             "pending_operations": [],
+            "n_1_transcript_path": "C:\\transcripts\\session_a.jsonl",
+            "n_2_transcript_path": None,
         }
     }
 
@@ -306,5 +354,10 @@ def test_compact_restore_format_unchanged():
     assert "progress_state:" in message
     assert "progress_percent:" in message
     assert "next_step:" in message
+    assert "transcript_chain:" in message
+    assert "n_1_transcript_path:" in message
+    assert "n_2_transcript_path:" in message
+    assert "session_identity:" in message
+    assert "working_set:" in message
     assert "continuation_rule:" in message
     assert "</compact-restore>" in message

@@ -142,7 +142,7 @@ def test_full_flow_session_compaction_to_restore(tmp_path):
         loaded = load_handoff_envelope(terminal_id)
         assert loaded is not None
         assert loaded["resume_snapshot"]["goal"] == "Test goal"
-        assert loaded["resume_snapshot"]["transcript_path"] == str(transcript_path)
+        assert loaded["resume_snapshot"]["n_1_transcript_path"] == str(transcript_path)
 
         # Step 4: Build injection message
         message = injector.build_injection_message(loaded)

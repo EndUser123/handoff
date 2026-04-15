@@ -46,10 +46,14 @@ def _run_hook(
 
 
 def _capture_v2_snapshot(
-    tmp_path, monkeypatch, terminal_id: str = "console_integration"
+    tmp_path,
+    monkeypatch,
+    terminal_id: str = "console_integration",
+    transcript_path: Path | None = None,
 ) -> tuple[Path, HandoffFileStorage]:
     monkeypatch.setenv("HANDOFF_PROJECT_ROOT", str(tmp_path))
-    transcript_path = tmp_path / "transcripts" / "integration.jsonl"
+    if transcript_path is None:
+        transcript_path = tmp_path / "transcripts" / "integration.jsonl"
     _write_transcript(
         transcript_path,
         [
@@ -156,16 +160,46 @@ def test_stale_snapshot_is_rejected_with_metadata_only_hint(tmp_path, monkeypatc
 
 
 def test_tasks_snapshot_flows_through_handoff_pipeline(tmp_path, monkeypatch):
-    """Regression test: tasks_snapshot should flow from PreCompact through to restore message.
+    """Regression test: tasks_snapshot should flow from PreCompact through to restore message."""
+    terminal_id = "console_tasks"
+    task_tracker_dir = tmp_path / ".claude" / "state" / "task_tracker"
+    task_tracker_dir.mkdir(parents=True, exist_ok=True)
+    (task_tracker_dir / f"{terminal_id}_tasks.json").write_text(
+        json.dumps(
+            {
+                "tasks": {
+                    "task_list": [
+                        {"title": "Review handoff", "status": "in_progress"},
+                        {"title": "Verify restore", "status": "pending"},
+                    ]
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
 
-    NOTE: Skipped because tasks_snapshot IS stored in the envelope by PreCompact
-    (verified: len(task_snapshot)==2 after PreCompact), but build_restore_message_compact()
-    reads pending_operations from the transcript-derived list (empty in this test) and never
-    reads tasks_snapshot from the envelope. This is a pre-existing structural gap — the test
-    was always broken. The fix would require build_restore_message_compact() to incorporate
-    tasks_snapshot into pending_operations.
-    """
-    pytest.skip("pre-existing: tasks_snapshot stored but not surfaced in compact restore output")
+    _, storage = _capture_v2_snapshot(
+        tmp_path, monkeypatch, terminal_id=terminal_id
+    )
+
+    raw = storage.load_raw_handoff()
+    assert raw is not None
+    assert raw["resume_snapshot"]["tasks_snapshot"]
+    assert len(raw["resume_snapshot"]["tasks_snapshot"]) == 2
+
+    restore_payload = {
+        "session_id": "restore-session",
+        "terminal_id": terminal_id,
+        "cwd": str(tmp_path),
+        "hook_event_name": "SessionStart",
+        "trigger": "compact",
+        "source": "compact",
+    }
+    output = _run_hook("SessionStart_handoff_restore.py", restore_payload)
+
+    assert "task_snapshot:" in output["additionalContext"]
+    assert "Review handoff" in output["additionalContext"]
+    assert "Verify restore" in output["additionalContext"]
 
 
 def test_invalid_checksum_is_rejected_without_task_context(tmp_path, monkeypatch):
@@ -241,7 +275,7 @@ def test_changed_transcript_rejects_restore_as_stale_snapshot(tmp_path, monkeypa
 def test_load_raw_handoff_exclude_session_id(tmp_path, monkeypatch):
     """Test that exclude_session_id correctly skips S_NEW's handoff and returns S_OLD's.
 
-    Regression test for the prior_transcript_path=N/A bug: load_raw_handoff() was
+    Regression test for the n_2_transcript_path=N/A bug: load_raw_handoff() was
     returning S_NEW's own handoff (newest by mtime) instead of S_OLD's. The fix adds
     exclude_session_id to skip S_NEW's handoff during the scan.
     """
@@ -264,7 +298,8 @@ def test_load_raw_handoff_exclude_session_id(tmp_path, monkeypatch):
         "version": "2.0",
         "resume_snapshot": {
             "source_session_id": "session-old",
-            "transcript_path": str(tmp_path / "transcripts" / "old.jsonl"),
+            "n_1_transcript_path": str(tmp_path / "transcripts" / "old.jsonl"),
+            "n_2_transcript_path": None,
             "status": "consumed",
             "created_at": "2026-04-09T10:00:00.000000+00:00",
         },
@@ -283,7 +318,8 @@ def test_load_raw_handoff_exclude_session_id(tmp_path, monkeypatch):
         "version": "2.0",
         "resume_snapshot": {
             "source_session_id": "session-new",
-            "transcript_path": str(tmp_path / "transcripts" / "new.jsonl"),
+            "n_1_transcript_path": str(tmp_path / "transcripts" / "new.jsonl"),
+            "n_2_transcript_path": None,
             "status": "pending",
             "created_at": "2026-04-09T11:00:00.000000+00:00",
         },
@@ -313,16 +349,16 @@ def test_load_raw_handoff_exclude_session_id(tmp_path, monkeypatch):
 
 
 def test_transcript_chain_precompact_reads_prior_from_previous_handoff(tmp_path, monkeypatch):
-    """PreCompact reads prior_transcript_path from the previous session's handoff.
+    """PreCompact reads n_2_transcript_path from the previous session's handoff.
 
-    Chain: S_B.prior_transcript_path → S_A.transcript_path → None
+    Chain: S_B.n_2_transcript_path → S_A.n_1_transcript_path → None
 
     Verifies that when PreCompact runs for S_B:
     1. It finds S_A's handoff via load_raw_handoff(exclude_session_id=S_B)
-    2. It reads S_A's transcript_path and stores it as S_B's prior_transcript_path
+    2. It reads S_A's n_1_transcript_path and stores it as S_B's n_2_transcript_path
     3. The chain S_B → S_A is established in the envelope
 
-    This is the foundation for /recap chain-walking: walk via prior_transcript_path links.
+    This is the foundation for /recap chain-walking: walk via n_2_transcript_path links.
     """
     import json as _json
 
@@ -350,8 +386,8 @@ def test_transcript_chain_precompact_reads_prior_from_previous_handoff(tmp_path,
             "version": "2.0",
             "resume_snapshot": {
                 "source_session_id": "session-a",
-                "transcript_path": str(transcript_a),
-                "prior_transcript_path": None,
+                "n_1_transcript_path": str(transcript_a),
+                "n_2_transcript_path": None,
                 "status": "pending",
                 "created_at": "2026-04-13T10:00:00.000000+00:00",
             },
@@ -359,7 +395,7 @@ def test_transcript_chain_precompact_reads_prior_from_previous_handoff(tmp_path,
             "evidence_index": [],
         }, f)
 
-    # Run PreCompact for S_B — it should read S_A's transcript_path as prior_transcript_path
+    # Run PreCompact for S_B — it should read S_A's n_1_transcript_path as n_2_transcript_path
     precompact_b = {
         "session_id": "session-b",
         "terminal_id": terminal_id,
@@ -381,9 +417,9 @@ def test_transcript_chain_precompact_reads_prior_from_previous_handoff(tmp_path,
     with open(handoff_b_path, "r", encoding="utf-8") as f:
         handoff_b = _json.load(f)
 
-    # S_B's prior_transcript_path must point to S_A's transcript — this is the chain link
-    assert handoff_b["resume_snapshot"]["prior_transcript_path"] == str(transcript_a), (
-        f"Expected prior_transcript_path={transcript_a}, "
-        f"got {handoff_b['resume_snapshot'].get('prior_transcript_path')}"
+    # S_B's n_2_transcript_path must point to S_A's transcript — this is the chain link
+    assert handoff_b["resume_snapshot"]["n_2_transcript_path"] == str(transcript_a), (
+        f"Expected n_2_transcript_path={transcript_a}, "
+        f"got {handoff_b['resume_snapshot'].get('n_2_transcript_path')}"
     )
     assert handoff_b["resume_snapshot"]["source_session_id"] == "session-b"

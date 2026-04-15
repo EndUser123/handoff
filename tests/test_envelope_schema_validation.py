@@ -14,14 +14,15 @@ from __future__ import annotations
 
 import pytest
 from scripts.hooks.__lib.handoff_v2 import (
+    HandoffValidationError,
     VALID_DECISION_KINDS,
     VALID_EVIDENCE_TYPES,
     VALID_MESSAGE_INTENTS,
     VALID_SNAPSHOT_STATUSES,
     build_envelope,
+    compute_checksum,
     build_resume_snapshot,
     validate_envelope,
-    HandoffValidationError,
 )
 
 
@@ -166,7 +167,8 @@ def test_validate_envelope_rejects_missing_snapshot_fields():
         "next_step": "Test step",
         "decision_refs": [],
         "evidence_refs": [],
-        "transcript_path": "/tmp/test.jsonl",
+        "n_1_transcript_path": "/tmp/test.jsonl",
+        "n_2_transcript_path": None,
         "message_intent": "instruction",
     }
 
@@ -195,7 +197,8 @@ def test_validate_envelope_rejects_missing_snapshot_fields():
         "next_step",
         "decision_refs",
         "evidence_refs",
-        "transcript_path",
+        "n_1_transcript_path",
+        "n_2_transcript_path",
     ]
 
     for field in required_fields:
@@ -206,7 +209,7 @@ def test_validate_envelope_rejects_missing_snapshot_fields():
             "decision_register": [],
             "evidence_index": [],
         }
-
+        envelope["checksum"] = compute_checksum(envelope)
         with pytest.raises(
             HandoffValidationError, match="resume_snapshot missing required fields"
         ):
