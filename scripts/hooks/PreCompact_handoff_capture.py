@@ -353,18 +353,18 @@ def _infer_next_step(
 ) -> str:
     if pending_operations:
         operation = pending_operations[0]
-        return f"Resume {operation.get('type', 'work')} on {operation.get('target', 'unknown')}."
+        return f"(advisory) Previous session had pending: {operation.get('type', 'work')} on {operation.get('target', 'unknown')}."
 
     for line in last_assistant_text.splitlines():
         candidate = line.strip().lstrip("-*• ").strip()
         if len(candidate) >= 12 and not candidate.lower().startswith(
             ("here", "summary", "analysis")
         ):
-            return candidate[:220]
+            return f"(advisory) Previous session context: {candidate[:200]}"
 
     if goal:
-        return f"Continue working on: {goal[:180]}"
-    return "Ask the user for the next concrete step."
+        return f"(advisory) Previous session goal: {goal[:180]}"
+    return "Ask the user what to work on next."
 
 
 def _is_decision_noise(text: str) -> bool:

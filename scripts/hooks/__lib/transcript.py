@@ -691,12 +691,16 @@ def is_meta_discussion(message: str) -> bool:
         if len(message) < 100:
             conversational_patterns = [
                 "did it",
+                "did ",
                 "is it",
                 "are there",
                 "do we",
                 "should we",
                 "can we",
                 "will it",
+                "does it",
+                "has it",
+                "was it",
             ]
             if any(pat in message_lower for pat in conversational_patterns):
                 return True
@@ -1110,6 +1114,12 @@ def extract_last_substantive_user_message(
             # Skip meta-instructions
             if is_meta_instruction(message_text):
                 logger.debug(f"Skipping meta-instruction: {message_text[:50]}...")
+                meta_skipped += 1
+                continue
+
+            # Skip meta-discussion (conversational questions, system talk)
+            if is_meta_discussion(message_text):
+                logger.debug(f"Skipping meta-discussion: {message_text[:50]}...")
                 meta_skipped += 1
                 continue
 

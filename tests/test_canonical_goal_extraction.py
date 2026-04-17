@@ -26,6 +26,7 @@ sys.path.insert(0, str(HANDOFF_PACKAGE))
 from core.hooks.__lib.transcript import (
     detect_session_boundary,
     extract_last_substantive_user_message,
+    is_meta_discussion,
     is_meta_instruction,
     is_same_topic,
 )
@@ -360,15 +361,82 @@ def test_case_4_same_topic_returns_newest():
         Path(temp_path).unlink()
 
 
+def test_case_5_skip_conversational_question():
+    """Case 5: Last message is a conversational question → Skip it, extract previous task.
+
+    Regression test for #94: questions like "And did pre-mortem use the external LLMs?"
+    were captured as goals, causing the LLM to answer the question instead of continuing work.
+
+    Expected: Extract "Fix the handoff checksum validation bug", not the question.
+    """
+    entries = [
+        {
+            "type": "user",
+            "message": {"content": ["Fix the handoff checksum validation bug in transcript.py"]},
+            "timestamp": "2026-04-17T10:00:00Z",
+        },
+        {
+            "type": "assistant",
+            "message": {"content": ["I'll fix the checksum validation bug"]},
+            "timestamp": "2026-04-17T10:00:01Z",
+        },
+        {
+            "type": "user",
+            "message": {"content": ["And did pre-mortem use the external LLMs?"]},
+            "timestamp": "2026-04-17T11:00:00Z",
+        },
+    ]
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".jsonl", delete=False) as f:
+        temp_path = f.name
+
+    try:
+        create_test_transcript(entries, temp_path)
+        result = extract_last_substantive_user_message(temp_path)
+
+        expected = "Fix the handoff checksum validation bug in transcript.py"
+        actual = result.get("goal", "") if isinstance(result, dict) else result
+        assert actual == expected, (
+            f"Expected task directive but got: {actual}"
+        )
+    finally:
+        Path(temp_path).unlink()
+
+
+def test_is_meta_discussion():
+    """Test is_meta_discussion helper catches conversational questions."""
+    test_cases = [
+        ("And did pre-mortem use the external LLMs?", True),
+        ("Did it work?", True),
+        ("Does it handle edge cases?", True),
+        ("Was it the right approach?", True),
+        ("Fix the authentication bug", False),
+        ("Can you fix the auth bug?", False),  # "fix" makes it a task directive
+        ("Continue debugging", False),
+    ]
+
+    print("\nTesting is_meta_discussion helper:")
+    results = []
+    for message, expected in test_cases:
+        result = is_meta_discussion(message)
+        status = "✓" if result == expected else "✗"
+        print(f"  {status} '{message}': {result} (expected {expected})")
+        results.append(result == expected)
+
+    return all(results)
+
+
 if __name__ == "__main__":
     results = [
         test_case_1_skip_meta_instructions(),
         test_case_2_skip_side_question(),
         test_case_3_session_boundary(),
         test_case_4_same_topic_returns_newest(),
+        test_case_5_skip_conversational_question(),
         test_is_meta_instruction(),
         test_is_same_topic(),
         test_detect_session_boundary(),
+        test_is_meta_discussion(),
         test_performance_1000_entries(),
     ]
 
