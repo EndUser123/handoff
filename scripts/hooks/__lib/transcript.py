@@ -1079,6 +1079,7 @@ def extract_last_substantive_user_message(
         # Scan backwards from end to find most recent substantive message
         last_session_chain_id = None
         previous_message_text = None
+        first_substantive_message = None  # The return value: first (most recent) substantive hit
 
         for entry in reversed(entries):
             # Check for session boundary (session_chain_id change)
@@ -1112,7 +1113,7 @@ def extract_last_substantive_user_message(
                 meta_skipped += 1
                 continue
 
-            # NEW: Skip correction messages - continue scanning for actual task
+            # Skip correction messages - continue scanning for actual task
             if is_correction_message(message_text):
                 logger.debug(f"Skipping correction message: {message_text[:50]}...")
                 corrections_skipped += 1
@@ -1129,15 +1130,17 @@ def extract_last_substantive_user_message(
                     topic_shift_hit = True
                     break
 
-            # Update previous message for next iteration's topic comparison
+            # Capture the FIRST substantive message found (most recent, since scanning backwards)
+            if first_substantive_message is None:
+                first_substantive_message = message_text
+
+            # Update previous message for next iteration's topic comparison only
             previous_message_text = message_text
-            logger.info(
-                f"Stored substantive message for topic comparison: {message_text[:100]}{'...' if len(message_text) > 100 else ''}"
-            )
 
         # Return the most recent substantive message found during scan
-        if previous_message_text:
-            message_intent = detect_message_intent(previous_message_text)
+        goal_message = first_substantive_message or previous_message_text
+        if goal_message:
+            message_intent = detect_message_intent(goal_message)
             logger.info(
                 f"Goal extraction observability: scanned={messages_scanned}, "
                 f"corrections_skipped={corrections_skipped}, meta_skipped={meta_skipped}, "
@@ -1145,7 +1148,7 @@ def extract_last_substantive_user_message(
                 f"intent={message_intent}"
             )
             return {
-                "goal": previous_message_text,
+                "goal": goal_message,
                 "message_intent": message_intent,
                 "messages_scanned": messages_scanned,
                 "corrections_skipped": corrections_skipped,

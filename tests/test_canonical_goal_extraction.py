@@ -313,11 +313,59 @@ def test_performance_1000_entries():
         Path(temp_path).unlink()
 
 
+def test_case_4_same_topic_returns_newest():
+    """Regression test for #94: Two same-topic messages must return the LATEST, not the oldest.
+
+    The backward scan finds message B (newest) first, then message A (older, same topic).
+    Before the fix, previous_message_text was overwritten with A, so the goal was A.
+    After the fix, first_substantive_message captures B and is returned.
+    """
+    entries = [
+        {
+            "type": "user",
+            "message": {"content": ["Fix the handoff checksum validation bug in transcript.py"]},
+            "timestamp": "2026-04-17T10:00:00Z",
+        },
+        {
+            "type": "assistant",
+            "message": {"content": ["I'll fix the checksum validation bug"]},
+            "timestamp": "2026-04-17T10:00:01Z",
+        },
+        # Second user message on same topic (high keyword overlap with first)
+        {
+            "type": "user",
+            "message": {"content": ["Update the handoff checksum validation to handle edge cases in transcript.py"]},
+            "timestamp": "2026-04-17T11:00:00Z",
+        },
+        {
+            "type": "assistant",
+            "message": {"content": ["I'll update the checksum validation for edge cases"]},
+            "timestamp": "2026-04-17T11:00:01Z",
+        },
+    ]
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".jsonl", delete=False) as f:
+        temp_path = f.name
+
+    try:
+        create_test_transcript(entries, temp_path)
+        result = extract_last_substantive_user_message(temp_path)
+
+        expected = "Update the handoff checksum validation to handle edge cases in transcript.py"
+        actual = result.get("goal", "") if isinstance(result, dict) else result
+        assert actual == expected, (
+            f"Expected LATEST same-topic message but got: {actual}"
+        )
+    finally:
+        Path(temp_path).unlink()
+
+
 if __name__ == "__main__":
     results = [
         test_case_1_skip_meta_instructions(),
         test_case_2_skip_side_question(),
         test_case_3_session_boundary(),
+        test_case_4_same_topic_returns_newest(),
         test_is_meta_instruction(),
         test_is_same_topic(),
         test_detect_session_boundary(),
