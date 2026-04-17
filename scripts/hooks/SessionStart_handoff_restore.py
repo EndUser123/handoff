@@ -124,6 +124,24 @@ def main() -> None:
         terminal_id = resolve_terminal_key(input_data.get("terminal_id"))
         source = _normalize_session_start_source(input_data)
 
+        # Write active-session file for multi-terminal session detection (used by chs_cli.py)
+        # This enables /chs export to auto-detect the current session without --session-id
+        if session_id and terminal_id:
+            try:
+                active_session_file = (
+                    Path.home() / ".claude" / f"active-session-{terminal_id}.txt"
+                )
+                active_session_file.parent.mkdir(parents=True, exist_ok=True)
+                tmp = active_session_file.with_suffix(".tmp")
+                tmp.write_text(session_id + "\n")
+                if active_session_file.exists():
+                    active_session_file.unlink()
+                tmp.rename(active_session_file)
+            except Exception as exc:
+                logger.warning(
+                    "[SessionStart V2] Failed to write active-session file: %s", exc
+                )
+
         # CRITICAL: For handoff package, detect project root with testing support
         # Priority: 1) HANDOFF_PROJECT_ROOT env var (for testing), 2) cwd (production)
         # Use Path.cwd() instead of __file__-derived path because Claude Code
