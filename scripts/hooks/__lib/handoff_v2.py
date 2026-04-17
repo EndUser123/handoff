@@ -952,6 +952,10 @@ def _extract_and_format_user_context(
                 message_text[:2000] + "... [truncated, see transcript for full]"
             )
 
+        # Skip messages that duplicate the goal (already in work_state.goal)
+        if goal_text and message_text.strip() == goal_text.strip():
+            continue
+
         user_messages.append(message_text)
 
     if not user_messages:
