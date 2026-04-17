@@ -249,7 +249,7 @@ def _build_restore_state(
 
     if include_user_context and n_1_transcript_path:
         user_context = _extract_and_format_user_context(
-            n_1_transcript_path, max_messages=15
+            n_1_transcript_path, max_messages=15, goal_text=snapshot.get("goal")
         )
     else:
         user_context = None
@@ -874,7 +874,7 @@ def ensure_progress_state(
 
 
 def _extract_and_format_user_context(
-    transcript_path: str, max_messages: int = 15
+    transcript_path: str, max_messages: int = 15, *, goal_text: str | None = None
 ) -> str | None:
     """Extract and format recent user messages from transcript for context injection.
 

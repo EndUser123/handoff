@@ -151,8 +151,8 @@ def test_full_flow_session_compaction_to_restore(tmp_path):
         assert f"Session: {terminal_id}" in message
         assert "**Goal**:" in message
         assert "Test goal" in message
-        assert "/chs:" in message
-        assert "/search:" in message
+        # Tool suggestions removed (Fix B, issue #94)
+        assert "previous session" in message
 
         # Step 5: Verify sliding window pattern (state persists after injection)
         # State file should still exist (cleanup happens during SessionStart, not injection)
@@ -186,13 +186,12 @@ def test_full_flow_expired_envelope_rejected(tmp_path):
         # Create envelope
         envelope, _ = _make_simple_envelope(tmp_path, terminal_id)
 
-        # Manually set created_at to be expired (more than HANDOFF_TTL ago)
+        # Manually set created_at inside resume_snapshot to be expired
         expired_time = time.time() - HANDOFF_TTL - 1
+        envelope["resume_snapshot"]["created_at"] = expired_time
 
         state_file = tmp_path / f"{terminal_id}_handoff.json"
-        state_file.write_text(
-            json.dumps({"created_at": expired_time, **envelope}), encoding="utf-8"
-        )
+        state_file.write_text(json.dumps(envelope), encoding="utf-8")
 
         # Load should return None (expired)
         loaded = load_handoff_envelope(terminal_id)

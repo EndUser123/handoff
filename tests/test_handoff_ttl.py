@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import time
+from datetime import UTC, datetime
 from pathlib import Path
 
 # Import from the hooks system (outside handoff package)
@@ -40,10 +41,10 @@ def _write_envelope(path: Path, created_at: float | None = None) -> None:
     data = {
         "session_id": "test_session",
         "transcript_path": "/tmp/test.jsonl",
-        "created_at": created_at,
         "resume_snapshot": {
             "goal": "test goal",
             "current_task": "test task",
+            "created_at": datetime.fromtimestamp(created_at, tz=UTC).isoformat(),
         },
     }
     path.write_text(json.dumps(data), encoding="utf-8")

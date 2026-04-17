@@ -157,12 +157,12 @@ class TestPreCompactHookIntegration:
         """Verify PreCompact hook captures message_intent in handoff."""
         import tempfile
 
-        # Create a transcript with a question
-        question_message = "Is the authentication system working correctly?"
+        # Use a task directive (not filtered by is_meta_discussion)
+        task_message = "Can you investigate the authentication timeout issue?"
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
             transcript_file = create_test_transcript_with_message(
-                question_message, temp_path
+                task_message, temp_path
             )
 
             # Simulate what PreCompact hook does - extract goal with intent
@@ -350,8 +350,7 @@ class TestChecksumExclusionIntegration:
             "next_step": "Complete test",
             "decision_refs": [],
             "evidence_refs": [],
-            "n_1_transcript_path": "test_transcript.jsonl",
-            "n_2_transcript_path": None,
+            "transcript_path": "test_transcript.jsonl",
             "message_intent": "instruction",
         }
 
@@ -413,6 +412,7 @@ class TestMessageTypeValidation:
             "next_step": "Complete test",
             "decision_refs": [],
             "evidence_refs": [],
+            "transcript_path": "test_transcript.jsonl",
             "n_1_transcript_path": "test_transcript.jsonl",
             "n_2_transcript_path": None,
             "message_intent": "unsupported_language",  # Non-English detected

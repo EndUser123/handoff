@@ -88,12 +88,12 @@ class TestPERF001_ChecksumFromMemory:
         """Verify checksum is computed and validated from in-memory payload before file write."""
         storage = HandoffFileStorage(temp_project_root, "test_terminal")
 
-        # Save should succeed when checksum matches
+        # Save returns Path on success (not True)
         result = storage.save_handoff(valid_v2_payload)
-        assert result is True
+        assert result is not False
 
-        # Verify file was created
-        assert storage.handoff_file.exists()
+        # Verify file was created (use returned path, handoff_file may differ)
+        assert Path(str(result)).exists()
 
     def test_checksum_mismatch_detected_before_write(
         self, temp_project_root: Path, valid_v2_payload: dict
@@ -121,9 +121,9 @@ class TestLOGIC001_TOCTOU_Fix:
         """Verify temp file is verified before atomic move (prevents TOCTOU race)."""
         storage = HandoffFileStorage(temp_project_root, "test_terminal")
 
-        # Normal save should verify temp file before move
+        # Normal save returns Path on success
         result = storage.save_handoff(valid_v2_payload)
-        assert result is True
+        assert result is not False
 
         # Read back and verify checksum
         loaded = storage.load_handoff()
@@ -478,7 +478,7 @@ class TestIntegration_ChecksumFlow:
 
         # Save
         save_result = storage.save_handoff(envelope)
-        assert save_result is True
+        assert save_result is not False
 
         # Load
         loaded = storage.load_handoff()
