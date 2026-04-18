@@ -453,27 +453,31 @@ def validate_envelope(payload: dict[str, Any]) -> None:
 
     transcript_file = Path(transcript_path).resolve()
 
-    # SEC-001: Find project root by locating .claude directory in path hierarchy
-    # This is more flexible than using cwd() and works in test environments
+    # SEC-001: Validate transcript path against known project root.
+    # When CLAUDE_PROJECT_ROOT is set, use it as the authoritative boundary.
+    # Otherwise fall back to .claude walk-up (original behavior).
     project_root = None
-    current = transcript_file
-    for _ in range(5):  # Check up to 5 levels up
-        if (current / ".claude").exists():
-            project_root = current
-            break
-        parent = current.parent
-        if parent == current:  # Reached filesystem root
-            break
-        current = parent
+    env_root = os.environ.get("CLAUDE_PROJECT_ROOT")
+    if env_root:
+        project_root = Path(env_root).resolve()
+    else:
+        # Walk up from transcript to find .claude boundary
+        current = transcript_file
+        for _ in range(5):
+            if (current / ".claude").exists():
+                project_root = current
+                break
+            parent = current.parent
+            if parent == current:
+                break
+            current = parent
 
-    # If no .claude directory found, reject the path as unsafe
-    # SEC-001: Path security requires project boundary verification
     if project_root is None:
         raise HandoffValidationError(
             "resume_snapshot.n_1_transcript_path must be within project directory (no .claude boundary found)"
         )
 
-    # SEC-001: Verify path is within project root to prevent traversal attacks
+    # Verify path is within project root to prevent traversal attacks
     try:
         transcript_file.relative_to(project_root)
     except ValueError:
@@ -748,17 +752,16 @@ def verify_evidence_freshness(
         # This prevents an attacker from replacing the file with a symlink between validation and hash computation
         evidence_file = Path(path).resolve()
         label = item.get("label") if isinstance(item.get("label"), str) else path
-        current_hash = compute_file_content_hash(str(evidence_file))
 
-        # Validate repo file evidence against the workspace root. Transcript evidence
-        # is stored in Claude's archive tree and is intentionally allowed outside the
-        # project root, so it is excluded from this boundary check.
+        # Validate repo file evidence against the workspace root BEFORE hashing
+        # to prevent reading files outside project via symlink traversal.
         if effective_project_root is not None and item.get("type") == "file":
             try:
                 evidence_file.relative_to(effective_project_root)
             except ValueError:
-                # Path traversal detected - return safe error message
                 return "snapshot evidence path outside project directory"
+
+        current_hash = compute_file_content_hash(str(evidence_file))
         if current_hash is None:
             return f"snapshot evidence missing: {label}"
         if current_hash != recorded_hash:

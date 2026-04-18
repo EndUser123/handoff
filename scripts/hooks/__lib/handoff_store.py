@@ -158,6 +158,10 @@ class FileLock:
             # Lock is held by another process
             os.close(lock_fd)
             return False
+        except Exception:
+            # Unexpected exception (e.g. KeyboardInterrupt) — close fd to prevent leak
+            os.close(lock_fd)
+            raise
 
     def acquire(self) -> bool:
         """Acquire the file lock with retry logic.
@@ -729,42 +733,9 @@ class HandoffStore:
         self._current_chain_id: str | None = None
 
     def _validate_terminal_id(self, terminal_id: str) -> None:
-        """Validate terminal_id to prevent security issues (SEC-002).
-
-        Security validation checks:
-        - Reject empty or whitespace-only strings
-        - Reject null bytes (null byte injection)
-        - Reject path traversal patterns (../, ./, etc.)
-        - Reject absolute paths
-        - Allow alphanumeric, underscore, hyphen, and UUID-like formats
-
-        Args:
-            terminal_id: Terminal identifier to validate
-
-        Raises:
-            ValueError: If terminal_id fails any validation check with descriptive message
-        """
-        # Check for empty or whitespace-only
-        if not terminal_id or not terminal_id.strip():
-            raise ValueError("terminal_id cannot be empty or whitespace-only")
-
-        # Check for null bytes (null byte injection prevention)
-        if "\x00" in terminal_id:
-            raise ValueError(
-                f"terminal_id cannot contain null bytes (got: '{terminal_id}')"
-            )
-
-        # Check for path traversal patterns
-        if ".." in terminal_id or terminal_id.startswith("./"):
-            raise ValueError(
-                f"terminal_id cannot contain path traversal sequences (got: '{terminal_id}')"
-            )
-
-        # Check for absolute paths
-        if terminal_id.startswith("/") or terminal_id.startswith("\\"):
-            raise ValueError(
-                f"terminal_id cannot be an absolute path (got: '{terminal_id}')"
-            )
+        """Validate terminal_id to prevent security issues (SEC-002)."""
+        from scripts.hooks.__lib.validation_utils import validate_terminal_id
+        validate_terminal_id(terminal_id)
 
     def build_handoff_data(
         self,

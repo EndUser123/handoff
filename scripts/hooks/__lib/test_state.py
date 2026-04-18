@@ -100,8 +100,8 @@ def _find_test_files(project_root: Path) -> list[str]:
         if len(test_files) > 20:
             test_files = test_files[:20]
 
-    except (subprocess.TimeoutExpired, FileNotFoundError) as e:
-        logger.warning(f"[test_state] Test file discovery failed: {e}")
+    except OSError as e:
+        logger.warning("[test_state] Test file discovery failed: %s", e)
 
     return test_files
 

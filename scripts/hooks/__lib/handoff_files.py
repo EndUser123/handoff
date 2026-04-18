@@ -48,17 +48,12 @@ class HandoffFileStorage:
         self.terminal_id = terminal_id
         self.handoff_dir = project_root / ".claude" / "state" / "handoff"
         self.handoff_file = self.handoff_dir / f"{terminal_id}_handoff.json"
+        self._in_load = False
 
     @staticmethod
     def _validate_terminal_id(terminal_id: str) -> None:
-        if not terminal_id or not terminal_id.strip():
-            raise ValueError("terminal_id cannot be empty or whitespace-only")
-        if "\x00" in terminal_id:
-            raise ValueError("terminal_id cannot contain null bytes")
-        if ".." in terminal_id or terminal_id.startswith("./"):
-            raise ValueError("terminal_id cannot contain path traversal sequences")
-        if terminal_id.startswith("/") or terminal_id.startswith("\\"):
-            raise ValueError("terminal_id cannot be an absolute path")
+        from scripts.hooks.__lib.validation_utils import validate_terminal_id
+        validate_terminal_id(terminal_id)
 
     def _handoff_file_for_payload(self, payload: dict[str, Any]) -> Path:
         """Compute the handoff file path for a payload.
@@ -236,6 +231,10 @@ class HandoffFileStorage:
 
     def load_handoff(self) -> dict[str, Any] | None:
         """Load and validate the current V2 payload."""
+        if self._in_load:
+            logger.warning("[HandoffFileStorage] Recursive load_handoff call prevented")
+            return None
+        self._in_load = True
         try:
             payload = self.load_raw_handoff()
             if not payload:
@@ -328,6 +327,8 @@ class HandoffFileStorage:
         except Exception as exc:
             logger.error("[HandoffFileStorage] Exception loading handoff: %s", exc)
             return None
+        finally:
+            self._in_load = False
 
     def load_raw_handoff(
         self, exclude_session_id: str | None = None

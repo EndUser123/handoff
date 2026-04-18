@@ -1293,7 +1293,7 @@ class TranscriptLines(Sequence[str]):
             path: Path to transcript file (None returns empty sequence)
         """
         self._path = path
-        self._cache: list[str] = []
+        self._cache: dict[int, str] = {}
         self._length: int | None = None
 
     def _ensure_length(self) -> int:
@@ -1362,8 +1362,8 @@ class TranscriptLines(Sequence[str]):
             raise IndexError("TranscriptLines index out of range")
 
         # Check cache first
-        if self._cache and key == len(self._cache) - 1:
-            return self._cache[-1]
+        if self._cache is not None and key in self._cache:
+            return self._cache[key]
 
         # Load from file
         return self._load_line(key)
@@ -1388,8 +1388,8 @@ class TranscriptLines(Sequence[str]):
                 for i, line in enumerate(f):
                     if i == index:
                         # Cache this line for potential subsequent access
-                        if len(self._cache) < 100:
-                            self._cache.append(line)
+                        if self._cache is not None and len(self._cache) < 100:
+                            self._cache[i] = line
                         return line
         except (OSError, UnicodeDecodeError) as e:
             logger.warning(f"[TranscriptLines] Could not read line {index}: {e}")
@@ -1432,7 +1432,8 @@ class TranscriptLines(Sequence[str]):
 
         # Cache recent lines if this is a tail access
         if start >= length - 100:
-            self._cache = result[-min(len(result), 100) :]
+            cache_entries = result[-min(len(result), 100):]
+            self._cache = {start + i: line for i, line in enumerate(cache_entries)}
 
         return result
 
@@ -1461,12 +1462,17 @@ class TranscriptParser:
     - Extracting conversation context
     - Extracting session decisions and patterns
     - Extracting controversial decisions
-
-    Attributes:
-        transcript_path: Path to the transcript JSON file
-        _transcript_cache: Cached transcript lines (lazy loaded)
-        _parsed_entries_cache: Cached parsed JSON entries (lazy loaded)
     """
+
+    _DECISION_PATTERNS = [
+        r"(?:decision:|decided to|going with|chose|recommend|use\s+\w+\s+instead)",
+        r"(?:i'll|i will|we'll|we will)\s+(?:use|go with|implement)",
+        r"(?:let's|lets)\s+(?:use|go with|try)",
+        r"(?:approach|plan|strategy):\s+(?:\w+.{0,100}?)(?:\.|\n|$)",
+    ]
+    _DECISION_COMBINED = re.compile(
+        "|".join(f"(?:{p})" for p in _DECISION_PATTERNS), re.IGNORECASE
+    )
 
     # Minimum content length for meaningful message extraction
     _MIN_CONTENT_LENGTH = 15
@@ -1674,18 +1680,8 @@ class TranscriptParser:
             content_parts.append(value)
 
         if isinstance(content, list):
-            # Skip tool_result entries - they're not actual user questions
-            # When content is a list with only tool_result items, the user is just
-            # responding to a tool call, not providing a substantive task
-            if len(content) > 0:
-                first_item = content[0]
-                if (
-                    isinstance(first_item, dict)
-                    and first_item.get("type") == "tool_result"
-                ):
-                    return ""
-
             # Handle list content (most common case)
+            # Process all items, including those after tool_result entries
             for item in content:
                 if isinstance(item, str):
                     append_text(item)
@@ -1693,7 +1689,7 @@ class TranscriptParser:
                     item_type = item.get("type")
                     if item_type == "text" and isinstance(item.get("text"), str):
                         append_text(item["text"])
-                    elif isinstance(item.get("content"), str):
+                    elif item_type != "tool_result" and isinstance(item.get("content"), str):
                         append_text(item["content"])
         elif isinstance(content, str):
             # Handle string content (less common)
@@ -1900,15 +1896,8 @@ class TranscriptParser:
             return decisions
 
         try:
-            # Decision patterns to look for
-            decision_patterns = [
-                r"(?:decision:|decided to|going with|chose|recommend|use\s+\w+\s+instead)",
-                r"(?:i'll|i will|we'll|we will)\s+(?:use|go with|implement)",
-                r"(?:let's|lets)\s+(?:use|go with|try)",
-                r"(?:approach|plan|strategy):\s+(?:\w+.{0,100}?)(?:\.|\n|$)",
-            ]
-
-            combined_pattern = "|".join(f"(?:{p})" for p in decision_patterns)
+            # Use pre-compiled decision pattern (class-level _DECISION_COMBINED)
+            combined_pattern = self._DECISION_COMBINED
 
             # Scan transcript for decision indicators
             for entry in self._filter_entries_by_type(entries, "user"):
@@ -1917,7 +1906,7 @@ class TranscriptParser:
                     continue
 
                 # Check for decision patterns
-                if re.search(combined_pattern, content_text, re.IGNORECASE):
+                if combined_pattern.search(content_text):
                     # Extract decision context
                     decision_text = content_text[:300]
 

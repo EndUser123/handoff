@@ -46,12 +46,8 @@ class TerminalFileRegistry:
 
     @staticmethod
     def _validate_terminal_id(terminal_id: str) -> None:
-        if not terminal_id or not terminal_id.strip():
-            raise ValueError("terminal_id cannot be empty or whitespace-only")
-        if "\x00" in terminal_id:
-            raise ValueError("terminal_id cannot contain null bytes")
-        if ".." in terminal_id or terminal_id.startswith("./"):
-            raise ValueError("terminal_id cannot contain path traversal sequences")
+        from scripts.hooks.__lib.validation_utils import validate_terminal_id
+        validate_terminal_id(terminal_id)
 
     def record_access(self, file_path: str) -> None:
         """Record file access with timestamp.
