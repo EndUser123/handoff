@@ -443,6 +443,157 @@ class TestQUAL005_TestWarningLevel:
         assert logging.ERROR == logging.ERROR
 
 
+class TestWalkUpBoundary:
+    """Test walk-up boundary guard: 5-level directory walk-up limit."""
+
+    def test_transcript_beyond_walkup_limit_rejected(self, tmp_path: Path) -> None:
+        """Verify transcript placed deeper than 5 levels from .claude is rejected."""
+        # Create a directory structure 7 levels deep (exceeds 5-level walk-up)
+        deep_dir = tmp_path
+        for i in range(7):
+            deep_dir = deep_dir / f"level{i}"
+        deep_dir.mkdir(parents=True, exist_ok=True)
+
+        # Place .claude at the root (tmp_path), transcript 7 levels deep
+        claude_dir = tmp_path / ".claude"
+        claude_dir.mkdir(parents=True, exist_ok=True)
+
+        transcript_path = deep_dir / "session.jsonl"
+        transcript_path.write_text(
+            json.dumps({"type": "user", "message": {"content": []}}) + "\n",
+            encoding="utf-8",
+        )
+
+        # Clear env var so walk-up is used (not CLAUDE_PROJECT_ROOT)
+        import os
+
+        old_val = os.environ.pop("CLAUDE_PROJECT_ROOT", None)
+        try:
+            snapshot = build_resume_snapshot(
+                terminal_id="test_terminal",
+                source_session_id="session_123",
+                goal="Test goal",
+                current_task="Test task",
+                progress_percent=50,
+                progress_state="in_progress",
+                blockers=[],
+                active_files=[],
+                pending_operations=[],
+                next_step="Test step",
+                decision_refs=[],
+                evidence_refs=[],
+                transcript_path=str(transcript_path),
+                message_intent="instruction",
+            )
+            envelope = build_envelope(
+                resume_snapshot=snapshot,
+                decision_register=[],
+                evidence_index=[],
+            )
+
+            with pytest.raises(HandoffValidationError) as exc_info:
+                validate_envelope(envelope)
+
+            assert "no .claude boundary found" in str(exc_info.value)
+        finally:
+            if old_val is not None:
+                os.environ["CLAUDE_PROJECT_ROOT"] = old_val
+
+    def test_transcript_within_walkup_limit_accepted(self, tmp_path: Path) -> None:
+        """Verify transcript within 5 levels of .claude is accepted."""
+        # Create .claude at root and transcript 3 levels deep (within limit)
+        claude_dir = tmp_path / ".claude"
+        claude_dir.mkdir(parents=True, exist_ok=True)
+
+        nested_dir = tmp_path / "a" / "b" / "c"
+        nested_dir.mkdir(parents=True, exist_ok=True)
+
+        transcript_path = nested_dir / "session.jsonl"
+        transcript_path.write_text(
+            json.dumps({"type": "user", "message": {"content": []}}) + "\n",
+            encoding="utf-8",
+        )
+
+        import os
+
+        old_val = os.environ.pop("CLAUDE_PROJECT_ROOT", None)
+        try:
+            snapshot = build_resume_snapshot(
+                terminal_id="test_terminal",
+                source_session_id="session_123",
+                goal="Test goal",
+                current_task="Test task",
+                progress_percent=50,
+                progress_state="in_progress",
+                blockers=[],
+                active_files=[],
+                pending_operations=[],
+                next_step="Test step",
+                decision_refs=[],
+                evidence_refs=[],
+                transcript_path=str(transcript_path),
+                message_intent="instruction",
+            )
+            envelope = build_envelope(
+                resume_snapshot=snapshot,
+                decision_register=[],
+                evidence_index=[],
+            )
+
+            # Should pass — transcript is within walk-up limit
+            validate_envelope(envelope)
+        finally:
+            if old_val is not None:
+                os.environ["CLAUDE_PROJECT_ROOT"] = old_val
+
+    def test_env_root_overrides_walkup(self, tmp_path: Path) -> None:
+        """Verify CLAUDE_PROJECT_ROOT env var takes precedence over walk-up."""
+        import os
+
+        # Place transcript deep (would fail walk-up) but set env root
+        deep_dir = tmp_path / "a" / "b" / "c" / "d" / "e" / "f" / "g"
+        deep_dir.mkdir(parents=True, exist_ok=True)
+
+        transcript_path = deep_dir / "session.jsonl"
+        transcript_path.write_text(
+            json.dumps({"type": "user", "message": {"content": []}}) + "\n",
+            encoding="utf-8",
+        )
+
+        old_val = os.environ.get("CLAUDE_PROJECT_ROOT")
+        os.environ["CLAUDE_PROJECT_ROOT"] = str(tmp_path)
+        try:
+            snapshot = build_resume_snapshot(
+                terminal_id="test_terminal",
+                source_session_id="session_123",
+                goal="Test goal",
+                current_task="Test task",
+                progress_percent=50,
+                progress_state="in_progress",
+                blockers=[],
+                active_files=[],
+                pending_operations=[],
+                next_step="Test step",
+                decision_refs=[],
+                evidence_refs=[],
+                transcript_path=str(transcript_path),
+                message_intent="instruction",
+            )
+            envelope = build_envelope(
+                resume_snapshot=snapshot,
+                decision_register=[],
+                evidence_index=[],
+            )
+
+            # Should pass — env root overrides walk-up limit
+            validate_envelope(envelope)
+        finally:
+            if old_val is not None:
+                os.environ["CLAUDE_PROJECT_ROOT"] = old_val
+            else:
+                os.environ.pop("CLAUDE_PROJECT_ROOT", None)
+
+
 class TestIntegration_ChecksumFlow:
     """Integration tests for complete checksum flow."""
 

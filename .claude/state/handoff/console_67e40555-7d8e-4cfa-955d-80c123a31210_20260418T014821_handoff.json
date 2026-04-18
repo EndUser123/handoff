@@ -1,0 +1,145 @@
+{
+  "resume_snapshot": {
+    "schema_version": 2,
+    "snapshot_id": "7c021768-a586-4de1-9939-6af961cc491c",
+    "terminal_id": "console_67e40555-7d8e-4cfa-955d-80c123a31210",
+    "source_session_id": "c12acd4d-5d6f-41ad-9e97-f4fa8bf41c36",
+    "created_at": "2026-04-18T01:48:21.593649+00:00",
+    "expires_at": "2026-04-18T02:08:21.593649+00:00",
+    "status": "consumed",
+    "goal": "0 — Do ALL Recommended Next Actions (4 items)",
+    "current_task": "0 — Do ALL Recommended Next Actions (4 items)",
+    "progress_percent": 65,
+    "progress_state": "in_progress",
+    "blockers": [],
+    "active_files": [
+      "P:/packages/handoff/scripts/hooks/SessionStart_handoff_restore.py",
+      "P:/packages/handoff/scripts/hooks/userpromptsubmit_task_injector.py",
+      "P:/packages/handoff/scripts/hooks/__lib/handoff_v2.py",
+      "P:/packages/handoff/scripts/hooks/PreCompact_handoff_capture.py",
+      "P:/packages/handoff/scripts/hooks/__lib/handoff_accumulator.py",
+      "P:/packages/handoff/scripts/hooks/__lib/transcript.py",
+      "P:/.claude/hooks/UserPromptSubmit_modules/handoff_context_injector.py",
+      "P:/.claude/hooks/UserPromptSubmit_modules/registry.py",
+      "P:/packages/handoff/tests/test_canonical_goal_extraction.py",
+      "P:/packages/search-research/core/cache.py"
+    ],
+    "pending_operations": [
+      {
+        "type": "command",
+        "target": "ls -la P:/packages/handoff/",
+        "state": "in_progress"
+      },
+      {
+        "type": "investigation",
+        "target": "search: goal|current_task|first.*goal|last.*goal|resume_sn",
+        "state": "in_progress"
+      },
+      {
+        "type": "investigation",
+        "target": "files: P:/packages/handoff/**/*.py",
+        "state": "in_progress"
+      },
+      {
+        "type": "read",
+        "target": "P:/packages/handoff/scripts/hooks/SessionStart_handoff_restore.py",
+        "state": "in_progress"
+      },
+      {
+        "type": "read",
+        "target": "P:/packages/handoff/scripts/hooks/userpromptsubmit_task_injector.py",
+        "state": "in_progress"
+      }
+    ],
+    "next_step": "(advisory) Previous session had pending: command on ls -la P:/packages/handoff/.",
+    "decision_refs": [
+      "dec_e000e1ae70a04e7f90c5211ff7999885",
+      "dec_3a17916685204b949e3bc9ec96f365f8"
+    ],
+    "evidence_refs": [
+      "ev_95b8ebc0cfb449039e2358036915dd65",
+      "ev_663e245ec914433290a7f4d10e42824a",
+      "ev_db47b46f581b4d58bdc7b6068065d31b",
+      "ev_2319597477be429f86d23b36d226de40",
+      "ev_89f3e40b19ee4995bca17072f31b2c46",
+      "ev_0268a60d52bd4a58bd8513d8b6210ba7"
+    ],
+    "n_1_transcript_path": "C:\\Users\\brsth\\.claude\\projects\\P--\\c12acd4d-5d6f-41ad-9e97-f4fa8bf41c36.jsonl",
+    "n_2_transcript_path": null,
+    "message_intent": "unsupported_language",
+    "goal_origin": "user_message",
+    "quality_score": 0.4,
+    "tasks_snapshot": [],
+    "consumed_at": "2026-04-18T01:49:31.336406+00:00",
+    "consumed_by_session_id": "c12acd4d-5d6f-41ad-9e97-f4fa8bf41c36"
+  },
+  "decision_register": [
+    {
+      "id": "dec_e000e1ae70a04e7f90c5211ff7999885",
+      "kind": "constraint",
+      "summary": "Updated `/retro` SKILL.md. Key changes: 1. **Replaced flat `ACTIONS:` list** with full RNS output format (dynamic domain grouping, emoji headers, domain-numbered items `1a`, `1b`, `2a`) 2. **Added GAP COVERAGE section** requiring explicit disposition (MAPPED/REJECTED/DEFERRED) for every finding — no silent drops 3. **Added `0 — Do ALL` footer** matching `/rns` output semantics 4. **Updated step execution** — steps 6-7 now aggregate then render RNS output instead of calling `/rns` separately 5. **Updated frontmatter** — workflow_steps, usage_markers reflect the new RNS output markers 6. **Added domain emoji table** including process/workflow domain for friction items 7. **Mandatory next-step rule** — every finding must have a recommended next step or explicit REJECTED/DEFERRED disposition",
+      "details": "Updated `/retro` SKILL.md. Key changes: 1. **Replaced flat `ACTIONS:` list** with full RNS output format (dynamic domain grouping, emoji headers, domain-numbered items `1a`, `1b`, `2a`) 2. **Added GAP COVERAGE section** requiring explicit disposition (MAPPED/REJECTED/DEFERRED) for every finding — no silent drops 3. **Added `0 — Do ALL` footer** matching `/rns` output semantics 4. **Updated step execution** — steps 6-7 now aggregate then render RNS output instead of calling `/rns` separately 5. **Updated frontmatter** — workflow_steps, usage_markers reflect the new RNS output markers 6. **Added domain emoji table** including process/workflow domain for friction items 7. **Mandatory next-step rule** — every finding must have a recommended next step or explicit REJECTED/DEFERRED disposition",
+      "priority": "high",
+      "applies_when": "Continue the current task after compact.",
+      "source_refs": [
+        "ev_95b8ebc0cfb449039e2358036915dd65"
+      ]
+    },
+    {
+      "id": "dec_3a17916685204b949e3bc9ec96f365f8",
+      "kind": "constraint",
+      "summary": "Done. Added the carryover rule to the RNS Aggregation Rule section. Now when `/retro` runs, it must check the session transcript for the prior retro's RNS output and carry forward any unresolved actions with a `(carryover)` tag. Each one gets the same MAPPED/REJECTED/DEFERRED disposition as new findings.",
+      "details": "Done. Added the carryover rule to the RNS Aggregation Rule section. Now when `/retro` runs, it must check the session transcript for the prior retro's RNS output and carry forward any unresolved actions with a `(carryover)` tag. Each one gets the same MAPPED/REJECTED/DEFERRED disposition as new findings.",
+      "priority": "high",
+      "applies_when": "Continue the current task after compact.",
+      "source_refs": [
+        "ev_95b8ebc0cfb449039e2358036915dd65"
+      ]
+    }
+  ],
+  "evidence_index": [
+    {
+      "id": "ev_95b8ebc0cfb449039e2358036915dd65",
+      "type": "transcript",
+      "label": "Current compact transcript",
+      "path": "C:\\Users\\brsth\\.claude\\projects\\P--\\c12acd4d-5d6f-41ad-9e97-f4fa8bf41c36.jsonl",
+      "content_hash": "sha256:c1487648175af9b7010112705a3f132569b215ce982ee1cd2fc34815112fc822"
+    },
+    {
+      "id": "ev_663e245ec914433290a7f4d10e42824a",
+      "type": "file",
+      "label": "SessionStart_handoff_restore.py",
+      "path": "P:\\packages\\handoff\\scripts\\hooks\\SessionStart_handoff_restore.py",
+      "content_hash": "sha256:84928ce6bc63456f0e46e9951e2a15553fc059d6dc80684274675efb30c0c416"
+    },
+    {
+      "id": "ev_db47b46f581b4d58bdc7b6068065d31b",
+      "type": "file",
+      "label": "userpromptsubmit_task_injector.py",
+      "path": "P:\\packages\\handoff\\scripts\\hooks\\userpromptsubmit_task_injector.py",
+      "content_hash": "sha256:e4342d1412c8482677bbf3b5499ff317b99e5813aa276f3c05aa879535ee60e2"
+    },
+    {
+      "id": "ev_2319597477be429f86d23b36d226de40",
+      "type": "file",
+      "label": "handoff_v2.py",
+      "path": "P:\\packages\\handoff\\scripts\\hooks\\__lib\\handoff_v2.py",
+      "content_hash": "sha256:571b390ab4e412027f4367e7acc6b66ce62a111815f2b351b4bae3fc2a89df98"
+    },
+    {
+      "id": "ev_89f3e40b19ee4995bca17072f31b2c46",
+      "type": "file",
+      "label": "PreCompact_handoff_capture.py",
+      "path": "P:\\packages\\handoff\\scripts\\hooks\\PreCompact_handoff_capture.py",
+      "content_hash": "sha256:1be6541b221dc7e66938890f01a86fab659db2fa46ac82a6101f49a4342aced0"
+    },
+    {
+      "id": "ev_0268a60d52bd4a58bd8513d8b6210ba7",
+      "type": "file",
+      "label": "handoff_accumulator.py",
+      "path": "P:\\packages\\handoff\\scripts\\hooks\\__lib\\handoff_accumulator.py",
+      "content_hash": "sha256:dc00ea796e6e4def5fbdb05ba97721d46087ae3ab1b133573fc2a8636a68da61"
+    }
+  ],
+  "checksum": "sha256:b4d54934c805f61d6f326dba43b33b8b079f94fc6ec6546245a354e95c22bb35"
+}
