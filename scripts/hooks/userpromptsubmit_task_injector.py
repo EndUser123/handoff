@@ -136,9 +136,16 @@ def _build_recovery_message(envelope: dict) -> str:
     # Delegate to shared compact formatter for contract consistency.
     # Both SessionStart and UPS paths now emit the same <compact-restore> block.
     # Richer transcript context is captured via conversation_summary (P1).
-    import importlib
-    handoff_v2 = importlib.import_module("scripts.hooks.__lib.handoff_v2")
-    return handoff_v2.build_restore_message_compact(envelope)
+    try:
+        import importlib
+        handoff_v2 = importlib.import_module("scripts.hooks.__lib.handoff_v2")
+        return handoff_v2.build_restore_message_compact(envelope)
+    except ImportError as exc:
+        import logging
+        logging.getLogger(__name__).warning(
+            "[task_injector] Failed to import handoff_v2: %s", exc
+        )
+        return ""
 
 
 # ---------------------------------------------------------------------------

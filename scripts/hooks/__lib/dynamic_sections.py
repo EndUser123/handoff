@@ -14,7 +14,7 @@ from typing import Any
 
 # AIR Gap state file path
 _AIR_GAPS_KEY = "air_gap_context"
-_STATE_DIR = Path("P:/") / ".claude" / "state"
+_STATE_DIR = Path(os.environ.get("CLAUDE_PROJECT_ROOT", "P:/")) / ".claude" / "state"
 
 
 def _get_session_id_from_env() -> str:
@@ -99,7 +99,7 @@ def has_tasks(session_data: dict[str, Any]) -> bool:
 
     # Check for any non-completed tasks
     for task in tasks:
-        if task.get("status") not in ["completed", "done", "resolved"]:
+        if task.get("status") not in ("completed", "done", "resolved"):
             return True
 
     return False

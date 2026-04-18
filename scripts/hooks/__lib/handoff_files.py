@@ -116,13 +116,6 @@ class HandoffFileStorage:
 
             lock_file = target_file.with_suffix(".lock")
             with FileLock(lock_file, timeout=5.0) as lock:
-                if not lock:
-                    logger.warning(
-                        "[HandoffFileStorage] Failed to acquire lock for %s",
-                        target_file.name,
-                    )
-                    return False
-
                 logger.debug(
                     "[HandoffFileStorage] Lock acquired for %s", lock_file.name
                 )
@@ -382,7 +375,7 @@ class HandoffFileStorage:
                     with open(p, encoding="utf-8") as handle:
                         payload = json.load(handle)
                     sid = payload.get("resume_snapshot", {}).get("source_session_id", "")
-                    if sid is not None and sid != exclude_session_id:
+                    if sid != exclude_session_id:
                         return payload
                 except Exception as exc:
                     logger.warning(

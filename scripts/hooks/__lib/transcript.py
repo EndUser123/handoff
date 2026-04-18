@@ -1817,7 +1817,7 @@ class TranscriptParser:
             return None
 
         try:
-            # Read last 20 user messages to find open discussion threads
+            # Read last 5 user messages to find open discussion threads
             recent_user_messages: list[str] = []
             for i in range(len(entries) - 1, max(-1, len(entries) - 50), -1):
                 entry = entries[i]

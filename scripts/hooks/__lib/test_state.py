@@ -87,19 +87,11 @@ def _find_test_files(project_root: Path) -> list[str]:
     ]
 
     try:
-        # Use find to locate test files
+        # Use glob to locate test files (cross-platform)
         for pattern in test_patterns:
-            result = subprocess.run(
-                ["find", ".", "-name", pattern, "-type", "f"],
-                cwd=project_root,
-                capture_output=True,
-                text=True,
-                timeout=2,
-            )
-            if result.returncode == 0:
-                for line in result.stdout.strip().split("\n"):
-                    if line:
-                        test_files.append(line)
+            for match in project_root.glob(pattern):
+                if match.is_file():
+                    test_files.append(str(match.relative_to(project_root)))
 
         # Remove duplicates and sort
         test_files = sorted(set(test_files))
