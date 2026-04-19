@@ -27,6 +27,11 @@ case "$(uname -s)" in
     CYGWIN*|MINGW*|MSYS*) IS_WINDOWS=true ;;
 esac
 
+# Normalize backslash paths to forward slashes so Python string literals don't
+# produce SyntaxError on \U or other escape sequences in Windows paths.
+OUTPUT=$(echo "$OUTPUT" | tr '\\' '/')
+PROMPT_FILE=$(echo "$PROMPT_FILE" | tr '\\' '/')
+
 # Retry wrapper
 max_retries=3
 delays=(0 2 4)  # seconds
@@ -42,14 +47,14 @@ for i in $(seq 0 $((max_retries - 1))); do
 
     if [ "$IS_WINDOWS" = true ]; then
         # Windows: use Python to spawn with CREATE_NEW_PROCESS_GROUP
-        python - <<'PY'
+        python - <<PY
 import subprocess
 import sys
 import os
+import tempfile
 
-transcript = sys.argv[1]
-output = sys.argv[2]
-prompt_content = sys.argv[3]
+output = "$OUTPUT"
+prompt_content = """$(cat "$PROMPT_FILE")"""
 
 env = {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}
 
@@ -63,7 +68,7 @@ try:
             "--max-turns", "1",
         ],
         env=env,
-        cwd="/tmp",
+        cwd=tempfile.gettempdir(),
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if hasattr(subprocess, 'CREATE_NEW_PROCESS_GROUP') else 0,
