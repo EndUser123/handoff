@@ -234,6 +234,29 @@ def main() -> None:
             )
             # Clear the UPS marker so UserPromptSubmit doesn't re-inject the same snapshot
             _clear_marker(terminal_id)
+
+            # TASK-6: Inject conversation_summary into restore message
+            # Field takes precedence; sidecar is fallback for older handoffs
+            summary_text: str | None = None
+            snapshot = restore_decision.envelope.get("resume_snapshot", {})
+            if snapshot.get("conversation_summary"):
+                summary_text = snapshot["conversation_summary"]
+            elif snapshot.get("n_1_transcript_path"):
+                # Fallback: check sidecar for older handoffs without field
+                try:
+                    from scripts.hooks.__lib.handoff_files import load_summary_for_envelope
+                    envelope_path = Path(storage.handoff_file)
+                    sidecar_text = load_summary_for_envelope(envelope_path)
+                    if sidecar_text and sidecar_text.strip().upper() != "SKIP":
+                        summary_text = sidecar_text
+                except Exception:
+                    pass
+
+            if summary_text:
+                # Inject summary into additionalContext under ## Session Summary
+                summary_block = f"\n\n## Session Summary\n\n{summary_text}"
+                restoration_message = restoration_message + summary_block
+
             print(
                 json.dumps(
                     _build_output(

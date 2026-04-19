@@ -870,6 +870,73 @@ def main() -> None:
             saved_path.stat().st_size,
         )
 
+        # TASK-4: Spawn async Haiku subprocess for conversation_summary
+        # Non-fatal — envelope is already saved; Haiku enrichment is best-effort
+        try:
+            from scripts.hooks.__lib.haiku_prompt import build_haiku_prompt, should_skip_haiku
+
+            msg_count = 0
+            byte_count = 0
+            try:
+                content = Path(transcript_path).read_text(encoding="utf-8")
+                byte_count = len(content)
+                msg_count = sum(
+                    1
+                    for line in content.strip().split("\n")
+                    if line and json.loads(line)
+                )
+            except Exception:
+                pass
+
+            skip, _, _ = should_skip_haiku(msg_count, byte_count)
+            if skip:
+                logger.info(
+                    "[PreCompact V2] Haiku skipped: %d messages, %d bytes (below threshold)",
+                    msg_count,
+                    byte_count,
+                )
+            else:
+                import tempfile
+
+                sidecar_path = saved_path.with_suffix(".summary.md")
+                prompt_text = build_haiku_prompt(Path(transcript_path))
+                prompt_fd, prompt_file = tempfile.mkstemp(
+                    suffix=".prompt", prefix="haiku_"
+                )
+                try:
+                    with os.fdopen(prompt_fd, "w", encoding="utf-8") as _fh:
+                        _fh.write(prompt_text)
+                    script_path = Path(__file__).parent / "__lib" / "retry_haiku.sh"
+                    subprocess.Popen(
+                        [
+                            "bash",
+                            str(script_path),
+                            transcript_path,
+                            str(sidecar_path),
+                            prompt_file,
+                        ],
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                        creationflags=getattr(
+                            subprocess, "CREATE_NEW_PROCESS_GROUP", 0
+                        )
+                        if sys.platform == "win32"
+                        else 0,
+                        cwd=str(project_root),
+                    )
+                    logger.info(
+                        "[PreCompact V2] Haiku subprocess spawned: %s", sidecar_path
+                    )
+                finally:
+                    try:
+                        Path(prompt_file).unlink()
+                    except Exception:
+                        pass
+        except Exception as exc:
+            logger.warning(
+                "[PreCompact V2] Haiku spawn failed (non-fatal): %s", exc
+            )
+
         # Write compaction marker so UserPromptSubmit hook can detect intra-session compaction
         # and inject restoration context on the first prompt after compaction.
         try:

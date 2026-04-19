@@ -484,3 +484,37 @@ class HandoffFileStorage:
         except Exception as exc:
             logger.error("[HandoffFileStorage] Failed to delete handoff: %s", exc)
             return False
+
+    def load_summary(self) -> str | None:
+        """Load the Haiku summary sidecar if it exists.
+
+        Returns:
+            Summary text if sidecar exists and is non-empty, None otherwise.
+        """
+        sidecar = self.handoff_file.with_suffix(".summary.md")
+        if not sidecar.exists():
+            return None
+        try:
+            text = sidecar.read_text(encoding="utf-8").strip()
+            return text if text else None
+        except OSError:
+            return None
+
+
+def load_summary_for_envelope(envelope_path: Path) -> str | None:
+    """Load Haiku summary sidecar for a specific envelope path.
+
+    Args:
+        envelope_path: Path to the handoff JSON envelope file.
+
+    Returns:
+        Summary text if sidecar exists and is non-empty, None otherwise.
+    """
+    sidecar = envelope_path.with_suffix(".summary.md")
+    if not sidecar.exists():
+        return None
+    try:
+        text = sidecar.read_text(encoding="utf-8").strip()
+        return text if text else None
+    except OSError:
+        return None

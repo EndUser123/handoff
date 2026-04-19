@@ -569,6 +569,7 @@ def build_resume_snapshot(
     tasks_snapshot: list[dict[str, Any]] | None = None,
     open_questions: list[Any] | None = None,
     goal_origin: str | None = None,  # Source of the goal value (user_message, preceding_message, skill_args_unfiltered)
+    conversation_summary: str | None = None,  # Haiku-compressed session summary
 ) -> dict[str, Any]:
     """Build the V2 resume snapshot."""
     # QUAL-005: Validate message_intent is a recognized value
@@ -609,6 +610,8 @@ def build_resume_snapshot(
         snapshot["tasks_snapshot"] = tasks_snapshot
     if open_questions is not None:
         snapshot["open_questions"] = open_questions
+    if conversation_summary is not None:
+        snapshot["conversation_summary"] = conversation_summary
     return snapshot
 
 
