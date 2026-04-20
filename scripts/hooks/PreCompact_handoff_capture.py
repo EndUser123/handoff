@@ -67,7 +67,6 @@ from scripts.hooks.__lib.transcript import (  # noqa: F401
     is_meta_discussion,
     is_clarification_message,
     extract_preceding_message,
-    is_meta_instruction,
 )
 
 SESSION_PATTERNS = {
@@ -336,6 +335,35 @@ def _normalize_pending_operations(parser: TranscriptParser) -> list[dict[str, An
     except Exception as exc:
         logger.warning("[PreCompact V2] Failed to extract pending operations: %s", exc)
     return normalized
+
+
+def _extract_slash_command_goal(
+    raw_last_user: str | None,
+    active_files: list[str],
+) -> tuple[str, str] | None:
+    """If the last user message is a slash command, return (goal, goal_origin).
+
+    Covers three cases:
+    - Explicit args  → ("/cmd arg", "slash_command_with_args")
+    - No args + active_files → ("/cmd [inferred subject: <file>]", "slash_command_inferred_subject")
+    - No args + no files    → ("/cmd", "slash_command_bare")
+
+    Returns None when raw_last_user is not a slash command.
+    """
+    match = re.match(
+        r"^(/[a-z][a-z0-9_-]*)(\s+(.+))?$",
+        (raw_last_user or "").strip(),
+        re.DOTALL,
+    )
+    if not match:
+        return None
+    cmd_name = match.group(1)
+    explicit_args = (match.group(3) or "").strip()
+    if explicit_args:
+        return f"{cmd_name} {explicit_args}", "slash_command_with_args"
+    if active_files:
+        return f"{cmd_name} [inferred subject: {active_files[0]}]", "slash_command_inferred_subject"
+    return cmd_name, "slash_command_bare"
 
 
 def _extract_last_assistant_text(parser: TranscriptParser) -> str:
@@ -613,28 +641,13 @@ def main() -> None:
         # the subject must be inferred from the session's active_files.
         goal_origin = "user_message"
         raw_last_user = parser.extract_last_user_message()
-        slash_match = re.match(
-            r"^(/[a-z][a-z0-9_-]*)(\s+(.+))?$",
-            (raw_last_user or "").strip(),
-            re.DOTALL,
-        )
-        if slash_match:
-            cmd_name = slash_match.group(1)
-            explicit_args = (slash_match.group(3) or "").strip()
-            if explicit_args:
-                goal = f"{cmd_name} {explicit_args}"
-                goal_origin = "slash_command_with_args"
-            elif active_files:
-                goal = f"{cmd_name} [inferred subject: {active_files[0]}]"
-                goal_origin = "slash_command_inferred_subject"
-            else:
-                goal = cmd_name
-                goal_origin = "slash_command_bare"
+        slash_result = _extract_slash_command_goal(raw_last_user, active_files)
+        if slash_result:
+            goal, goal_origin = slash_result
             message_intent = "instruction"
             logger.info(
-                "[PreCompact V2] Slash command captured as goal: cmd=%s, args=%r, origin=%s",
-                cmd_name,
-                explicit_args or None,
+                "[PreCompact V2] Slash command captured as goal: %r, origin=%s",
+                goal,
                 goal_origin,
             )
         else:
