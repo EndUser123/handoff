@@ -7,7 +7,9 @@ import json
 import logging
 import os
 import re
+import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 from typing import Any
@@ -595,83 +597,80 @@ def main() -> None:
 
         parser = TranscriptParser(transcript_path)
 
-        # Extract goal with observability data
-        goal_result = extract_last_substantive_user_message(transcript_path)
-        goal = goal_result.get("goal", "Unknown task")
-        message_intent = goal_result.get("message_intent", "instruction")
+        # Extract active files FIRST — needed for slash-command subject inference below.
+        active_files = _extract_active_files(parser)
 
-        # Log observability data for monitoring
-        logger.info(
-            "[PreCompact V2] Goal extraction observability: "
-            f"messages_scanned={goal_result.get('messages_scanned', 0)}, "
-            f"corrections_skipped={goal_result.get('corrections_skipped', 0)}, "
-            f"meta_skipped={goal_result.get('meta_skipped', 0)}, "
-            f"session_boundary={goal_result.get('session_boundary_hit', False)}, "
-            f"topic_shift={goal_result.get('topic_shift_hit', False)}, "
-            f"scan_pattern={goal_result.get('scan_pattern', 'unknown')}, "
-            f"intent={message_intent}"
+        # Determine goal: check raw last user message for slash-command intent BEFORE
+        # running the backwards-scanning substantive-message extractor.
+        #
+        # The META_PATTERNS filter in extract_last_substantive_user_message skips slash
+        # commands (e.g., "/review_bundle P:/packages/yt-is") and returns the preceding
+        # substantive message instead — losing the user's actual intent.  We intercept
+        # here so that slash commands are preserved as the goal.
+        #
+        # For commands WITH explicit args the arg IS the subject (e.g., "/review_bundle
+        # P:/packages/yt-is").  For bare commands (e.g., "/review_bundle" with no arg)
+        # the subject must be inferred from the session's active_files.
+        goal_origin = "user_message"
+        raw_last_user = parser.extract_last_user_message()
+        slash_match = re.match(
+            r"^(/[a-z][a-z0-9_-]*)(\s+(.+))?$",
+            (raw_last_user or "").strip(),
+            re.DOTALL,
         )
-
-        # Handle fallback for unknown or meta-discussion goals
-        if not goal or goal == "Unknown task" or is_meta_discussion(goal):
-            fallback_goal = parser.extract_last_user_message()
-            # Also check fallback_goal for meta-discussion
-            if fallback_goal and is_meta_discussion(fallback_goal):
-                # If both goal and fallback are meta-discussion, use context
-                goal = "Continue current task (meta-discussion filtered)"
+        if slash_match:
+            cmd_name = slash_match.group(1)
+            explicit_args = (slash_match.group(3) or "").strip()
+            if explicit_args:
+                goal = f"{cmd_name} {explicit_args}"
+                goal_origin = "slash_command_with_args"
+            elif active_files:
+                goal = f"{cmd_name} [inferred subject: {active_files[0]}]"
+                goal_origin = "slash_command_inferred_subject"
             else:
-                goal = fallback_goal or "Unknown task"
-                # For fallback goals, use default intent since we don't have classified intent
-                message_intent = "instruction"
+                goal = cmd_name
+                goal_origin = "slash_command_bare"
+            message_intent = "instruction"
+            logger.info(
+                "[PreCompact V2] Slash command captured as goal: cmd=%s, args=%r, origin=%s",
+                cmd_name,
+                explicit_args or None,
+                goal_origin,
+            )
+        else:
+            # Normal path: backwards-scan for the last substantive user message.
+            goal_result = extract_last_substantive_user_message(transcript_path)
+            goal = goal_result.get("goal", "Unknown task")
+            message_intent = goal_result.get("message_intent", "instruction")
+
+            logger.info(
+                "[PreCompact V2] Goal extraction observability: "
+                f"messages_scanned={goal_result.get('messages_scanned', 0)}, "
+                f"corrections_skipped={goal_result.get('corrections_skipped', 0)}, "
+                f"meta_skipped={goal_result.get('meta_skipped', 0)}, "
+                f"session_boundary={goal_result.get('session_boundary_hit', False)}, "
+                f"topic_shift={goal_result.get('topic_shift_hit', False)}, "
+                f"scan_pattern={goal_result.get('scan_pattern', 'unknown')}, "
+                f"intent={message_intent}"
+            )
+
+            # Handle fallback for unknown or meta-discussion goals
+            if not goal or goal == "Unknown task" or is_meta_discussion(goal):
+                fallback_goal = parser.extract_last_user_message()
+                if fallback_goal and is_meta_discussion(fallback_goal):
+                    goal = "Continue current task (meta-discussion filtered)"
+                else:
+                    goal = fallback_goal or "Unknown task"
+                    message_intent = "instruction"
 
         # Check if the last substantive action was a skill invocation
-        # If so, capture skill output instead of skill definition
         skill_output = parser.extract_last_skill_output(max_length=800)
-
-        # DEFENSIVE: If the goal is still a Skill invocation (edge case — e.g., slash command
-        # args captured before skip filter ran), fall back to the preceding user message.
-        # The META_PATTERNS skip filter handles most cases, but this is a safety net.
-        goal_origin = "user_message"  # Default; degraded paths override this
-        import re as _re
-        if _re.match(r"^/[a-z][a-z0-9_-]*(?:\s+|\s*--?\s*)", goal.strip()):
-            preceding = parser.extract_preceding_message(transcript_path, goal)
-            if preceding is None:
-                # String normalization caused exact-match to fail — degraded path, log it
-                goal_origin = "skill_args_unfiltered"
-                logger.warning(
-                    "Defensive fallback: extract_preceding_message returned None for goal=%r. "
-                    "Skill args may propagate as goal.",
-                    goal[:100],
-                )
-            elif not preceding.strip():
-                # Empty or whitespace-only preceding message — do not use as fallback
-                goal_origin = "skill_args_unfiltered"
-                logger.warning(
-                    "Defensive fallback: preceding message is empty/whitespace for goal=%r. "
-                    "Skill args may propagate as goal.",
-                    goal[:100],
-                )
-            elif is_meta_instruction(preceding.strip()):
-                # Preceding message is itself a meta-invocation — not a valid goal
-                goal_origin = "skill_args_unfiltered"
-                logger.warning(
-                    "Defensive fallback: preceding message is meta-invocation=%r. "
-                    "Skill args may propagate as goal.",
-                    preceding[:100],
-                )
-            else:
-                goal = preceding.strip()
-                goal_origin = "preceding_message"
-                message_intent = "instruction"
 
         skill_name_for_decision = None
         if skill_output:
             skill_name_for_decision = skill_output.get("skill_name", "unknown")
-            # If goal looks like skill definition, replace with skill invocation context
             if goal.lower().startswith("base directory for this skill:"):
                 goal = f"Skill /{skill_name_for_decision} invoked - analyzing results"
-
-        active_files = _extract_active_files(parser)
         pending_operations = _normalize_pending_operations(parser)
         current_task = short_task_name(goal)
         planning_blocker = detect_planning_session(goal, active_files)
@@ -873,65 +872,36 @@ def main() -> None:
         # TASK-4: Spawn async Haiku subprocess for conversation_summary
         # Non-fatal — envelope is already saved; Haiku enrichment is best-effort
         try:
-            from scripts.hooks.__lib.haiku_prompt import build_haiku_prompt, should_skip_haiku
+            from scripts.hooks.__lib.haiku_prompt import build_haiku_prompt
 
-            msg_count = 0
-            byte_count = 0
-            try:
-                content = Path(transcript_path).read_text(encoding="utf-8")
-                byte_count = len(content)
-                msg_count = sum(
-                    1
-                    for line in content.strip().split("\n")
-                    if line and json.loads(line)
+            sidecar_path = saved_path.with_suffix(".summary.md")
+            prompt_text = build_haiku_prompt(Path(transcript_path))
+            prompt_fd, prompt_file = tempfile.mkstemp(
+                suffix=".prompt", prefix="haiku_"
+            )
+            with os.fdopen(prompt_fd, "w", encoding="utf-8") as _fh:
+                _fh.write(prompt_text)
+            script_path = Path(__file__).parent / "__lib" / "retry_haiku.sh"
+            subprocess.Popen(
+                [
+                    "bash",
+                    str(script_path),
+                    transcript_path,
+                    str(sidecar_path),
+                    prompt_file,
+                ],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                creationflags=getattr(
+                    subprocess, "CREATE_NEW_PROCESS_GROUP", 0
                 )
-            except Exception:
-                pass
-
-            skip, _, _ = should_skip_haiku(msg_count, byte_count)
-            if skip:
-                logger.info(
-                    "[PreCompact V2] Haiku skipped: %d messages, %d bytes (below threshold)",
-                    msg_count,
-                    byte_count,
-                )
-            else:
-                import tempfile
-
-                sidecar_path = saved_path.with_suffix(".summary.md")
-                prompt_text = build_haiku_prompt(Path(transcript_path))
-                prompt_fd, prompt_file = tempfile.mkstemp(
-                    suffix=".prompt", prefix="haiku_"
-                )
-                try:
-                    with os.fdopen(prompt_fd, "w", encoding="utf-8") as _fh:
-                        _fh.write(prompt_text)
-                    script_path = Path(__file__).parent / "__lib" / "retry_haiku.sh"
-                    subprocess.Popen(
-                        [
-                            "bash",
-                            str(script_path),
-                            transcript_path,
-                            str(sidecar_path),
-                            prompt_file,
-                        ],
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL,
-                        creationflags=getattr(
-                            subprocess, "CREATE_NEW_PROCESS_GROUP", 0
-                        )
-                        if sys.platform == "win32"
-                        else 0,
-                        cwd=str(project_root),
-                    )
-                    logger.info(
-                        "[PreCompact V2] Haiku subprocess spawned: %s", sidecar_path
-                    )
-                finally:
-                    try:
-                        Path(prompt_file).unlink()
-                    except Exception:
-                        pass
+                if sys.platform == "win32"
+                else 0,
+                cwd=str(project_root),
+            )
+            logger.info(
+                "[PreCompact V2] Haiku subprocess spawned: %s", sidecar_path
+            )
         except Exception as exc:
             logger.warning(
                 "[PreCompact V2] Haiku spawn failed (non-fatal): %s", exc
