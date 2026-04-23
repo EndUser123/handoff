@@ -11,6 +11,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -798,10 +799,9 @@ def main() -> None:
         except Exception as exc:
             logger.warning("[PreCompact V2] Failed to read task state: %s", exc)
 
-        # FIX: Load the EXISTING terminal handoff to get S_OLD's transcript path.
-        # At PreCompact time, input_data.transcript_path is S_NEW's path (current session).
-        # The resume_snapshot.n_1_transcript_path should be S_OLD's path (prior session).
-        # S_NEW's path != S_OLD's path, so we must read the old handoff to get S_OLD.
+        # Load the EXISTING terminal handoff to get S_OLD's chain.
+        # At PreCompact time, input_data.transcript_path is S_OLD's path (the session
+        # being compacted). We must read the old handoff to build the session chain.
         # Pass exclude_session_id to skip S_NEW's own handoff (already written to disk
         # with a recent mtime; without exclusion load_raw_handoff() returns S_NEW).
         storage = HandoffFileStorage(project_root, terminal_id)
@@ -809,13 +809,29 @@ def main() -> None:
             exclude_session_id=input_data.get("session_id")
         )
         n_2_transcript_path: str | None = None
+        # Build session chain: oldest-first list of session IDs.
+        # Each compaction appends the new session_id to the prior chain,
+        # so the chain survives PreCompact's chain-rewriting behavior.
+        session_id = input_data.get("session_id", "")
+        session_chain: list[str] = []
         if old_handoff:
             old_snapshot = old_handoff["resume_snapshot"]
             n_2_transcript_path = old_snapshot["n_1_transcript_path"]
+            prior_chain = old_snapshot.get("session_chain", [])
+            if prior_chain and prior_chain[0] == old_snapshot.get("source_session_id"):
+                # Valid chain (oldest-first): extend it with the new session
+                session_chain = prior_chain + [session_id]
+            else:
+                # Chain invalid or empty: start fresh with the old source
+                session_chain = [old_snapshot.get("source_session_id", ""), session_id]
             logger.info(
-                "[PreCompact V2] Loaded n-2 transcript from old handoff: %s",
+                "[PreCompact V2] Loaded n-2 transcript from old handoff: %s, chain length: %d",
                 n_2_transcript_path,
+                len(session_chain),
             )
+        else:
+            # No prior handoff: this is the first session in this terminal
+            session_chain = [session_id]
 
         resume_snapshot = build_resume_snapshot(
             terminal_id=terminal_id,
@@ -836,6 +852,8 @@ def main() -> None:
             quality_score=quality_score,
             tasks_snapshot=tasks_snapshot,
             goal_origin=goal_origin,
+            session_chain=session_chain,
+            last_user_message=raw_last_user,
         )
         envelope = build_envelope(
             resume_snapshot=resume_snapshot,
@@ -881,6 +899,29 @@ def main() -> None:
             saved_path.name,
             saved_path.stat().st_size,
         )
+
+        # Session registry: append-only JSONL index for cross-session queries.
+        # handoff_path is a hint — handoff files are cleaned up by retention policy
+        # (cleanup_old_handoffs, 90-day default). Consumers MUST check file existence
+        # before reading. The registry is an index, not a source of truth.
+        try:
+            registry_path = Path("P:/.claude/.artifacts/session_registry.jsonl")
+            registry_path.parent.mkdir(parents=True, exist_ok=True)
+            entry = {
+                "ts": datetime.now(UTC).isoformat(),
+                "terminal_id": terminal_id,
+                "session_id": input_data.get("session_id", ""),
+                "transcript_path": transcript_path,
+                "goal": goal[:200],
+                "progress_percent": progress_percent,
+                "handoff_path": str(saved_path),
+                "cwd": input_data.get("cwd", ""),
+            }
+            with registry_path.open("a", encoding="utf-8") as rf:
+                rf.write(json.dumps(entry, ensure_ascii=False) + "\n")
+            logger.debug("[PreCompact V2] Session registry entry appended")
+        except Exception as exc:
+            print(f"session_registry append failed: {exc}", file=sys.stderr)
 
         # TASK-4: Spawn async Haiku subprocess for conversation_summary
         # Non-fatal — envelope is already saved; Haiku enrichment is best-effort

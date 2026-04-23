@@ -570,6 +570,8 @@ def build_resume_snapshot(
     open_questions: list[Any] | None = None,
     goal_origin: str | None = None,  # Source of the goal value (user_message, preceding_message, skill_args_unfiltered)
     conversation_summary: str | None = None,  # Haiku-compressed session summary
+    session_chain: list[str] | None = None,  # Full session chain (oldest-first session IDs)
+    last_user_message: str | None = None,  # Verbatim last user message (ADR-006)
 ) -> dict[str, Any]:
     """Build the V2 resume snapshot."""
     # QUAL-005: Validate message_intent is a recognized value
@@ -612,6 +614,10 @@ def build_resume_snapshot(
         snapshot["open_questions"] = open_questions
     if conversation_summary is not None:
         snapshot["conversation_summary"] = conversation_summary
+    if session_chain is not None:
+        snapshot["session_chain"] = session_chain
+    if last_user_message is not None:
+        snapshot["last_user_message"] = last_user_message
     return snapshot
 
 

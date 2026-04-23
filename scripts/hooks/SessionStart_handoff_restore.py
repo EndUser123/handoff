@@ -258,6 +258,11 @@ def main() -> None:
                 summary_block = f"\n\n## Session Summary\n\n{summary_text}"
                 restoration_message = restoration_message + summary_block
 
+            # ADR-006: Inject verbatim last user message for post-compact disambiguation
+            last_user_msg = snapshot.get("last_user_message")
+            if last_user_msg and isinstance(last_user_msg, str) and last_user_msg.strip():
+                restoration_message += f"\n\n**Last user message (verbatim):** {last_user_msg.strip()}"
+
             print(
                 json.dumps(
                     _build_output(
