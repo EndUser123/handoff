@@ -49,6 +49,7 @@ from scripts.hooks.__lib.hook_input_validation import (
     validate_hook_input,
 )
 from scripts.hooks.__lib.terminal_detection import resolve_terminal_key
+from scripts.hooks.__lib.project_root import detect_project_root
 
 
 def _read_hook_input() -> dict[str, Any]:
@@ -155,9 +156,9 @@ def main() -> None:
                 f"[SessionStart V2] Using project root from environment: {project_root}"
             )
         else:
-            project_root = Path.cwd()
+            project_root = detect_project_root(current_dir=Path.cwd(), strict=False)
             logger.info(
-                f"[SessionStart V2] Using project root from cwd: {project_root}"
+                f"[SessionStart V2] Using project root from detect_project_root: {project_root}"
             )
         storage = HandoffFileStorage(project_root, terminal_id)
         raw_payload = storage.load_raw_handoff()
