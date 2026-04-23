@@ -758,11 +758,23 @@ def verify_evidence_freshness(
 
         # Validate repo file evidence against the workspace root BEFORE hashing
         # to prevent reading files outside project via symlink traversal.
+        # Also allow files inside .claude directories (project-managed state).
         if effective_project_root is not None and item.get("type") == "file":
             try:
                 evidence_file.relative_to(effective_project_root)
             except ValueError:
-                return "snapshot evidence path outside project directory"
+                # Exempt files inside .claude directories (project-managed, not external)
+                inside_claude = False
+                ancestor = evidence_file
+                for _ in range(10):
+                    if ancestor.name == ".claude":
+                        inside_claude = True
+                        break
+                    if ancestor.parent == ancestor:
+                        break
+                    ancestor = ancestor.parent
+                if not inside_claude:
+                    return "snapshot evidence path outside project directory"
 
         current_hash = compute_file_content_hash(str(evidence_file))
         if current_hash is None:
