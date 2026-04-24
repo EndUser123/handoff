@@ -114,6 +114,7 @@ def make_evidence_id() -> str:
 def _normalize_for_checksum(payload: dict[str, Any]) -> dict[str, Any]:
     normalized = deepcopy(payload)
     normalized.pop("checksum", None)
+    normalized.pop("environment_context", None)  # Supplementary, not session state
 
     snapshot = normalized.get("resume_snapshot", {})
     if isinstance(snapshot, dict):
@@ -349,6 +350,18 @@ def validate_envelope(payload: dict[str, Any]) -> None:
     """Validate the V2 handoff envelope."""
     if not isinstance(payload, dict):
         raise HandoffValidationError("handoff payload must be a dict")
+
+    # Top-level schema_version is optional for backward compatibility.
+    top_level_version = payload.get("schema_version")
+    if top_level_version is not None and top_level_version != ENVELOPE_SCHEMA_VERSION:
+        raise HandoffValidationError(
+            f"unsupported envelope schema_version: {top_level_version}"
+        )
+
+    # environment_context is optional and supplementary (not checksummed).
+    env_ctx = payload.get("environment_context")
+    if env_ctx is not None and not isinstance(env_ctx, dict):
+        raise HandoffValidationError("environment_context must be a dict if present")
 
     _require_fields(
         payload, ["resume_snapshot", "decision_register", "evidence_index"], "envelope"
@@ -630,6 +643,7 @@ def build_envelope(
 ) -> dict[str, Any]:
     """Build and checksum the V2 handoff envelope."""
     payload = {
+        "schema_version": ENVELOPE_SCHEMA_VERSION,
         "resume_snapshot": resume_snapshot,
         "decision_register": decision_register,
         "evidence_index": evidence_index,
