@@ -263,6 +263,32 @@ def main() -> None:
             if last_user_msg and isinstance(last_user_msg, str) and last_user_msg.strip():
                 restoration_message += f"\n\n**Last user message (verbatim):** {last_user_msg.strip()}"
 
+            # Conflict detection: compare captured git hash against current HEAD
+            try:
+                env_ctx = restore_decision.envelope.get("environment_context")
+                if env_ctx and isinstance(env_ctx, dict):
+                    git_st = env_ctx.get("git_state")
+                    if git_st and isinstance(git_st, dict):
+                        captured_commit = (git_st.get("last_commit") or {}).get("hash")
+                        if captured_commit and isinstance(captured_commit, str):
+                            import subprocess
+                            cwd = str(storage.project_root) if storage.project_root else None
+                            if cwd:
+                                result = subprocess.run(
+                                    ["git", "rev-parse", "HEAD"],
+                                    capture_output=True, text=True, cwd=cwd, timeout=5,
+                                )
+                                if result.returncode == 0:
+                                    current_hash = result.stdout.strip()[:8]
+                                    if current_hash != captured_commit:
+                                        restoration_message += (
+                                            f"\n\n**Codebase has changed** since last session "
+                                            f"(captured: `{captured_commit}`, current: `{current_hash}`). "
+                                            f"Context may be stale."
+                                        )
+            except Exception:
+                pass  # Non-fatal: conflict detection is advisory only
+
             print(
                 json.dumps(
                     _build_output(
