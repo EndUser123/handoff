@@ -18,13 +18,14 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 
-HOOKS_DIR = Path(__file__).resolve().parent
-STATE_DIR = HOOKS_DIR.parent / "state" / "session_tldr"
+# Resolve paths explicitly — this file lives in packages/handoff/scripts/hooks/
+CLAUDE_DIR = Path("P:/.claude")
+STATE_DIR = CLAUDE_DIR / "state" / "session_tldr"
 
 # Import terminal_id resolver from hook_base (centralized source of truth)
 _get_terminal_id: Callable[[dict | None], str] | None = None
 try:
-    sys.path.insert(0, str(HOOKS_DIR / "__lib"))
+    sys.path.insert(0, str(CLAUDE_DIR / "hooks" / "__lib"))
     from hook_base import get_terminal_id as _get_terminal_id_func
     _get_terminal_id = _get_terminal_id_func
 except ImportError as exc:

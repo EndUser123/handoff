@@ -25,13 +25,14 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
-HOOKS_DIR = Path(__file__).resolve().parent
-STATE_DIR = HOOKS_DIR.parent / "state" / "session_tldr"
+# Resolve paths explicitly — this file lives in packages/handoff/scripts/hooks/
+CLAUDE_DIR = Path("P:/.claude")
+STATE_DIR = CLAUDE_DIR / "state" / "session_tldr"
 
 # Import terminal_id resolver from hook_base (centralized source of truth)
 _get_terminal_id: Callable[[dict | None], str] | None = None
 try:
-    sys.path.insert(0, str(HOOKS_DIR / "__lib"))
+    sys.path.insert(0, str(CLAUDE_DIR / "hooks" / "__lib"))
     from hook_base import get_terminal_id as _get_terminal_id_func
     _get_terminal_id = _get_terminal_id_func
 except ImportError as exc:
@@ -69,7 +70,7 @@ def _redact_secrets(text: str) -> str:
 
 # Import file lock — fail open if unavailable (best-effort)
 try:
-    sys.path.insert(0, str(HOOKS_DIR / "__lib"))
+    sys.path.insert(0, str(CLAUDE_DIR / "hooks" / "__lib"))
     from file_lock import FileLock
 except ImportError:
 
@@ -158,7 +159,7 @@ def _collect_session_activity_from_handoff() -> dict:
 
         # Handoff files use console_ prefix, but hook_base may return env_ prefix
         # Try both variants to find the actual handoff file
-        handoff_dir = HOOKS_DIR.parent / "state" / "handoff"
+        handoff_dir = CLAUDE_DIR / "state" / "handoff"
 
         for prefix in ("console_", "env_"):
             candidate_tid = prefix + safe_tid.split("_", 1)[-1] if "_" in safe_tid else safe_tid
@@ -213,7 +214,7 @@ def _collect_session_activity() -> dict:
     # Fallback: Try investigation-ledger for accomplishments (if handoff empty)
     result = {"files_changed": [], "accomplishments": [], "open_items": []}
     try:
-        state_base = HOOKS_DIR.parent / "state"
+        state_base = CLAUDE_DIR / "state"
         terminal_id = _resolve_terminal_id(None)
         ledger_path = state_base / "investigation-ledger" / "ledger.db"
         if ledger_path.exists():

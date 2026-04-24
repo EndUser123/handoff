@@ -20,10 +20,9 @@ import sys
 from pathlib import Path
 
 # Add __lib to path for commitment_tracker import
-_HOOKS_DIR = Path(__file__).resolve().parent
-_HOOKS_LIB_DIR = _HOOKS_DIR / "__lib"
-if str(_HOOKS_LIB_DIR) not in sys.path:
-    sys.path.insert(0, str(_HOOKS_LIB_DIR))
+_CLAUDE_HOOKS_LIB = Path("P:/.claude/hooks/__lib")
+if str(_CLAUDE_HOOKS_LIB) not in sys.path:
+    sys.path.insert(0, str(_CLAUDE_HOOKS_LIB))
 
 from commitment_tracker import CommitmentTracker
 
