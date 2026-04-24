@@ -16,6 +16,7 @@ from uuid import uuid4
 # Import dynamic sections for content generation
 
 SCHEMA_VERSION = 2
+ENVELOPE_SCHEMA_VERSION = 1
 DEFAULT_FRESHNESS_MINUTES = int(os.getenv("HANDOFF_FRESHNESS_MINUTES", "20"))
 SNAPSHOT_PENDING = "pending"
 SNAPSHOT_CONSUMED = "consumed"

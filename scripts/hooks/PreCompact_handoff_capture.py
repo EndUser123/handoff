@@ -861,6 +861,23 @@ def main() -> None:
             evidence_index=evidence_index,
         )
 
+        # Parallel capture: supplementary environment context (non-fatal)
+        try:
+            from scripts.hooks.__lib.parallel_capture import capture_all_parallel
+
+            env_ctx = capture_all_parallel(project_root, "")
+            env_ctx = {k: v for k, v in env_ctx.items() if v is not None}
+            if env_ctx:
+                envelope["environment_context"] = env_ctx
+                logger.info(
+                    "[PreCompact V2] Parallel capture: %s",
+                    list(env_ctx.keys()),
+                )
+        except Exception as exc:
+            logger.warning(
+                "[PreCompact V2] Parallel capture failed (non-fatal): %s", exc
+            )
+
         # Diagnostic logging before save
         logger.info(
             "[PreCompact V2] Attempting to save handoff: terminal=%s, handoff_file=%s",

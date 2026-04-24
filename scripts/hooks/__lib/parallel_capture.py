@@ -170,11 +170,11 @@ def _capture_architectural_context(project_root: Path, transcript: str) -> dict 
     """
     try:
         # Import here to avoid issues if module doesn't exist
-        from scripts.hooks.__lib.architectural_context import (
+        from scripts.hooks.__lib.architecture_capture import (
             capture_architectural_context,
         )
 
-        return capture_architectural_context(str(project_root), transcript)
+        return capture_architectural_context(project_root)
     except ImportError:
         logger.warning("[ParallelCapture] architectural_context module not available")
         return None
