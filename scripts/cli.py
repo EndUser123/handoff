@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Handoff V2 CLI tool for capture, restore, and debug operations.
+"""Snapshot CLI tool for capture, restore, and debug operations.
 
 Usage:
     python -m scripts.cli capture [--terminal ID] [--transcript PATH]
@@ -21,8 +21,8 @@ if str(PACKAGE_ROOT) not in sys.path:
     sys.path.insert(0, str(PACKAGE_ROOT))
 
 from scripts.config import cleanup_old_handoffs
-from scripts.hooks.__lib.handoff_files import HandoffFileStorage
-from scripts.hooks.__lib.handoff_v2 import (
+from scripts.hooks.__lib.snapshot_files import SnapshotFileStorage
+from scripts.hooks.__lib.snapshot_v2 import (
     compute_checksum,
     evaluate_for_restore,
     validate_envelope,
@@ -60,7 +60,7 @@ def cmd_restore(args: argparse.Namespace) -> int:
     terminal_id = resolve_terminal_key(args.terminal)
     project_root = Path.cwd()
 
-    storage = HandoffFileStorage(project_root, terminal_id)
+    storage = SnapshotFileStorage(project_root, terminal_id)
     handoff = storage.load_handoff()
 
     if not handoff:
@@ -99,7 +99,7 @@ def cmd_list(args: argparse.Namespace) -> int:
     terminal_id = resolve_terminal_key(args.terminal)
     project_root = Path.cwd()
 
-    storage = HandoffFileStorage(project_root, terminal_id)
+    storage = SnapshotFileStorage(project_root, terminal_id)
     handoff = storage.load_handoff()
 
     if not handoff:
@@ -129,7 +129,7 @@ def cmd_debug(args: argparse.Namespace) -> int:
     terminal_id = resolve_terminal_key(args.terminal)
     project_root = Path.cwd()
 
-    storage = HandoffFileStorage(project_root, terminal_id)
+    storage = SnapshotFileStorage(project_root, terminal_id)
     handoff = storage.load_handoff()
 
     if not handoff:
@@ -186,7 +186,7 @@ def cmd_health(args: argparse.Namespace) -> int:
     """
     terminal_id = resolve_terminal_key(args.terminal)
     project_root = Path.cwd()
-    storage = HandoffFileStorage(project_root, terminal_id)
+    storage = SnapshotFileStorage(project_root, terminal_id)
     handoff = storage.load_handoff()
 
     if not handoff:

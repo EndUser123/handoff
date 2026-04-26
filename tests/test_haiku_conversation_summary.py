@@ -11,8 +11,8 @@ import pytest
 package_root = Path(__file__).parent.parent
 sys.path.insert(0, str(package_root))
 
-from scripts.hooks.__lib.handoff_v2 import build_resume_snapshot, build_envelope
-from scripts.hooks.__lib.handoff_files import HandoffFileStorage, load_summary_for_envelope
+from scripts.hooks.__lib.snapshot_v2 import build_resume_snapshot, build_envelope
+from scripts.hooks.__lib.snapshot_files import SnapshotFileStorage, load_summary_for_envelope
 from scripts.hooks.__lib.haiku_prompt import should_skip_haiku, build_haiku_prompt, MIN_MESSAGE_COUNT, MIN_BYTE_COUNT
 
 

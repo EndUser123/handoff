@@ -16,7 +16,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from scripts.hooks.__lib.handoff_v2 import (
+from scripts.hooks.__lib.snapshot_v2 import (
     _extract_and_format_user_context,
     build_restore_message,
 )

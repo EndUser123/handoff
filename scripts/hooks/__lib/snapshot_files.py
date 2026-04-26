@@ -12,7 +12,7 @@ from typing import Any
 
 from scripts.hooks.__lib.snapshot_store import FileLock, atomic_write_with_retry
 from scripts.hooks.__lib.snapshot_v2 import (
-    HandoffValidationError,
+    SnapshotValidationError,
     SNAPSHOT_PENDING,
     SNAPSHOT_REJECTED_STALE,
     compute_checksum,

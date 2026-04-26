@@ -17,7 +17,7 @@ import time
 from pathlib import Path
 
 # Import handoff V2 functions
-from scripts.hooks.__lib.handoff_v2 import (
+from scripts.hooks.__lib.snapshot_v2 import (
     build_envelope,
     build_resume_snapshot,
     compute_checksum,
@@ -90,7 +90,7 @@ def _make_simple_envelope(
     )
     # Add session_id and transcript_path at envelope top level for build_injection_message()
     # Then recompute checksum since we've added new fields
-    from scripts.hooks.__lib.handoff_v2 import compute_checksum
+    from scripts.hooks.__lib.snapshot_v2 import compute_checksum
 
     envelope["session_id"] = session_id
     envelope["transcript_path"] = str(transcript_path)

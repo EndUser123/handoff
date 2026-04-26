@@ -18,9 +18,9 @@ from pathlib import Path
 
 import pytest
 
-from scripts.hooks.__lib.handoff_files import HandoffFileStorage
-from scripts.hooks.__lib.handoff_v2 import (
-    HandoffValidationError,
+from scripts.hooks.__lib.snapshot_files import SnapshotFileStorage
+from scripts.hooks.__lib.snapshot_v2 import (
+    SnapshotValidationError,
     build_envelope,
     build_resume_snapshot,
     compute_file_content_hash,

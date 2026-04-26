@@ -13,8 +13,8 @@ This test verifies that handoff V2 envelopes conform to the required schema:
 from __future__ import annotations
 
 import pytest
-from scripts.hooks.__lib.handoff_v2 import (
-    HandoffValidationError,
+from scripts.hooks.__lib.snapshot_v2 import (
+    SnapshotValidationError,
     VALID_DECISION_KINDS,
     VALID_EVIDENCE_TYPES,
     VALID_MESSAGE_INTENTS,
@@ -76,13 +76,13 @@ def test_validate_envelope_accepts_valid_envelope(tmp_path):
 
 def test_validate_envelope_rejects_non_dict():
     """Non-dict payloads should be rejected."""
-    with pytest.raises(HandoffValidationError, match="must be a dict"):
+    with pytest.raises(SnapshotValidationError, match="must be a dict"):
         validate_envelope("not a dict")
 
-    with pytest.raises(HandoffValidationError, match="must be a dict"):
+    with pytest.raises(SnapshotValidationError, match="must be a dict"):
         validate_envelope(None)
 
-    with pytest.raises(HandoffValidationError, match="must be a dict"):
+    with pytest.raises(SnapshotValidationError, match="must be a dict"):
         validate_envelope([])
 
 
@@ -106,11 +106,11 @@ def test_validate_envelope_rejects_missing_top_level_fields():
     )
 
     # Missing decision_register
-    with pytest.raises(HandoffValidationError, match="missing required fields"):
+    with pytest.raises(SnapshotValidationError, match="missing required fields"):
         validate_envelope({"resume_snapshot": snapshot, "evidence_index": []})
 
     # Missing evidence_index
-    with pytest.raises(HandoffValidationError, match="missing required fields"):
+    with pytest.raises(SnapshotValidationError, match="missing required fields"):
         validate_envelope({"resume_snapshot": snapshot, "decision_register": []})
 
 
@@ -120,7 +120,7 @@ def test_validate_envelope_rejects_wrong_top_level_types(tmp_path):
 
     # resume_snapshot must be dict
     envelope["resume_snapshot"] = "not a dict"
-    with pytest.raises(HandoffValidationError, match="resume_snapshot must be a dict"):
+    with pytest.raises(SnapshotValidationError, match="resume_snapshot must be a dict"):
         validate_envelope(envelope)
 
     # Fix and test decision_register
@@ -142,7 +142,7 @@ def test_validate_envelope_rejects_wrong_top_level_types(tmp_path):
     )
     envelope["decision_register"] = "not a list"
     with pytest.raises(
-        HandoffValidationError, match="decision_register must be a list"
+        SnapshotValidationError, match="decision_register must be a list"
     ):
         validate_envelope(envelope)
 
@@ -211,7 +211,7 @@ def test_validate_envelope_rejects_missing_snapshot_fields():
         }
         envelope["checksum"] = compute_checksum(envelope)
         with pytest.raises(
-            HandoffValidationError, match="resume_snapshot missing required fields"
+            SnapshotValidationError, match="resume_snapshot missing required fields"
         ):
             validate_envelope(envelope)
 
@@ -221,7 +221,7 @@ def test_validate_envelope_rejects_invalid_snapshot_status(tmp_path):
     envelope, _ = _make_minimal_valid_envelope(tmp_path)
     envelope["resume_snapshot"]["status"] = "invalid_status"
 
-    with pytest.raises(HandoffValidationError, match="invalid resume_snapshot.status"):
+    with pytest.raises(SnapshotValidationError, match="invalid resume_snapshot.status"):
         validate_envelope(envelope)
 
 
@@ -231,17 +231,17 @@ def test_validate_envelope_rejects_invalid_progress_percent(tmp_path):
 
     # Test non-integer
     envelope["resume_snapshot"]["progress_percent"] = "not an int"
-    with pytest.raises(HandoffValidationError, match="must be an integer"):
+    with pytest.raises(SnapshotValidationError, match="must be an integer"):
         validate_envelope(envelope)
 
     # Test out of range (negative)
     envelope["resume_snapshot"]["progress_percent"] = -1
-    with pytest.raises(HandoffValidationError, match="must be between 0 and 100"):
+    with pytest.raises(SnapshotValidationError, match="must be between 0 and 100"):
         validate_envelope(envelope)
 
     # Test out of range (> 100)
     envelope["resume_snapshot"]["progress_percent"] = 101
-    with pytest.raises(HandoffValidationError, match="must be between 0 and 100"):
+    with pytest.raises(SnapshotValidationError, match="must be between 0 and 100"):
         validate_envelope(envelope)
 
 
@@ -287,7 +287,7 @@ def test_validate_envelope_rejects_invalid_decision_kind(tmp_path):
         evidence_index=[],
     )
 
-    with pytest.raises(HandoffValidationError, match="kind is invalid"):
+    with pytest.raises(SnapshotValidationError, match="kind is invalid"):
         validate_envelope(envelope)
 
 
@@ -330,7 +330,7 @@ def test_validate_envelope_rejects_invalid_evidence_type(tmp_path):
         evidence_index=[evidence],
     )
 
-    with pytest.raises(HandoffValidationError, match="type is invalid"):
+    with pytest.raises(SnapshotValidationError, match="type is invalid"):
         validate_envelope(envelope)
 
 
@@ -367,7 +367,7 @@ def test_validate_envelope_rejects_broken_decision_refs(tmp_path):
     )
 
     with pytest.raises(
-        HandoffValidationError, match="decision_refs contains unknown id"
+        SnapshotValidationError, match="decision_refs contains unknown id"
     ):
         validate_envelope(envelope)
 
@@ -405,7 +405,7 @@ def test_validate_envelope_rejects_broken_evidence_refs(tmp_path):
     )
 
     with pytest.raises(
-        HandoffValidationError, match="evidence_refs contains unknown id"
+        SnapshotValidationError, match="evidence_refs contains unknown id"
     ):
         validate_envelope(envelope)
 
@@ -415,7 +415,7 @@ def test_validate_envelope_rejects_missing_checksum(tmp_path):
     envelope, _ = _make_minimal_valid_envelope(tmp_path)
     envelope.pop("checksum", None)
 
-    with pytest.raises(HandoffValidationError, match="checksum is required"):
+    with pytest.raises(SnapshotValidationError, match="checksum is required"):
         validate_envelope(envelope)
 
 
@@ -424,7 +424,7 @@ def test_validate_envelope_rejects_checksum_mismatch(tmp_path):
     envelope, _ = _make_minimal_valid_envelope(tmp_path)
     envelope["checksum"] = "invalid:checksum"
 
-    with pytest.raises(HandoffValidationError, match="checksum mismatch"):
+    with pytest.raises(SnapshotValidationError, match="checksum mismatch"):
         validate_envelope(envelope)
 
 
@@ -434,7 +434,7 @@ def test_validate_envelope_accepts_all_valid_statuses(tmp_path):
         envelope, _ = _make_minimal_valid_envelope(tmp_path)
         envelope["resume_snapshot"]["status"] = status
         # Recompute checksum after mutating status
-        from scripts.hooks.__lib.handoff_v2 import compute_checksum
+        from scripts.hooks.__lib.snapshot_v2 import compute_checksum
 
         envelope["checksum"] = compute_checksum(envelope)
 
@@ -448,7 +448,7 @@ def test_validate_envelope_accepts_all_valid_message_intents(tmp_path):
         envelope, _ = _make_minimal_valid_envelope(tmp_path)
         envelope["resume_snapshot"]["message_intent"] = intent
         # Recompute checksum after mutating message_intent
-        from scripts.hooks.__lib.handoff_v2 import compute_checksum
+        from scripts.hooks.__lib.snapshot_v2 import compute_checksum
 
         envelope["checksum"] = compute_checksum(envelope)
 
