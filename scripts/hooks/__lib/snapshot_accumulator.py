@@ -89,7 +89,7 @@ def run(data: dict[str, Any]) -> dict[str, Any]:
         terminal_id = data.get(
             "terminal_id", os.environ.get("CLAUDE_TERMINAL_ID", "default")
         )
-        project_root_str = os.environ.get("HANDOFF_PROJECT_ROOT")
+        project_root_str = os.environ.get("SNAPSHOT_PROJECT_ROOT")
         if project_root_str:
             project_root = Path(project_root_str)
         else:

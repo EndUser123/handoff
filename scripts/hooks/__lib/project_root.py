@@ -38,13 +38,13 @@ def detect_project_root(
     Raises:
         ValueError: If project root cannot be detected
     """
-    env_override = os.getenv("HANDOFF_PROJECT_ROOT")
+    env_override = os.getenv("SNAPSHOT_PROJECT_ROOT")
     if env_override:
         override_path = Path(env_override)
         override_path.mkdir(parents=True, exist_ok=True)
         (override_path / ".claude").mkdir(parents=True, exist_ok=True)
         logger.info(
-            "[ProjectRoot] Using HANDOFF_PROJECT_ROOT override: %s", override_path
+            "[ProjectRoot] Using SNAPSHOT_PROJECT_ROOT override: %s", override_path
         )
         return override_path
 
