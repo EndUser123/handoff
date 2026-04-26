@@ -5,7 +5,15 @@
       "hooks": [
         {
           "type": "command",
-          "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/PreCompact_handoff_capture.py\""
+          "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/PreCompact_snapshot_capture.py\""
+        },
+        {
+          "type": "command",
+          "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/PreCompact_commitment_tracker.py\""
+        },
+        {
+          "type": "command",
+          "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/PreCompact_workflow_checkpoint.py\""
         },
         {
           "type": "command",
@@ -20,7 +28,22 @@
       "hooks": [
         {
           "type": "command",
-          "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/SessionStart_handoff_restore.py\""
+          "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/SessionStart_snapshot_restore.py\""
+        },
+        {
+          "type": "command",
+          "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/SessionStart_tldr.py\""
+        }
+      ]
+    }
+  ],
+  "SessionEnd": [
+    {
+      "matcher": ".*",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/SessionEnd_tldr.py\""
         }
       ]
     }

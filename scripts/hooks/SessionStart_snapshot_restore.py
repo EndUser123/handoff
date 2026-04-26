@@ -33,8 +33,8 @@ if not logger.handlers:
     logger.addHandler(_handler)
 logger.setLevel(logging.DEBUG)
 
-from scripts.hooks.__lib.handoff_files import HandoffFileStorage
-from scripts.hooks.__lib.handoff_v2 import (
+from scripts.hooks.__lib.snapshot_files import HandoffFileStorage
+from scripts.hooks.__lib.snapshot_v2 import (
     SNAPSHOT_CONSUMED,
     SNAPSHOT_REJECTED_INVALID,
     SNAPSHOT_REJECTED_STALE,
@@ -245,7 +245,7 @@ def main() -> None:
             elif snapshot.get("n_1_transcript_path"):
                 # Fallback: check sidecar for older handoffs without field
                 try:
-                    from scripts.hooks.__lib.handoff_files import load_summary_for_envelope
+                    from scripts.hooks.__lib.snapshot_files import load_summary_for_envelope
                     envelope_path = Path(storage.handoff_file)
                     sidecar_text = load_summary_for_envelope(envelope_path)
                     if sidecar_text and sidecar_text.strip().upper() != "SKIP":

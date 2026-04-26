@@ -14,7 +14,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from scripts.hooks.__lib.handoff_store import FileLock
+from scripts.hooks.__lib.snapshot_store import FileLock
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +129,7 @@ def run(data: dict[str, Any]) -> dict[str, Any]:
     except Exception as exc:
         # Accumulator is best-effort -- never block the tool pipeline
         # But log the failure for debugging instead of silent swallowing
-        logger.debug("[handoff_accumulator] Failed: %s", exc)
+        logger.debug("[snapshot_accumulator] Failed: %s", exc)
 
     return {}
 

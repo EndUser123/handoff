@@ -10,8 +10,8 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-from scripts.hooks.__lib.handoff_store import FileLock, atomic_write_with_retry
-from scripts.hooks.__lib.handoff_v2 import (
+from scripts.hooks.__lib.snapshot_store import FileLock, atomic_write_with_retry
+from scripts.hooks.__lib.snapshot_v2 import (
     HandoffValidationError,
     SNAPSHOT_PENDING,
     SNAPSHOT_REJECTED_STALE,
@@ -24,10 +24,10 @@ from scripts.hooks.__lib.handoff_v2 import (
 
 logger = logging.getLogger(__name__)
 
-# Configure logging for handoff file operations
-# Logs will be written to .claude/logs/handoff_files.log
+# Configure logging for snapshot file operations
+# Logs will be written to .claude/logs/snapshot_files.log
 _log_file_path = (
-    Path(__file__).resolve().parents[3] / ".claude" / "logs" / "handoff_files.log"
+    Path(__file__).resolve().parents[3] / ".claude" / "logs" / "snapshot_files.log"
 )
 _log_file_path.parent.mkdir(parents=True, exist_ok=True)
 if not logger.handlers:
@@ -39,8 +39,8 @@ if not logger.handlers:
 logger.setLevel(logging.DEBUG)
 
 
-class HandoffFileStorage:
-    """Persist one Handoff V2 envelope per terminal."""
+class SnapshotFileStorage:
+    """Persist one Snapshot V2 envelope per terminal."""
 
     def __init__(self, project_root: Path, terminal_id: str):
         self._validate_terminal_id(terminal_id)

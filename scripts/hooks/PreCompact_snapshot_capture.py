@@ -42,8 +42,8 @@ if str(PACKAGE_ROOT) not in sys.path:
 
 # Import V1 features for integration
 from scripts.config import cleanup_old_handoffs
-from scripts.hooks.__lib.handoff_files import HandoffFileStorage
-from scripts.hooks.__lib.handoff_v2 import (
+from scripts.hooks.__lib.snapshot_files import HandoffFileStorage
+from scripts.hooks.__lib.snapshot_v2 import (
     HandoffValidationError,
     build_envelope,
     build_resume_snapshot,

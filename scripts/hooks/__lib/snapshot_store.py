@@ -318,7 +318,7 @@ def atomic_write_with_retry(
         except PermissionError:
             # Windows-specific file locking error
             logger.warning(
-                f"[HandoffStore] Atomic write PermissionError "
+                f"[SnapshotStore] Atomic write PermissionError "
                 f"(attempt {attempt + 1}/{max_retries}): {target_path_str}"
             )
             if attempt == max_retries - 1:
@@ -328,7 +328,7 @@ def atomic_write_with_retry(
                 except OSError:
                     pass
                 logger.error(
-                    f"[HandoffStore] Failed to write {target_path_str} after {max_retries} attempts"
+                    f"[SnapshotStore] Failed to write {target_path_str} after {max_retries} attempts"
                 )
                 raise
             # Exponential backoff: 5ms, 10ms, 20ms, 40ms
@@ -337,7 +337,7 @@ def atomic_write_with_retry(
         except OSError as e:
             # Other OS errors - don't retry, clean up and raise
             logger.error(
-                f"[HandoffStore] Atomic write OSError for {target_path_str}: {e}"
+                f"[SnapshotStore] Atomic write OSError for {target_path_str}: {e}"
             )
             try:
                 os.unlink(temp_path)
@@ -384,7 +384,7 @@ def atomic_write_with_validation(
     # PERF-002: Perform size check here using cached JSON instead of re-serializing
     if final_size > MAX_HANDOFF_SIZE_BYTES:
         logger.warning(
-            f"[HandoffStore] Handoff still exceeds "
+            f"[SnapshotStore] Handoff still exceeds "
             f"{MAX_HANDOFF_SIZE_BYTES} bytes: {final_size} bytes"
         )
         validated_data = _apply_last_resort_truncation(validated_data)
@@ -398,7 +398,7 @@ def atomic_write_with_validation(
     # Log warning if data was truncated
     if truncated:
         logger.info(
-            f"[HandoffStore] Warning: Handoff data truncated from "
+            f"[SnapshotStore] Warning: Handoff data truncated from "
             f"{original_size} to {final_size} bytes"
         )
 
@@ -417,7 +417,7 @@ def atomic_write_with_validation(
     except OSError as e:
         # Clean up temp file if write fails
         logger.error(
-            f"[HandoffStore] Failed to write validated data to {target_path_str}: {e}"
+            f"[SnapshotStore] Failed to write validated data to {target_path_str}: {e}"
         )
         try:
             os.unlink(temp_path)
@@ -521,7 +521,7 @@ def _apply_last_resort_truncation(validated: dict[str, Any]) -> dict[str, Any]:
             if field in task_aware and task_aware[field]:
                 task_aware[field] = []
         validated["task_aware"] = task_aware
-        logger.info("[HandoffStore] Truncated task_aware fields to reduce size")
+        logger.info("[SnapshotStore] Truncated task_aware fields to reduce size")
 
     return validated
 
@@ -583,7 +583,7 @@ def _validate_handoff_data_size(
         estimated_size = len(cached_json.encode("utf-8"))
         if estimated_size > MAX_HANDOFF_SIZE_BYTES:
             logger.info(
-                f"[HandoffStore] Warning: Handoff still exceeds "
+                f"[SnapshotStore] Warning: Handoff still exceeds "
                 f"{MAX_HANDOFF_SIZE_BYTES} bytes: {estimated_size} bytes"
             )
             validated = _apply_last_resort_truncation(validated)
@@ -674,14 +674,14 @@ def get_quality_rating(score: float) -> str:
         return "Needs Improvement"
 
 
-def compute_handoff_checksum(handoff_internal: dict[str, Any]) -> str:
-    """Compute deterministic checksum for handoff data.
+def compute_snapshot_checksum(snapshot_internal: dict[str, Any]) -> str:
+    """Compute deterministic checksum for snapshot data.
 
-    This function computes a SHA-256 hash of the handoff_internal dict with
+    This function computes a SHA-256 hash of the snapshot_internal dict with
     deterministic serialization (sort_keys=True) to ensure consistent
     checksums across Python versions and terminals.
 
-    Scope: Only hashes handoff_internal content (session_info, task, context,
+    Scope: Only hashes snapshot_internal content (session_info, task, context,
     continuation, transcript_path). Wrapper metadata like quality_score is
     excluded to allow metadata updates without changing the checksum.
 
@@ -700,18 +700,18 @@ def compute_handoff_checksum(handoff_internal: dict[str, Any]) -> str:
     return f"sha256:{checksum}"
 
 
-class HandoffStore:
-    """Store handoffs to JSON and Tasks list.
+class SnapshotStore:
+    """Store snapshots to JSON and Tasks list.
 
-    Handles handoff storage operations including:
-    - Building handoff data structure
+    Handles snapshot storage operations including:
+    - Building snapshot data structure
     - Creating continue_session tasks
 
-    Note: Renamed from CheckpointStore to avoid Claude Code naming conflicts.
+    Note: Renamed from HandoffStore to avoid Claude Code naming conflicts.
     """
 
     def __init__(self, project_root: Path, terminal_id: str):
-        """Initialize handoff store.
+        """Initialize snapshot store.
 
         Args:
             project_root: Path to project root directory
@@ -904,7 +904,7 @@ class HandoffStore:
                     task_data = json.load(f)
             except (json.JSONDecodeError, OSError) as e:
                 logger.warning(
-                    f"[HandoffStore] Failed to load task file {task_file_path}, creating new: {e}"
+                    f"[SnapshotStore] Failed to load task file {task_file_path}, creating new: {e}"
                 )
                 task_data = _create_empty_task_data()
         else:
@@ -957,10 +957,10 @@ class HandoffStore:
                     atomic_write_with_retry(temp_path, task_file_path)
 
                     logger.info(
-                        f"[HandoffStore] active_session task added to {task_file_path.name} (PID {os.getpid()})"
+                        f"[SnapshotStore] active_session task added to {task_file_path.name} (PID {os.getpid()})"
                     )
                     logger.info(
-                        f"[HandoffStore] continue_session task added to {task_file_path.name}"
+                        f"[SnapshotStore] continue_session task added to {task_file_path.name}"
                     )
 
                     # Write manifest file atomically
@@ -974,11 +974,11 @@ class HandoffStore:
                             json.dump(manifest_data, f, indent=2)
                         atomic_write_with_retry(temp_manifest_path, manifest_path)
                         logger.debug(
-                            f"[HandoffStore] Created manifest file: {manifest_path.name}"
+                            f"[SnapshotStore] Created manifest file: {manifest_path.name}"
                         )
                     except OSError as manifest_error:
                         logger.error(
-                            f"[HandoffStore] Failed to write manifest file: {manifest_error}"
+                            f"[SnapshotStore] Failed to write manifest file: {manifest_error}"
                         )
                         try:
                             os.unlink(temp_manifest_path)
@@ -987,7 +987,7 @@ class HandoffStore:
                         # Manifest is optional, don't fail the entire operation
                 except OSError as write_error:
                     logger.error(
-                        f"[HandoffStore] Failed to write task file {task_file_path}: {write_error}"
+                        f"[SnapshotStore] Failed to write task file {task_file_path}: {write_error}"
                     )
                     try:
                         os.unlink(temp_path)
@@ -1000,7 +1000,7 @@ class HandoffStore:
             # Proceeding without lock violates atomicity guarantees and can cause data corruption
             # in multi-terminal environments. Better to fail explicitly than corrupt data silently.
             logger.error(
-                f"[HandoffStore] Could not acquire lock for {task_file_path.name} after "
+                f"[SnapshotStore] Could not acquire lock for {task_file_path.name} after "
                 f"{LOCK_TIMEOUT_SECONDS}s timeout - failing operation to prevent data corruption"
             )
             raise  # Re-raise TimeoutError to fail the operation explicitly

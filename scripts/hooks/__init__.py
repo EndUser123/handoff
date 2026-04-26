@@ -1,21 +1,21 @@
 """
-Handoff hooks for Claude Code integration.
+Snapshot hooks for Claude Code integration.
 
 This module contains Claude Code hook files that integrate with
-the handoff package.
+the snapshot package.
 
 Hooks:
-    PreCompact_handoff_capture.py: Captures handoff before transcript compaction
-    SessionStart_handoff_restore.py: Restores handoff on session start
+    PreCompact_snapshot_capture.py: Captures snapshot before transcript compaction
+    SessionStart_snapshot_restore.py: Restores snapshot on session start
 
 These hooks are registered in settings.json and called by Claude Code's hook system.
 
-Note: HandoffManager, HandoffPayload, TaskType, CommandContext have been removed.
-Handoff data is now stored in task metadata.
+Note: SnapshotManager, SnapshotPayload, TaskType, CommandContext have been removed.
+Snapshot data is now stored in task metadata.
 """
 
-from scripts.hooks.__lib.handoff_store import (
-    HandoffStore,
+from scripts.hooks.__lib.snapshot_store import (
+    SnapshotStore,
     atomic_write_with_retry,
     atomic_write_with_validation,
 )
@@ -24,7 +24,7 @@ from scripts.hooks.__lib.task_identity_manager import TaskIdentityManager
 from scripts.hooks.__lib.transcript import TranscriptLines, TranscriptParser
 
 __all__ = [
-    "HandoffStore",
+    "SnapshotStore",
     "HandoverBuilder",
     "TaskIdentityManager",
     "TranscriptParser",

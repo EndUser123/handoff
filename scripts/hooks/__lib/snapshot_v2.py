@@ -70,8 +70,8 @@ MUTABLE_METADATA_FIELDS = {
 }
 
 
-class HandoffValidationError(ValueError):
-    """Raised when a V2 handoff envelope is malformed."""
+class SnapshotValidationError(ValueError):
+    """Raised when a V2 snapshot envelope is malformed."""
 
 
 @dataclass(slots=True)
@@ -947,7 +947,7 @@ def _extract_and_format_user_context(
         import logging
 
         logging.getLogger(__name__).warning(
-            "[handoff_v2] Failed to gather context from transcript: %s", exc
+            "[snapshot_v2] Failed to gather context from transcript: %s", exc
         )
         return None
 
