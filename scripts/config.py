@@ -25,12 +25,12 @@ if str(Path(__file__).resolve().parents[1]) not in sys.path:
 logger = logging.getLogger(__name__)
 
 # Project root (defaults to current working directory for portability)
-# HANDOFF_PROJECT_ROOT env var can override for testing
-PROJECT_ROOT = Path(os.getenv("HANDOFF_PROJECT_ROOT", str(Path.cwd()))).resolve()
+# SNAPSHOT_PROJECT_ROOT env var can override for testing
+PROJECT_ROOT = Path(os.getenv("SNAPSHOT_PROJECT_ROOT", str(Path.cwd()))).resolve()
 
-# Handoff storage directories
-HANDOFF_DIR = PROJECT_ROOT / ".claude" / "handoffs"
-TRASH_DIR = HANDOFF_DIR / "trash"
+# Snapshot storage directories
+SNAPSHOT_DIR = PROJECT_ROOT / ".claude" / "handoffs"
+TRASH_DIR = SNAPSHOT_DIR / "trash"
 
 # Retention policies
 # CLEANUP_DAYS: Delete handoff documents older than this (from /hod skill)
