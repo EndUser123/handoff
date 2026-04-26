@@ -583,12 +583,12 @@ def main() -> None:
 
         terminal_id = resolve_terminal_key(input_data.get("terminal_id"))
 
-        # CRITICAL: For handoff package, detect project root with testing support
-        # Priority: 1) HANDOFF_PROJECT_ROOT env var (for testing), 2) walk up from cwd to .claude
+        # CRITICAL: For snapshot package, detect project root with testing support
+        # Priority: 1) SNAPSHOT_PROJECT_ROOT env var (for testing), 2) walk up from cwd to .claude
         # Use walk-up from cwd instead of raw Path.cwd() because Claude Code may invoke
         # PreCompact from a skill subdirectory (e.g. P:/.claude/skills/s/) where cwd would
         # be that subdirectory. The walk-up finds the actual project root containing .claude.
-        env_project_root = os.environ.get("HANDOFF_PROJECT_ROOT")
+        env_project_root = os.environ.get("SNAPSHOT_PROJECT_ROOT")
         if env_project_root:
             project_root = Path(env_project_root)
             logger.info(

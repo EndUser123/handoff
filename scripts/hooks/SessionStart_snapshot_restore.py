@@ -143,13 +143,13 @@ def main() -> None:
                     "[SessionStart V2] Failed to write active-session file: %s", exc
                 )
 
-        # CRITICAL: For handoff package, detect project root with testing support
-        # Priority: 1) HANDOFF_PROJECT_ROOT env var (for testing), 2) cwd (production)
+        # CRITICAL: For snapshot package, detect project root with testing support
+        # Priority: 1) SNAPSHOT_PROJECT_ROOT env var (for testing), 2) cwd (production)
         # Use Path.cwd() instead of __file__-derived path because Claude Code
         # invokes hooks as plugin commands from the project root (cwd = P:/), while
-        # __file__ resolves to P:/packages/handoff/scripts/hooks/. This ensures
-        # state files are read from P:/.claude/ (project root) not P:/packages/handoff/.claude/
-        env_project_root = os.environ.get("HANDOFF_PROJECT_ROOT")
+        # __file__ resolves to P:/packages/snapshot/scripts/hooks/. This ensures
+        # state files are read from P:/.claude/ (project root) not P:/packages/snapshot/.claude/
+        env_project_root = os.environ.get("SNAPSHOT_PROJECT_ROOT")
         if env_project_root:
             project_root = Path(env_project_root)
             logger.info(
