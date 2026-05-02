@@ -64,8 +64,10 @@ def _locate_hooks_state_dir() -> Path:
 STATE_DIR = _locate_hooks_state_dir()
 
 _MARKER_PREFIX = "compaction_marker_"
+_SMOKE_PREFIX = "restore_smoke_"
 # TTL is a safety valve only — the one-shot deletion is the primary guard.
 _MARKER_TTL_SECONDS = 3600  # 1 hour
+_SMOKE_TTL_SECONDS = 120  # 2 minutes — window for next hook to clear it
 
 _ENABLED_ENV = "COMPACTION_RECOVERY_ENABLED"
 
@@ -119,6 +121,81 @@ def _clear_marker(terminal_id: str) -> None:
         pass
 
 
+def _smoke_path(terminal_id: str) -> Path:
+    """Return path to the restore-smoke marker file for this terminal."""
+    safe_id = re.sub(r"[^a-zA-Z0-9_.\-]+", "_", str(terminal_id))
+    return STATE_DIR / f"{_SMOKE_PREFIX}{safe_id}.json"
+
+
+def write_restore_smoke_marker(terminal_id: str, session_id: str) -> None:
+    """Write a post-restore smoke marker consumed by the next hook.
+
+    If the marker is not cleared within _SMOKE_TTL seconds, the next hook
+    logs a non-blocking warning that the restore output may not have been
+    consumed by Claude Code.
+    """
+    try:
+        STATE_DIR.mkdir(parents=True, exist_ok=True)
+        payload = {
+            "type": "restore_smoke",
+            "terminal_id": terminal_id,
+            "session_id": session_id,
+            "timestamp": time.time(),
+        }
+        path = _smoke_path(terminal_id)
+        path.write_text(json.dumps(payload), encoding="utf-8")
+    except Exception:
+        pass  # Non-fatal — smoke marker is advisory only
+
+
+def check_restore_smoke_marker(terminal_id: str, current_session_id: str) -> bool:
+    """Check for an uncleared restore smoke marker.
+
+    Returns True if the marker exists and matches the current session_id,
+    indicating the restore output was potentially not consumed.
+    Returns False if the marker is absent (normal — was cleared) or
+    belongs to a different session.
+
+    When True is returned, a warning is logged but the hook continues
+    normally (non-blocking).
+    """
+    import logging as _logging
+    _logger = _logging.getLogger(__name__)
+    try:
+        path = _smoke_path(terminal_id)
+        if not path.exists():
+            return False
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            path.unlink(missing_ok=True)
+            return False
+
+        ts = payload.get("timestamp", 0.0)
+        if (time.time() - ts) > _SMOKE_TTL_SECONDS:
+            path.unlink(missing_ok=True)
+            return False
+
+        marker_session = payload.get("session_id", "")
+        if marker_session != current_session_id:
+            # Different session — stale marker, clean it up
+            path.unlink(missing_ok=True)
+            return False
+
+        _logger.warning(
+            "[UserPromptSubmit] Restore smoke marker not cleared — "
+            "restore output may not have been consumed by Claude Code. "
+            "terminal=%s session=%s (age=%.1fs)",
+            terminal_id,
+            current_session_id,
+            time.time() - ts,
+        )
+        path.unlink(missing_ok=True)
+        return True
+    except Exception:
+        return False
+
+
 def _load_envelope(handoff_path: str) -> dict | None:
     """Load the Handoff V2 envelope JSON; return None on any error."""
     path = Path(handoff_path)
@@ -167,6 +244,12 @@ def handoff_task_injector_hook(context: HookContext) -> HookResult:
         return HookResult.empty()
 
     terminal_id = _get_terminal_id(context)
+
+    # Smoke test: verify the previous SessionStart restore output was consumed.
+    # If the smoke marker persists (wasn't cleared), log a warning — non-blocking.
+    session_id = context.data.get("session_id", "")
+    check_restore_smoke_marker(terminal_id, session_id)
+
     marker = _load_marker(terminal_id)
     if marker is None:
         return HookResult.empty()

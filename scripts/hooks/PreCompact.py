@@ -25,7 +25,7 @@ _log = logging.getLogger(__name__)
 
 # sequence (Priority-ordered)
 SEQUENCE = [
-    "PreCompact_handoff_capture.py",
+    "PreCompact_snapshot_capture.py",
     "PreCompact_commitment_tracker.py",
 ]
 

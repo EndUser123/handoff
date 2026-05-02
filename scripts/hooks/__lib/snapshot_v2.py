@@ -125,7 +125,15 @@ def _normalize_for_checksum(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def compute_checksum(payload: dict[str, Any]) -> str:
-    """Compute the V2 envelope checksum."""
+    """Compute the V2 envelope checksum.
+
+    Contract: environment_context is EXCLUDED from the hash because it is
+    supplementary data (environment snapshot at capture time) and changes on
+    every call even when session state is unchanged. This means checksum
+    validation passes even if environment_context is corrupted or truncated.
+    If environment_context integrity is required, add a separate content_hash.
+    See IO-003 from snapshot pre-mortem.
+    """
     normalized = _normalize_for_checksum(payload)
     serialized = json.dumps(normalized, sort_keys=True, separators=(",", ":"))
     return f"sha256:{hashlib.sha256(serialized.encode('utf-8')).hexdigest()}"
@@ -341,7 +349,7 @@ def _render_restore_message_compact(state: dict[str, Any]) -> str:
 def _require_fields(obj: dict[str, Any], fields: list[str], prefix: str) -> None:
     missing = [field for field in fields if field not in obj]
     if missing:
-        raise HandoffValidationError(
+        raise SnapshotValidationError(
             f"{prefix} missing required fields: {', '.join(missing)}"
         )
 
@@ -349,19 +357,19 @@ def _require_fields(obj: dict[str, Any], fields: list[str], prefix: str) -> None
 def validate_envelope(payload: dict[str, Any]) -> None:
     """Validate the V2 handoff envelope."""
     if not isinstance(payload, dict):
-        raise HandoffValidationError("handoff payload must be a dict")
+        raise SnapshotValidationError("handoff payload must be a dict")
 
     # Top-level schema_version is optional for backward compatibility.
     top_level_version = payload.get("schema_version")
     if top_level_version is not None and top_level_version != ENVELOPE_SCHEMA_VERSION:
-        raise HandoffValidationError(
+        raise SnapshotValidationError(
             f"unsupported envelope schema_version: {top_level_version}"
         )
 
     # environment_context is optional and supplementary (not checksummed).
     env_ctx = payload.get("environment_context")
     if env_ctx is not None and not isinstance(env_ctx, dict):
-        raise HandoffValidationError("environment_context must be a dict if present")
+        raise SnapshotValidationError("environment_context must be a dict if present")
 
     _require_fields(
         payload, ["resume_snapshot", "decision_register", "evidence_index"], "envelope"
@@ -372,11 +380,11 @@ def validate_envelope(payload: dict[str, Any]) -> None:
     evidence = payload["evidence_index"]
 
     if not isinstance(snapshot, dict):
-        raise HandoffValidationError("resume_snapshot must be a dict")
+        raise SnapshotValidationError("resume_snapshot must be a dict")
     if not isinstance(decisions, list):
-        raise HandoffValidationError("decision_register must be a list")
+        raise SnapshotValidationError("decision_register must be a list")
     if not isinstance(evidence, list):
-        raise HandoffValidationError("evidence_index must be a list")
+        raise SnapshotValidationError("evidence_index must be a list")
 
     _require_fields(
         snapshot,
@@ -405,12 +413,12 @@ def validate_envelope(payload: dict[str, Any]) -> None:
     )
 
     if snapshot["schema_version"] != SCHEMA_VERSION:
-        raise HandoffValidationError(
+        raise SnapshotValidationError(
             f"unsupported schema_version: {snapshot['schema_version']}"
         )
 
     if snapshot["status"] not in VALID_SNAPSHOT_STATUSES:
-        raise HandoffValidationError(
+        raise SnapshotValidationError(
             f"invalid resume_snapshot.status: {snapshot['status']}"
         )
 
@@ -422,7 +430,7 @@ def validate_envelope(payload: dict[str, Any]) -> None:
         "source_session_id",
     ]:
         if not isinstance(snapshot[field], str):
-            raise HandoffValidationError(f"resume_snapshot.{field} must be a string")
+            raise SnapshotValidationError(f"resume_snapshot.{field} must be a string")
 
     for field in [
         "active_files",
@@ -432,18 +440,18 @@ def validate_envelope(payload: dict[str, Any]) -> None:
         "evidence_refs",
     ]:
         if not isinstance(snapshot[field], list):
-            raise HandoffValidationError(f"resume_snapshot.{field} must be a list")
+            raise SnapshotValidationError(f"resume_snapshot.{field} must be a list")
 
     for field in [SNAPSHOT_TASKS_SNAPSHOT, SNAPSHOT_OPEN_QUESTIONS]:
         if field in snapshot and not isinstance(snapshot[field], list):
-            raise HandoffValidationError(f"resume_snapshot.{field} must be a list")
+            raise SnapshotValidationError(f"resume_snapshot.{field} must be a list")
 
     if not isinstance(snapshot["progress_percent"], int):
-        raise HandoffValidationError(
+        raise SnapshotValidationError(
             "resume_snapshot.progress_percent must be an integer"
         )
     if snapshot["progress_percent"] < 0 or snapshot["progress_percent"] > 100:
-        raise HandoffValidationError(
+        raise SnapshotValidationError(
             "resume_snapshot.progress_percent must be between 0 and 100"
         )
 
@@ -454,14 +462,14 @@ def validate_envelope(payload: dict[str, Any]) -> None:
     # (SEC-001: Path traversal protection).
     transcript_path = snapshot["n_1_transcript_path"]
     if not isinstance(transcript_path, str) or not transcript_path:
-        raise HandoffValidationError(
+        raise SnapshotValidationError(
             "resume_snapshot.n_1_transcript_path must be a string"
         )
     n_2_transcript_path = snapshot["n_2_transcript_path"]
     if n_2_transcript_path is not None and (
         not isinstance(n_2_transcript_path, str) or not n_2_transcript_path
     ):
-        raise HandoffValidationError(
+        raise SnapshotValidationError(
             "resume_snapshot.n_2_transcript_path must be a string or null"
         )
 
@@ -487,7 +495,7 @@ def validate_envelope(payload: dict[str, Any]) -> None:
             current = parent
 
     if project_root is None:
-        raise HandoffValidationError(
+        raise SnapshotValidationError(
             "resume_snapshot.n_1_transcript_path must be within project directory (no .claude boundary found)"
         )
 
@@ -495,24 +503,24 @@ def validate_envelope(payload: dict[str, Any]) -> None:
     try:
         transcript_file.relative_to(project_root)
     except ValueError:
-        raise HandoffValidationError(
+        raise SnapshotValidationError(
             "resume_snapshot.n_1_transcript_path must be within project directory"
         )
 
     # SEC-002: Sanitized error messages (don't leak actual paths)
     if not transcript_file.exists():
-        raise HandoffValidationError(
+        raise SnapshotValidationError(
             "resume_snapshot.n_1_transcript_path file does not exist"
         )
     if not transcript_file.is_file():
-        raise HandoffValidationError(
+        raise SnapshotValidationError(
             "resume_snapshot.n_1_transcript_path is not a file"
         )
 
     decision_ids = set()
     for index, decision in enumerate(decisions):
         if not isinstance(decision, dict):
-            raise HandoffValidationError(f"decision_register[{index}] must be a dict")
+            raise SnapshotValidationError(f"decision_register[{index}] must be a dict")
         _require_fields(
             decision,
             [
@@ -527,38 +535,38 @@ def validate_envelope(payload: dict[str, Any]) -> None:
             f"decision_register[{index}]",
         )
         if decision["kind"] not in VALID_DECISION_KINDS:
-            raise HandoffValidationError(f"decision_register[{index}].kind is invalid")
+            raise SnapshotValidationError(f"decision_register[{index}].kind is invalid")
         decision_ids.add(decision["id"])
 
     evidence_ids = set()
     for index, item in enumerate(evidence):
         if not isinstance(item, dict):
-            raise HandoffValidationError(f"evidence_index[{index}] must be a dict")
+            raise SnapshotValidationError(f"evidence_index[{index}] must be a dict")
         _require_fields(
             item, ["id", "type", "label", "path"], f"evidence_index[{index}]"
         )
         if item["type"] not in VALID_EVIDENCE_TYPES:
-            raise HandoffValidationError(f"evidence_index[{index}].type is invalid")
+            raise SnapshotValidationError(f"evidence_index[{index}].type is invalid")
         evidence_ids.add(item["id"])
 
     for ref in snapshot["decision_refs"]:
         if ref not in decision_ids:
-            raise HandoffValidationError(
+            raise SnapshotValidationError(
                 f"resume_snapshot.decision_refs contains unknown id: {ref}"
             )
 
     for ref in snapshot["evidence_refs"]:
         if ref not in evidence_ids:
-            raise HandoffValidationError(
+            raise SnapshotValidationError(
                 f"resume_snapshot.evidence_refs contains unknown id: {ref}"
             )
 
     # LOGIC-002: Require checksum field - reject envelopes without checksum
     checksum = payload.get("checksum")
     if checksum is None:
-        raise HandoffValidationError("resume_snapshot.checksum is required")
+        raise SnapshotValidationError("resume_snapshot.checksum is required")
     if checksum != compute_checksum(payload):
-        raise HandoffValidationError("handoff checksum mismatch")
+        raise SnapshotValidationError("handoff checksum mismatch")
 
 
 def build_resume_snapshot(
@@ -662,7 +670,7 @@ def mark_snapshot_status(
     """Return a copy of the envelope with updated snapshot status.
 
     Raises:
-        HandoffValidationError: If the status transition is invalid.
+        SnapshotValidationError: If the status transition is invalid.
     """
     updated = deepcopy(payload)
     snapshot = updated["resume_snapshot"]
@@ -670,11 +678,11 @@ def mark_snapshot_status(
 
     # Validate state transition
     if status not in VALID_SNAPSHOT_STATUSES:
-        raise HandoffValidationError(f"invalid target status: {status}")
+        raise SnapshotValidationError(f"invalid target status: {status}")
 
     allowed_transitions = VALID_STATE_TRANSITIONS.get(current_status, set())
     if status not in allowed_transitions:
-        raise HandoffValidationError(
+        raise SnapshotValidationError(
             f"invalid state transition: {current_status} -> {status} "
             f"(allowed: {', '.join(sorted(allowed_transitions)) or 'none (terminal state)'})"
         )
@@ -709,7 +717,7 @@ def evaluate_for_restore(
     """Evaluate whether the snapshot is safe to auto-restore."""
     try:
         validate_envelope(payload)
-    except HandoffValidationError as exc:
+    except SnapshotValidationError as exc:
         return RestoreDecision(ok=False, reason=f"invalid handoff: {exc}")
 
     if source != "compact":

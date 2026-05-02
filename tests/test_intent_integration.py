@@ -23,7 +23,7 @@ sys.modules["transcript"] = transcript
 spec.loader.exec_module(transcript)
 
 # Load handoff_v2 module
-HANDOFF_V2_PATH = PACKAGE_ROOT / "scripts" / "hooks" / "__lib" / "handoff_v2.py"
+HANDOFF_V2_PATH = PACKAGE_ROOT / "scripts" / "hooks" / "__lib" / "snapshot_v2.py"
 
 spec2 = importlib.util.spec_from_file_location("handoff_v2", HANDOFF_V2_PATH)
 handoff_v2 = importlib.util.module_from_spec(spec2)

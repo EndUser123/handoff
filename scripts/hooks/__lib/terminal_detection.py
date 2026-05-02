@@ -2,58 +2,83 @@
 """
 Terminal Detection Module - Compatibility Wrapper
 
-This module provides a compatibility wrapper that imports terminal detection
-from skill-guard, ensuring consistent terminal ID format across all systems.
-
-IMPORTANT: This ensures handoff and skill enforcement use the SAME terminal IDs.
-Previous version had incompatible implementations that broke skill enforcement.
+Lazy-imports terminal detection from skill-guard when available.
+Falls back to a local implementation using the same priority order:
+1. CLAUDE_TERMINAL_ID and other env vars
+2. Windows WT_SESSION / GetConsoleWindow() handle
+3. Empty string (callers must handle)
 """
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
+_TERMINAL_ENV_VARS = [
+    "CLAUDE_TERMINAL_ID",
+    "TERMINAL_ID",
+    "TERM_ID",
+    "SESSION_TERMINAL",
+]
 
-def _get_skill_guard_path() -> Path:
-    """Get the path to skill-guard package."""
-    # Try multiple possible locations for skill-guard
+_sg_detect_terminal_id = None
+_sg_resolved = False
+
+
+def _try_import_skill_guard() -> None:
+    """Attempt to import detect_terminal_id from skill-guard (once)."""
+    global _sg_detect_terminal_id, _sg_resolved
+    if _sg_resolved:
+        return
+    _sg_resolved = True
+
     current_file = Path(__file__)
-
-    # Option 1: Relative to handoff package (packages/handoff/core/hooks/__lib/)
-    # project_root should be P:/packages/
     project_root = current_file.parent.parent.parent.parent.parent
-    skill_guard_paths = [
-        project_root / "skill-guard" / "src",  # Fixed: removed extra "packages/"
+    for candidate in (
+        project_root / "skill-guard" / "src",
         project_root / ".claude" / "hooks" / "skill-guard" / "src",
-        current_file.parent.parent.parent.parent / "skill-guard",  # Fallback
-    ]
+        current_file.parent.parent.parent.parent / "skill-guard",
+    ):
+        marker = candidate / "skill_guard" / "utils" / "terminal_detection.py"
+        if marker.exists():
+            if str(candidate) not in sys.path:
+                sys.path.insert(0, str(candidate))
+            try:
+                from skill_guard.utils.terminal_detection import (
+                    detect_terminal_id as _impl,
+                )
+                _sg_detect_terminal_id = _impl
+            except Exception:
+                pass
+            return
 
-    for path in skill_guard_paths:
-        if (path / "skill_guard" / "utils" / "terminal_detection.py").exists():
-            return path
 
-    # If not found, raise import error with helpful message
-    raise ImportError(
-        f"skill-guard package not found. Tried:\n"
-        f"  - {skill_guard_paths[0]}\n"
-        f"  - {skill_guard_paths[1]}\n"
-        f"  - {skill_guard_paths[2]}\n"
-        f"Ensure skill-guard is installed in packages/ directory."
-    )
+def _fallback_detect_terminal_id() -> str:
+    """Fallback using env vars and Windows console handle."""
+    for env_var in _TERMINAL_ENV_VARS:
+        value = os.environ.get(env_var)
+        if value:
+            return f"env_{value}"
+    if sys.platform == "win32":
+        wt = os.environ.get("WT_SESSION")
+        if wt:
+            return f"console_{wt}"
+        try:
+            handle = __import__("ctypes").windll.kernel32.GetConsoleWindow()
+            if handle:
+                return f"console_{hex(handle)[2:]}"
+        except Exception:
+            pass
+    return ""
 
 
-# Add skill-guard to path and import
-_skill_guard_path = _get_skill_guard_path()
-if str(_skill_guard_path) not in sys.path:
-    sys.path.insert(0, str(_skill_guard_path))
-
-from skill_guard.utils.terminal_detection import (
-    detect_terminal_id as _sg_detect_terminal_id,
-)
-
-# Re-export for backward compatibility
-detect_terminal_id = _sg_detect_terminal_id
+def detect_terminal_id() -> str:
+    """Detect terminal ID. Uses skill-guard when available, fallback otherwise."""
+    _try_import_skill_guard()
+    if _sg_detect_terminal_id is not None:
+        return _sg_detect_terminal_id()
+    return _fallback_detect_terminal_id()
 
 
 def resolve_terminal_key(terminal_id: str | None = None) -> str:

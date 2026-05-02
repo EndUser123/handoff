@@ -12,7 +12,7 @@ from core.hooks.PreCompact_handoff_capture import (
     detect_planning_session,
     detect_session_type,
 )
-from core.hooks.__lib.handoff_files import HandoffFileStorage
+from core.hooks.__lib.handoff_files import SnapshotFileStorage as HandoffFileStorage
 
 HOOKS_DIR = Path(__file__).resolve().parents[1] / "hooks"
 
@@ -27,7 +27,7 @@ def _write_transcript(path: Path, entries: list[dict]) -> None:
 def test_detect_session_type_prefers_planning_keywords():
     session_type, emoji = detect_session_type(
         "/arch design the compact handoff replacement",
-        ["P:/packages/handoff/scripts/hooks/PreCompact_handoff_capture.py"],
+        ["P:/packages/snapshot/scripts/hooks/PreCompact_snapshot_capture.py"],
     )
 
     assert session_type == "planning"
@@ -42,7 +42,7 @@ def test_detect_planning_session_creates_approval_blocker():
 
 
 def test_precompact_hook_writes_v2_envelope(tmp_path, monkeypatch):
-    monkeypatch.setenv("HANDOFF_PROJECT_ROOT", str(tmp_path))
+    monkeypatch.setenv("SNAPSHOT_PROJECT_ROOT", str(tmp_path))
     transcript_path = tmp_path / "transcripts" / "capture.jsonl"
     _write_transcript(
         transcript_path,
@@ -62,7 +62,7 @@ def test_precompact_hook_writes_v2_envelope(tmp_path, monkeypatch):
                 "type": "tool_use",
                 "name": "Edit",
                 "input": {
-                    "file_path": "P:/packages/handoff/scripts/hooks/__lib/handoff_v2.py",
+                    "file_path": "P:/packages/snapshot/scripts/hooks/__lib/snapshot_v2.py",
                     "old_string": "old code",
                     "new_string": "new code",
                 },
@@ -73,7 +73,7 @@ def test_precompact_hook_writes_v2_envelope(tmp_path, monkeypatch):
                     "content": [
                         {
                             "type": "text",
-                            "text": "Decision: never auto-restore stale snapshots. editing file P:/packages/handoff/scripts/hooks/__lib/handoff_v2.py next.",
+                            "text": "Decision: never auto-restore stale snapshots. editing file P:/packages/snapshot/scripts/hooks/__lib/snapshot_v2.py next.",
                         }
                     ]
                 },
@@ -91,7 +91,7 @@ def test_precompact_hook_writes_v2_envelope(tmp_path, monkeypatch):
     }
 
     result = subprocess.run(
-        [sys.executable, str(HOOKS_DIR / "PreCompact_handoff_capture.py")],
+        [sys.executable, str(HOOKS_DIR / "PreCompact_snapshot_capture.py")],
         input=json.dumps(payload),
         capture_output=True,
         text=True,
@@ -102,13 +102,13 @@ def test_precompact_hook_writes_v2_envelope(tmp_path, monkeypatch):
     assert output["decision"] == "approve"
 
     storage = HandoffFileStorage(tmp_path, "console_test_capture")
-    saved = storage.load_handoff()
+    saved = storage.load_raw_handoff()
     assert saved is not None
     snapshot = saved["resume_snapshot"]
     assert snapshot["status"] == "pending"
     assert snapshot["goal"].startswith("Implement the handoff v2 restore path")
     assert (
-        "P:/packages/handoff/scripts/hooks/__lib/handoff_v2.py"
+        "P:/packages/snapshot/scripts/hooks/__lib/snapshot_v2.py"
         in snapshot["active_files"]
     )
     assert snapshot["decision_refs"]

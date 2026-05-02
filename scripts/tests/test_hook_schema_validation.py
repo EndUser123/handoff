@@ -136,7 +136,7 @@ class TestActualHookOutputSchema:
         result = subprocess.run(
             [
                 sys.executable,
-                str(package_root / "scripts/hooks/PreCompact_handoff_capture.py"),
+                str(package_root / "scripts/hooks/PreCompact_snapshot_capture.py"),
             ],
             input=json.dumps(payload),
             capture_output=True,
@@ -168,7 +168,7 @@ class TestActualHookOutputSchema:
         result = subprocess.run(
             [
                 sys.executable,
-                str(package_root / "scripts/hooks/SessionStart_handoff_restore.py"),
+                str(package_root / "scripts/hooks/SessionStart_snapshot_restore.py"),
             ],
             input=json.dumps(payload),
             capture_output=True,
@@ -189,7 +189,7 @@ class TestNoMagicStringsInHooks:
 
     def test_precompact_uses_approve_constant(self):
         """PreCompact hook should import and use DECISION_APPROVE constant."""
-        hook_path = package_root / "scripts/hooks/PreCompact_handoff_capture.py"
+        hook_path = package_root / "scripts/hooks/PreCompact_snapshot_capture.py"
         content = hook_path.read_text(encoding="utf-8")
 
         # Check for constant import
@@ -205,7 +205,7 @@ class TestNoMagicStringsInHooks:
 
     def test_session_start_uses_approve_constant(self):
         """SessionStart hook should not use magic 'allow' string."""
-        hook_path = package_root / "scripts/hooks/SessionStart_handoff_restore.py"
+        hook_path = package_root / "scripts/hooks/SessionStart_snapshot_restore.py"
         content = hook_path.read_text(encoding="utf-8")
 
         # Check for the bug pattern

@@ -126,28 +126,33 @@ class TerminalFileRegistry:
             return {}
 
     def _save_registry(self, registry: dict[str, Any]) -> None:
-        """Save registry to file atomically."""
+        """Save registry to file atomically (thread-safe via FileLock)."""
         import tempfile
 
         try:
             self.registry_dir.mkdir(parents=True, exist_ok=True)
-            fd, temp_path = tempfile.mkstemp(
-                suffix=".tmp",
-                dir=str(self.registry_dir),
-                prefix=f"{self.terminal_id}_files_",
-            )
-            try:
-                with os.fdopen(fd, "w", encoding="utf-8") as handle:
-                    json.dump(registry, handle, indent=2, ensure_ascii=False)
-                # Atomic rename
-                Path(temp_path).replace(self.registry_file)
-            except Exception:
-                # Clean up temp file on error
+            lock_file = self.registry_file.with_suffix(".lock")
+            # SNAPSHOT-005: FileLock prevents concurrent _save_registry calls from losing data
+            from scripts.hooks.__lib.snapshot_store import FileLock
+
+            with FileLock(lock_file, timeout=5.0):
+                fd, temp_path = tempfile.mkstemp(
+                    suffix=".tmp",
+                    dir=str(self.registry_dir),
+                    prefix=f"{self.terminal_id}_files_",
+                )
                 try:
-                    os.unlink(temp_path)
-                except OSError:
-                    pass
-                raise
+                    with os.fdopen(fd, "w", encoding="utf-8") as handle:
+                        json.dump(registry, handle, indent=2, ensure_ascii=False)
+                    # Atomic rename
+                    Path(temp_path).replace(self.registry_file)
+                except Exception:
+                    # Clean up temp file on error
+                    try:
+                        os.unlink(temp_path)
+                    except OSError:
+                        pass
+                    raise
         except Exception as exc:
             logger.error(
                 "[TerminalFileRegistry] Failed to save registry: %s",

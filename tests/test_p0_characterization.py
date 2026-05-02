@@ -13,13 +13,13 @@ import pytest
 
 # Test files exist and contain the problematic code
 HANDOFF_STORE = (
-    Path(__file__).parent.parent / "scripts" / "hooks" / "__lib" / "handoff_store.py"
+    Path(__file__).parent.parent / "scripts" / "hooks" / "__lib" / "snapshot_store.py"
 )
 GIT_STATE = (
     Path(__file__).parent.parent / "scripts" / "hooks" / "__lib" / "git_state.py"
 )
 HANDOFF_V2 = (
-    Path(__file__).parent.parent / "scripts" / "hooks" / "__lib" / "handoff_v2.py"
+    Path(__file__).parent.parent / "scripts" / "hooks" / "__lib" / "snapshot_v2.py"
 )
 TERMINAL_REGISTRY = (
     Path(__file__).parent.parent

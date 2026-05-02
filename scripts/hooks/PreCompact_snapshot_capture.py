@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import logging
+from logging.handlers import RotatingFileHandler
 import os
 import re
 import subprocess
@@ -23,7 +24,9 @@ _log_file_path = (
     Path(__file__).resolve().parents[2] / ".claude" / "logs" / "handoff_capture.log"
 )
 _log_file_path.parent.mkdir(parents=True, exist_ok=True)
-_handler = logging.FileHandler(_log_file_path, encoding="utf-8")
+_handler = RotatingFileHandler(
+    _log_file_path, maxBytes=1_000_000, backupCount=3, encoding="utf-8"
+)
 _handler.setFormatter(
     logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 )
@@ -42,9 +45,9 @@ if str(PACKAGE_ROOT) not in sys.path:
 
 # Import V1 features for integration
 from scripts.config import cleanup_old_handoffs
-from scripts.hooks.__lib.snapshot_files import HandoffFileStorage
+from scripts.hooks.__lib.snapshot_files import SnapshotFileStorage
 from scripts.hooks.__lib.snapshot_v2 import (
-    HandoffValidationError,
+    SnapshotValidationError,
     build_envelope,
     build_resume_snapshot,
     compute_file_content_hash,
@@ -603,11 +606,11 @@ def main() -> None:
         # CRITICAL: Validate transcript_path exists and is readable
         transcript_file = Path(transcript_path)
         if not transcript_file.exists():
-            raise HandoffValidationError(
+            raise SnapshotValidationError(
                 f"Transcript file does not exist: {transcript_path}"
             )
         if not transcript_file.is_file():
-            raise HandoffValidationError(
+            raise SnapshotValidationError(
                 f"Transcript path is not a file: {transcript_path}"
             )
         # LOGIC-003: Fixed inverted condition - warn when test transcripts are detected
@@ -702,7 +705,7 @@ def main() -> None:
         # Prefer accumulated JSONL state over inference when available
         accumulated_lifecycle_phase = None
         try:
-            storage_for_accum = HandoffFileStorage(project_root, terminal_id)
+            storage_for_accum = SnapshotFileStorage(project_root, terminal_id)
             accumulated_events = storage_for_accum.read_accumulated_state()
             # Find the last phase_transition event
             for event in reversed(accumulated_events):
@@ -804,7 +807,7 @@ def main() -> None:
         # being compacted). We must read the old handoff to build the session chain.
         # Pass exclude_session_id to skip S_NEW's own handoff (already written to disk
         # with a recent mtime; without exclusion load_raw_handoff() returns S_NEW).
-        storage = HandoffFileStorage(project_root, terminal_id)
+        storage = SnapshotFileStorage(project_root, terminal_id)
         old_handoff = storage.load_raw_handoff(
             exclude_session_id=input_data.get("session_id")
         )
@@ -899,7 +902,7 @@ def main() -> None:
                 "[PreCompact V2] save_handoff returned False: terminal=%s",
                 terminal_id,
             )
-            raise HandoffValidationError("failed to persist V2 handoff envelope")
+            raise SnapshotValidationError("failed to persist V2 handoff envelope")
 
         # Verify file was actually created
         if not saved_path.exists():
@@ -907,7 +910,7 @@ def main() -> None:
                 "[PreCompact V2] File does not exist after save: %s",
                 saved_path,
             )
-            raise HandoffValidationError(
+            raise SnapshotValidationError(
                 f"handoff file not created after save: {saved_path}"
             )
 
@@ -1021,7 +1024,7 @@ def main() -> None:
             )
         )
         sys.exit(1)
-    except HandoffValidationError as exc:
+    except SnapshotValidationError as exc:
         print(
             json.dumps(
                 {

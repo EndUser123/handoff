@@ -238,6 +238,22 @@ def cleanup_old_handoffs(project_root: Path | None = None) -> int:
                 except OSError:
                     continue
 
+    # PERF-006: Also clean up session_registry.jsonl (unbounded growth)
+    try:
+        registry_path = Path.home() / ".claude" / ".artifacts" / "session_registry.jsonl"
+        if registry_path.exists():
+            mtime = registry_path.stat().st_mtime
+            cutoff_time = datetime.now(UTC).timestamp() - (CLEANUP_DAYS * 86400)
+            if mtime < cutoff_time:
+                registry_path.unlink()
+                deleted_count += 1
+                logger.debug(
+                    "[Config] Auto-deleted old session_registry: age=%d days",
+                    (datetime.now(UTC).timestamp() - mtime) // 86400,
+                )
+    except OSError:
+        pass
+
     if deleted_count > 0:
         logger.info(
             f"[Config] Auto-cleanup: Deleted {deleted_count} old handoff file(s) "

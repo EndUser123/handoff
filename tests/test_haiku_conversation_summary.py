@@ -99,7 +99,7 @@ class TestHaikuConversationSummary:
 
     def test_load_summary_returns_content(self, tmp_path):
         """TASK-5: load_summary returns text when sidecar exists."""
-        storage = HandoffFileStorage(tmp_path, "test-terminal")
+        storage = SnapshotFileStorage(tmp_path, "test-terminal")
         (tmp_path / ".claude" / "state" / "handoff").mkdir(parents=True, exist_ok=True)
 
         # Create a fake envelope file

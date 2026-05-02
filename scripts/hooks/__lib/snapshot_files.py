@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import logging
+from logging.handlers import RotatingFileHandler
 import os
 import tempfile
 from pathlib import Path
@@ -31,7 +32,9 @@ _log_file_path = (
 )
 _log_file_path.parent.mkdir(parents=True, exist_ok=True)
 if not logger.handlers:
-    _handler = logging.FileHandler(_log_file_path, encoding="utf-8")
+    _handler = RotatingFileHandler(
+        _log_file_path, maxBytes=1_000_000, backupCount=3, encoding="utf-8"
+    )
     _handler.setFormatter(
         logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     )
@@ -71,11 +74,16 @@ class SnapshotFileStorage:
         if created_at:
             # ISO8601 timestamp -> filesystem-safe filename
             # 2026-04-09T12:00:00.000000 -> 20260409T120000
-            ts_part = created_at.replace("-", "").replace(":", "").split(".")[0]
+            # Malformed created_at falls back to strftime (IO-001 fix)
+            try:
+                parsed = parse_iso8601(created_at)
+                ts_part = parsed.strftime("%Y%m%dT%H%M%S")
+            except Exception:
+                import time
+                ts_part = time.strftime("%Y%m%dT%H%M%S%f")  # microsecond precision (SNAPSHOT-002)
         else:
             import time
-
-            ts_part = time.strftime("%Y%m%dT%H%M%S")
+            ts_part = time.strftime("%Y%m%dT%H%M%S%f")  # microsecond precision (SNAPSHOT-002)
 
         return self.handoff_dir / f"{self.terminal_id}_{ts_part}_handoff.json"
 
@@ -214,7 +222,7 @@ class SnapshotFileStorage:
                     except OSError:
                         pass
                     raise
-        except HandoffValidationError as exc:
+        except SnapshotValidationError as exc:
             logger.error(
                 "[HandoffFileStorage] Invalid handoff payload: %s",
                 exc,
@@ -310,7 +318,7 @@ class SnapshotFileStorage:
                 )
                 return None
             return payload
-        except HandoffValidationError as exc:
+        except SnapshotValidationError as exc:
             logger.error(
                 "[HandoffFileStorage] Invalid handoff payload in %s: %s",
                 self.handoff_file.name,

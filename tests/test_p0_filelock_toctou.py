@@ -23,7 +23,7 @@ sys.path.insert(0, str(handoff_scripts))
 import importlib.util
 
 spec = importlib.util.spec_from_file_location(
-    "handoff_store", handoff_scripts / "hooks" / "__lib" / "handoff_store.py"
+    "handoff_store", handoff_scripts / "hooks" / "__lib" / "snapshot_store.py"
 )
 handoff_store = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(handoff_store)

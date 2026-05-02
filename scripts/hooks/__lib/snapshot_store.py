@@ -58,7 +58,7 @@ except ImportError:
     )
     LOCK_CHECKS_PER_SECOND = 10  # Number of lock checks per second
     STALE_LOCK_AGE_SECONDS = (
-        10  # Age after which a lock is considered stale (10 seconds)
+        30  # Age after which a lock is considered stale (30 seconds — raised from 10 to handle Windows I/O latency under antivirus/indexed-search load)
     )
 
     def utcnow_iso() -> str:

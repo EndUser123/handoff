@@ -12,7 +12,7 @@ import json
 from pathlib import Path
 
 
-from scripts.hooks.PreCompact_handoff_capture import (
+from scripts.hooks.PreCompact_snapshot_capture import (
     _build_decisions,
     _extract_active_files,
 )
@@ -153,7 +153,7 @@ def test_decisions_limited_to_recent_entries(tmp_path):
 def test_decisions_filters_noise_from_current_session(tmp_path):
     """Decision register should filter out noise even in current session."""
     # This test verifies noise filtering is in place
-    from scripts.hooks.PreCompact_handoff_capture import _is_decision_noise
+    from scripts.hooks.PreCompact_snapshot_capture import _is_decision_noise
 
     # Test that noise filtering works correctly
     assert _is_decision_noise("Base directory for this skill: /path/to/skill")

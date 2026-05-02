@@ -1,62 +1,57 @@
 {
-  "PreCompact": [
-    {
-      "matcher": ".*",
-      "hooks": [
-        {
-          "type": "command",
-          "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/PreCompact_snapshot_capture.py\""
-        },
-        {
-          "type": "command",
-          "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/PreCompact_commitment_tracker.py\""
-        },
-        {
-          "type": "command",
-          "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/PreCompact_workflow_checkpoint.py\""
-        },
-        {
-          "type": "command",
-          "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/precompact_imports_patch.py\""
-        }
-      ]
-    }
-  ],
-  "SessionStart": [
-    {
-      "matcher": ".*",
-      "hooks": [
-        {
-          "type": "command",
-          "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/SessionStart_snapshot_restore.py\""
-        },
-        {
-          "type": "command",
-          "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/SessionStart_tldr.py\""
-        }
-      ]
-    }
-  ],
-  "SessionEnd": [
-    {
-      "matcher": ".*",
-      "hooks": [
-        {
-          "type": "command",
-          "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/SessionEnd_tldr.py\""
-        }
-      ]
-    }
-  ],
-  "UserPromptSubmit": [
-    {
-      "matcher": ".*",
-      "hooks": [
-        {
-          "type": "command",
-          "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/userpromptsubmit_task_injector.py\""
-        }
-      ]
-    }
-  ]
+  "hooks": {
+    "PreCompact": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/PreCompact_snapshot_capture.py\""
+          },
+          {
+            "type": "command",
+            "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/PreCompact_workflow_checkpoint.py\""
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/SessionStart_snapshot_restore.py\""
+          },
+          {
+            "type": "command",
+            "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/SessionStart_tldr.py\""
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/SessionEnd_tldr.py\""
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/userpromptsubmit_task_injector.py\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
 }

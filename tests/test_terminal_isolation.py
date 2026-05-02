@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 
-from core.hooks.__lib.handoff_files import HandoffFileStorage
+from core.hooks.__lib.handoff_files import SnapshotFileStorage as HandoffFileStorage
 from core.hooks.__lib.handoff_v2 import build_envelope, build_resume_snapshot
 
 

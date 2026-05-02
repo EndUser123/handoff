@@ -19,7 +19,7 @@ import json
 from pathlib import Path
 
 
-from scripts.hooks.PreCompact_handoff_capture import _build_decisions
+from scripts.hooks.PreCompact_snapshot_capture import _build_decisions
 from scripts.hooks.__lib.transcript import TranscriptParser
 
 

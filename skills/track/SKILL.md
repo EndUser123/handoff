@@ -84,7 +84,8 @@ Show recent compaction history across all terminals:
 
 ```bash
 python -c "
-import sys; sys.path.insert(0, 'P:/packages/handoff')
+import sys, os
+sys.path.insert(0, os.path.join(os.environ.get('CLAUDE_PLUGIN_ROOT', ''), 'scripts', 'hooks', '__lib'))
 from scripts.hooks.__lib.session_registry import query_registry
 entries = query_registry(limit=20)
 if not entries:
@@ -105,7 +106,8 @@ Filter to a specific terminal. Pass `terminal_id` to `query_registry()`:
 
 ```bash
 python -c "
-import sys, os; sys.path.insert(0, 'P:/packages/handoff')
+import sys, os
+sys.path.insert(0, os.path.join(os.environ.get('CLAUDE_PLUGIN_ROOT', ''), 'scripts', 'hooks', '__lib'))
 from scripts.hooks.__lib.session_registry import query_registry
 tid = sys.argv[1] if len(sys.argv) > 1 else f'console_{os.environ.get(\"WT_SESSION\",\"\")}'
 entries = query_registry(terminal_id=tid, limit=20)

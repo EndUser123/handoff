@@ -20,18 +20,33 @@ class CoreHooksFinder(MetaPathFinder):
         # Handle core.hooks.__lib.* modules
         if fullname.startswith("core.hooks.__lib."):
             module_name = fullname.rsplit(".", 1)[-1]
-            file_path = _LIB_DIR / f"{module_name}.py"
+            # Redirect old handoff-named __lib modules to snapshot-named files
+            _LIB_REDIRECT_MAP = {
+                "handoff_v2": "snapshot_v2",
+                "handoff_files": "snapshot_files",
+                "handoff_store": "snapshot_store",
+                "handoff_accumulator": "snapshot_accumulator",
+            }
+            redirected = _LIB_REDIRECT_MAP.get(module_name, module_name)
+            file_path = _LIB_DIR / f"{redirected}.py"
             if file_path.exists():
                 return spec_from_file_location(
                     fullname, file_path, loader=CoreHooksLoader()
                 )
 
-        # Handle core.hooks.{hook_name} modules (e.g., PreCompact_handoff_capture)
+        # Handle core.hooks.{hook_name} modules (e.g., PreCompact_snapshot_capture)
         elif fullname.startswith("core.hooks.") and not fullname.startswith(
             "core.hooks.__"
         ):
             module_name = fullname.rsplit(".", 1)[-1]
-            file_path = _HOOKS_DIR / f"{module_name}.py"
+            # Redirect old handoff-named hooks to snapshot-named files
+            _REDIRECT_MAP = {
+                "PreCompact_handoff_capture": "PreCompact_snapshot_capture",
+                "SessionStart_handoff_restore": "SessionStart_snapshot_restore",
+                "SessionEnd_handoff": "SessionEnd_tldr",
+            }
+            redirected = _REDIRECT_MAP.get(module_name, module_name)
+            file_path = _HOOKS_DIR / f"{redirected}.py"
             if file_path.exists():
                 return spec_from_file_location(
                     fullname, file_path, loader=CoreHooksLoader()

@@ -18,9 +18,9 @@ from pathlib import Path
 
 import pytest
 
-from scripts.hooks.__lib.snapshot_files import SnapshotFileStorage
+from scripts.hooks.__lib.snapshot_files import SnapshotFileStorage as HandoffFileStorage
 from scripts.hooks.__lib.snapshot_v2 import (
-    SnapshotValidationError,
+    SnapshotValidationError as HandoffValidationError,
     build_envelope,
     build_resume_snapshot,
     compute_file_content_hash,

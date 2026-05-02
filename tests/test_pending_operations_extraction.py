@@ -306,3 +306,172 @@ class TestInvestigationOperationDetails:
         assert ops[0]["type"] == "investigation"
         # Pattern should be truncated to ~50 chars
         assert len(ops[0]["target"]) < 100
+
+
+class TestPendingOperationsCompletedExclusion:
+    """Regression: completed tool_use entries must NOT appear as pending.
+
+    Bug: extract_pending_operations() collected ALL tool_use entries regardless
+    of completion state, then took the first 5 (oldest). A completed Read of
+    settings.json from early in the session would appear as "pending" in the
+    handoff snapshot, misleading the resumed session.
+    """
+
+    def _make_tool_result_entry(self, tool_use_id: str) -> dict:
+        """Create a tool result entry matching production transcript structure."""
+        return {
+            "type": "tool",
+            "id": tool_use_id,
+        }
+
+    def test_completed_read_excluded(self, tmp_path):
+        """Completed Read must not appear in pending operations."""
+        entry_id = "call_completed_read"
+        tool_use = {
+            "type": "assistant",
+            "message": {
+                "content": [
+                    {
+                        "type": "tool_use",
+                        "id": entry_id,
+                        "name": "Read",
+                        "input": {"file_path": "P:/.claude/settings.json"},
+                    }
+                ],
+            },
+        }
+        tool_result = self._make_tool_result_entry(entry_id)
+
+        transcript_file = tmp_path / "test.jsonl"
+        transcript_file.write_text(
+            json.dumps(tool_use) + "\n" + json.dumps(tool_result) + "\n"
+        )
+
+        parser = TranscriptParser(transcript_file)
+        ops = parser.extract_pending_operations()
+
+        assert ops == [], f"Completed Read should not be pending, got: {ops}"
+
+    def test_completed_ops_excluded_in_progress_kept(self, tmp_path):
+        """Mix of completed and in-progress: only in-progress kept."""
+        completed_id = "call_done"
+        in_progress_id = "call_pending"
+
+        completed_use = {
+            "type": "assistant",
+            "message": {
+                "content": [
+                    {
+                        "type": "tool_use",
+                        "id": completed_id,
+                        "name": "Read",
+                        "input": {"file_path": "old_file.py"},
+                    }
+                ],
+            },
+        }
+        completed_result = self._make_tool_result_entry(completed_id)
+        pending_use = {
+            "type": "assistant",
+            "message": {
+                "content": [
+                    {
+                        "type": "tool_use",
+                        "id": in_progress_id,
+                        "name": "Edit",
+                        "input": {"file_path": "new_file.py"},
+                    }
+                ],
+            },
+        }
+
+        transcript_file = tmp_path / "test.jsonl"
+        transcript_file.write_text(
+            "\n".join(
+                json.dumps(e)
+                for e in [completed_use, completed_result, pending_use]
+            )
+            + "\n"
+        )
+
+        parser = TranscriptParser(transcript_file)
+        ops = parser.extract_pending_operations()
+
+        assert len(ops) == 1
+        assert ops[0]["type"] == "edit"
+        assert ops[0]["target"] == "new_file.py"
+
+    def test_all_completed_yields_empty(self, tmp_path):
+        """When all tool_uses have matching results, pending ops is empty."""
+        entries = []
+        for i in range(3):
+            tid = f"call_{i}"
+            entries.append(
+                {
+                    "type": "assistant",
+                    "message": {
+                        "content": [
+                            {
+                                "type": "tool_use",
+                                "id": tid,
+                                "name": "Read",
+                                "input": {"file_path": f"file{i}.py"},
+                            }
+                        ],
+                    },
+                }
+            )
+            entries.append(self._make_tool_result_entry(tid))
+
+        transcript_file = tmp_path / "test.jsonl"
+        transcript_file.write_text(
+            "\n".join(json.dumps(e) for e in entries) + "\n"
+        )
+
+        parser = TranscriptParser(transcript_file)
+        ops = parser.extract_pending_operations()
+
+        assert ops == []
+
+
+class TestPendingOperationsReverseOrder:
+    """Regression: most recent incomplete operations should appear first.
+
+    Bug: extract_pending_operations() processed entries from the beginning,
+    so the first (oldest) incomplete operations were returned. For session
+    resumption, the most recent incomplete work matters most.
+    """
+
+    def test_most_recent_first(self, tmp_path):
+        """When multiple ops are in-progress, the latest appears first."""
+        entries = []
+        for i in range(3):
+            entries.append(
+                {
+                    "type": "assistant",
+                    "message": {
+                        "content": [
+                            {
+                                "type": "tool_use",
+                                "id": f"call_{i}",
+                                "name": "Read",
+                                "input": {"file_path": f"file{i}.py"},
+                            }
+                        ],
+                    },
+                }
+            )
+
+        transcript_file = tmp_path / "test.jsonl"
+        transcript_file.write_text(
+            "\n".join(json.dumps(e) for e in entries) + "\n"
+        )
+
+        parser = TranscriptParser(transcript_file)
+        ops = parser.extract_pending_operations()
+
+        assert len(ops) == 3
+        # Reverse order: file2 (most recent) first, file0 last
+        assert ops[0]["target"] == "file2.py"
+        assert ops[1]["target"] == "file1.py"
+        assert ops[2]["target"] == "file0.py"

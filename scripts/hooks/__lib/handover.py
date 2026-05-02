@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any, TypedDict
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from ..PreCompact_handoff_capture import TranscriptParser
+    from .PreCompact_snapshot_capture import TranscriptParser
 
 
 class HandoverData(TypedDict):

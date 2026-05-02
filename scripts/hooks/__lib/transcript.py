@@ -2299,9 +2299,10 @@ class TranscriptParser:
                 if tool_id:
                     completed_tool_ids.add(tool_id)
 
-        # First pass: Detect tool_use events inside assistant message content
-        # Real transcript structure: {"type": "assistant", "message": {"content": [{"type": "tool_use", ...}]}}
-        for i, entry in enumerate(entries):
+        # First pass: Detect INCOMPLETE tool_use events (no matching tool result).
+        # Process in reverse order so the most recent incomplete operations appear first.
+        for i in range(len(entries) - 1, -1, -1):
+            entry = entries[i]
             entry_type = entry.get("type", "")
 
             if entry_type != "assistant":
@@ -2325,10 +2326,9 @@ class TranscriptParser:
                 input_data = item.get("input", {})
                 tool_id = item.get("id", "")
 
-                # Determine completion state by checking for corresponding tool result
-                tool_state = (
-                    "completed" if tool_id in completed_tool_ids else "in_progress"
-                )
+                # Skip completed operations — only genuinely pending ones matter
+                if tool_id in completed_tool_ids:
+                    continue
 
                 # Extract target from tool input
                 target = "unknown"
@@ -2370,7 +2370,7 @@ class TranscriptParser:
                     {
                         "type": op_type,
                         "target": target,
-                        "state": tool_state,
+                        "state": "in_progress",
                         "details": {"tool": tool_name, "input": str(input_data)[:200]},
                     }
                 )

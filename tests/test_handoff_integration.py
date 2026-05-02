@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from core.hooks.__lib.handoff_files import HandoffFileStorage
+from core.hooks.__lib.handoff_files import SnapshotFileStorage as HandoffFileStorage
 from core.hooks.__lib.handoff_v2 import compute_checksum
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
@@ -51,7 +51,7 @@ def _capture_v2_snapshot(
     terminal_id: str = "console_integration",
     transcript_path: Path | None = None,
 ) -> tuple[Path, HandoffFileStorage]:
-    monkeypatch.setenv("HANDOFF_PROJECT_ROOT", str(tmp_path))
+    monkeypatch.setenv("SNAPSHOT_PROJECT_ROOT", str(tmp_path))
     if transcript_path is None:
         transcript_path = tmp_path / "transcripts" / "integration.jsonl"
     _write_transcript(
@@ -72,7 +72,7 @@ def _capture_v2_snapshot(
                 "type": "tool_use",
                 "name": "Edit",
                 "input": {
-                    "file_path": "P:/packages/handoff/scripts/hooks/SessionStart_handoff_restore.py"
+                    "file_path": "P:/packages/snapshot/scripts/hooks/SessionStart_snapshot_restore.py"
                 },
             },
             {
@@ -81,7 +81,7 @@ def _capture_v2_snapshot(
                     "content": [
                         {
                             "type": "text",
-                            "text": "Decision: keep the restore payload minimal. editing file P:/packages/handoff/scripts/hooks/SessionStart_handoff_restore.py and then run targeted tests.",
+                            "text": "Decision: keep the restore payload minimal. editing file P:/packages/snapshot/scripts/hooks/SessionStart_snapshot_restore.py and then run targeted tests.",
                         }
                     ]
                 },
@@ -97,7 +97,7 @@ def _capture_v2_snapshot(
         "hook_event_name": "PreCompact",
         "trigger": "manual",
     }
-    output = _run_hook("PreCompact_handoff_capture.py", precompact_payload, env=None)
+    output = _run_hook("PreCompact_snapshot_capture.py", precompact_payload, env=None)
     assert output["decision"] == "approve"
     return transcript_path, HandoffFileStorage(tmp_path, terminal_id)
 
@@ -119,12 +119,12 @@ def test_session_start_generic_startup_does_not_consume_snapshot(tmp_path, monke
         "hook_event_name": "SessionStart",
         "trigger": "startup",
     }
-    output = _run_hook("SessionStart_handoff_restore.py", startup_payload)
+    output = _run_hook("SessionStart_snapshot_restore.py", startup_payload)
 
     assert "HANDOFF NOT RESTORED" in output["additionalContext"]
     assert "not a post-compact session start" in output["additionalContext"]
 
-    saved = storage.load_handoff()
+    saved = storage.load_raw_handoff()
     assert saved is not None
     assert saved["resume_snapshot"]["status"] == "pending"
 
@@ -147,7 +147,7 @@ def test_stale_snapshot_is_rejected_with_metadata_only_hint(tmp_path, monkeypatc
         "trigger": "compact",
         "source": "compact",
     }
-    output = _run_hook("SessionStart_handoff_restore.py", restore_payload)
+    output = _run_hook("SessionStart_snapshot_restore.py", restore_payload)
 
     assert "HANDOFF NOT RESTORED" in output["additionalContext"]
     assert "Snapshot Created:" in output["additionalContext"]
@@ -195,7 +195,7 @@ def test_tasks_snapshot_flows_through_handoff_pipeline(tmp_path, monkeypatch):
         "trigger": "compact",
         "source": "compact",
     }
-    output = _run_hook("SessionStart_handoff_restore.py", restore_payload)
+    output = _run_hook("SessionStart_snapshot_restore.py", restore_payload)
 
     assert "task_snapshot:" in output["additionalContext"]
     assert "Review handoff" in output["additionalContext"]
@@ -228,7 +228,7 @@ def test_invalid_checksum_is_rejected_without_task_context(tmp_path, monkeypatch
         "trigger": "compact",
         "source": "compact",
     }
-    output = _run_hook("SessionStart_handoff_restore.py", restore_payload)
+    output = _run_hook("SessionStart_snapshot_restore.py", restore_payload)
 
     assert "HANDOFF NOT RESTORED" in output["additionalContext"]
     # LOGIC-002: Checksum validation now happens early in SessionStart (before evaluate_for_restore)
@@ -262,7 +262,7 @@ def test_changed_transcript_rejects_restore_as_stale_snapshot(tmp_path, monkeypa
         "trigger": "compact",
         "source": "compact",
     }
-    output = _run_hook("SessionStart_handoff_restore.py", restore_payload)
+    output = _run_hook("SessionStart_snapshot_restore.py", restore_payload)
 
     assert "HANDOFF NOT RESTORED" in output["additionalContext"]
     assert "snapshot evidence changed" in output["additionalContext"]
@@ -279,7 +279,7 @@ def test_load_raw_handoff_exclude_session_id(tmp_path, monkeypatch):
     returning S_NEW's own handoff (newest by mtime) instead of S_OLD's. The fix adds
     exclude_session_id to skip S_NEW's handoff during the scan.
     """
-    monkeypatch.setenv("HANDOFF_PROJECT_ROOT", str(tmp_path))
+    monkeypatch.setenv("SNAPSHOT_PROJECT_ROOT", str(tmp_path))
     terminal_id = "console_exclude_test"
     storage = HandoffFileStorage(tmp_path, terminal_id)
 
@@ -363,7 +363,7 @@ def test_transcript_chain_precompact_reads_prior_from_previous_handoff(tmp_path,
     import json as _json
 
     terminal_id = "console_chain_test"
-    monkeypatch.setenv("HANDOFF_PROJECT_ROOT", str(tmp_path))
+    monkeypatch.setenv("SNAPSHOT_PROJECT_ROOT", str(tmp_path))
     storage = HandoffFileStorage(tmp_path, terminal_id)
 
     # Session transcripts
@@ -404,7 +404,7 @@ def test_transcript_chain_precompact_reads_prior_from_previous_handoff(tmp_path,
         "hook_event_name": "PreCompact",
         "trigger": "manual",
     }
-    output_b = _run_hook("PreCompact_handoff_capture.py", precompact_b, env=None)
+    output_b = _run_hook("PreCompact_snapshot_capture.py", precompact_b, env=None)
     assert output_b["decision"] == "approve"
 
     # Find the handoff file S_B created (newest by mtime)

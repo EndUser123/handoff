@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import logging
+from logging.handlers import RotatingFileHandler
 import os
 import sys
 from pathlib import Path
@@ -15,7 +16,7 @@ PACKAGE_ROOT = Path(__file__).resolve().parents[2]
 if str(PACKAGE_ROOT) not in sys.path:
     sys.path.insert(0, str(PACKAGE_ROOT))
 
-from scripts.hooks.userpromptsubmit_task_injector import _clear_marker
+from scripts.hooks.userpromptsubmit_task_injector import _clear_marker, write_restore_smoke_marker
 
 logger = logging.getLogger(__name__)
 
@@ -26,14 +27,16 @@ _log_file_path = (
 )
 _log_file_path.parent.mkdir(parents=True, exist_ok=True)
 if not logger.handlers:
-    _handler = logging.FileHandler(_log_file_path, encoding="utf-8")
+    _handler = RotatingFileHandler(
+        _log_file_path, maxBytes=1_000_000, backupCount=3, encoding="utf-8"
+    )
     _handler.setFormatter(
         logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     )
     logger.addHandler(_handler)
 logger.setLevel(logging.DEBUG)
 
-from scripts.hooks.__lib.snapshot_files import HandoffFileStorage
+from scripts.hooks.__lib.snapshot_files import SnapshotFileStorage
 from scripts.hooks.__lib.snapshot_v2 import (
     SNAPSHOT_CONSUMED,
     SNAPSHOT_REJECTED_INVALID,
@@ -53,7 +56,8 @@ from scripts.hooks.__lib.project_root import detect_project_root
 
 
 def _read_hook_input() -> dict[str, Any]:
-    raw = sys.stdin.read().strip()
+    # IO-004: Bound stdin read to prevent memory exhaustion from malformed input
+    raw = sys.stdin.read(10_000_000).strip()  # 10MB max
     if not raw:
         raise ValueError("SessionStart hook received empty stdin")
     payload = json.loads(raw)
@@ -95,7 +99,7 @@ def _build_output(reason: str, additional_context: str | None = None) -> dict[st
 
 
 def _reject_if_possible(
-    storage: HandoffFileStorage,
+    storage: SnapshotFileStorage,
     payload: dict[str, Any] | None,
     *,
     session_id: str,
@@ -138,9 +142,9 @@ def main() -> None:
                 if active_session_file.exists():
                     active_session_file.unlink()
                 tmp.rename(active_session_file)
-            except Exception as exc:
-                logger.warning(
-                    "[SessionStart V2] Failed to write active-session file: %s", exc
+            except OSError as exc:
+                logger.error(
+                    "[SessionStart V2] Failed to write active-session file (OSError): %s", exc
                 )
 
         # CRITICAL: For snapshot package, detect project root with testing support
@@ -160,7 +164,7 @@ def main() -> None:
             logger.info(
                 f"[SessionStart V2] Using project root from detect_project_root: {project_root}"
             )
-        storage = HandoffFileStorage(project_root, terminal_id)
+        storage = SnapshotFileStorage(project_root, terminal_id)
         raw_payload = storage.load_raw_handoff()
 
         if not raw_payload:
@@ -289,6 +293,10 @@ def main() -> None:
             except Exception:
                 pass  # Non-fatal: conflict detection is advisory only
 
+            # IO-005 note: Claude Code reads stdout JSON from SessionStart hooks.
+            # Exit code (0=success, 1=error) is also read; error paths exit 1.
+            # The JSON output in "additionalContext" is consumed by Claude Code
+            # when the decision is "approve" — this is the restore message flow.
             print(
                 json.dumps(
                     _build_output(
@@ -297,6 +305,10 @@ def main() -> None:
                     indent=2,
                 )
             )
+            # Smoke test: write a marker that the next hook verifies was consumed.
+            # If the marker persists past the TTL window, the next hook logs a
+            # non-blocking warning indicating restore output may not have been used.
+            write_restore_smoke_marker(terminal_id, session_id)
             sys.exit(0)
 
         reason = restore_decision.reason or "restore rejected"

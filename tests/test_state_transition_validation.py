@@ -10,7 +10,7 @@ from core.hooks.__lib.handoff_v2 import (
     SNAPSHOT_PENDING,
     SNAPSHOT_REJECTED_INVALID,
     SNAPSHOT_REJECTED_STALE,
-    HandoffValidationError,
+    SnapshotValidationError,
     build_envelope,
     build_resume_snapshot,
     mark_snapshot_status,
@@ -85,7 +85,7 @@ def test_invalid_transition_from_consumed_to_pending():
     payload = _pending_snapshot()
     consumed = mark_snapshot_status(payload, status=SNAPSHOT_CONSUMED, session_id="s1")
 
-    with pytest.raises(HandoffValidationError, match="invalid state transition"):
+    with pytest.raises(SnapshotValidationError, match="invalid state transition"):
         mark_snapshot_status(consumed, status=SNAPSHOT_PENDING, session_id="s2")
 
 
@@ -96,7 +96,7 @@ def test_invalid_transition_from_rejected_stale_to_consumed():
         payload, status=SNAPSHOT_REJECTED_STALE, session_id="s1", reason="stale"
     )
 
-    with pytest.raises(HandoffValidationError, match="invalid state transition"):
+    with pytest.raises(SnapshotValidationError, match="invalid state transition"):
         mark_snapshot_status(rejected, status=SNAPSHOT_CONSUMED, session_id="s2")
 
 
@@ -104,7 +104,7 @@ def test_invalid_transition_to_unknown_status():
     """Test transition to unknown status is rejected."""
     payload = _pending_snapshot()
 
-    with pytest.raises(HandoffValidationError, match="invalid target status"):
+    with pytest.raises(SnapshotValidationError, match="invalid target status"):
         mark_snapshot_status(payload, status="unknown_status", session_id="s2")
 
 
@@ -115,7 +115,7 @@ def test_double_rejection_is_invalid():
         payload, status=SNAPSHOT_REJECTED_STALE, session_id="s1", reason="stale"
     )
 
-    with pytest.raises(HandoffValidationError, match="invalid state transition"):
+    with pytest.raises(SnapshotValidationError, match="invalid state transition"):
         mark_snapshot_status(
             rejected_stale, status=SNAPSHOT_REJECTED_INVALID, session_id="s2"
         )

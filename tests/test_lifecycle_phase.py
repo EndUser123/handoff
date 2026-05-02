@@ -6,8 +6,8 @@ Covers:
 - detect_task_mode() body restoration
 - build_restore_message() phase directive injection
 - dynamic_sections lifecycle directive
-- handoff_files read/truncate accumulated state
-- handoff_accumulator PostToolUse module
+- snapshot_files read/truncate accumulated state
+- snapshot_accumulator PostToolUse module
 - Accumulated phase preference over inference
 """
 
@@ -27,7 +27,7 @@ if str(PACKAGE_ROOT) not in sys.path:
 
 
 # ---------------------------------------------------------------------------
-# CHANGE-001: Constants and validation (handoff_v2.py)
+# CHANGE-001: Constants and validation (snapshot_v2.py)
 # ---------------------------------------------------------------------------
 
 
@@ -35,7 +35,7 @@ class TestLifecyclePhaseConstants:
     """Validate lifecycle phase constants are defined correctly."""
 
     def test_valid_lifecycle_phases(self) -> None:
-        pytest.skip("VALID_LIFECYCLE_PHASES not yet implemented in handoff_v2")
+        pytest.skip("VALID_LIFECYCLE_PHASES not yet implemented in snapshot_v2")
 
     def test_lifecycle_phase_in_optional_fields(self) -> None:
         pytest.skip("lifecycle_phase not yet in OPTIONAL_SNAPSHOT_FIELDS")
@@ -55,7 +55,7 @@ class TestLifecyclePhaseValidation:
 
 
 # ---------------------------------------------------------------------------
-# CHANGE-002: detect_lifecycle_phase() (PreCompact_handoff_capture.py)
+# CHANGE-002: detect_lifecycle_phase() (PreCompact_snapshot_capture.py)
 # ---------------------------------------------------------------------------
 
 
@@ -63,7 +63,7 @@ class TestDetectLifecyclePhase:
     """Test detect_lifecycle_phase() detection logic."""
 
     def test_planning_with_awaiting_approval_blocker(self) -> None:
-        from scripts.hooks.PreCompact_handoff_capture import detect_lifecycle_phase
+        from scripts.hooks.PreCompact_snapshot_capture import detect_lifecycle_phase
 
         result = detect_lifecycle_phase(
             blockers=[{"type": "awaiting_approval", "summary": "Waiting"}],
@@ -74,7 +74,7 @@ class TestDetectLifecyclePhase:
         assert result == "planning"
 
     def test_implementing_with_pending_operations(self) -> None:
-        from scripts.hooks.PreCompact_handoff_capture import detect_lifecycle_phase
+        from scripts.hooks.PreCompact_snapshot_capture import detect_lifecycle_phase
 
         result = detect_lifecycle_phase(
             blockers=[],
@@ -85,7 +85,7 @@ class TestDetectLifecyclePhase:
         assert result == "implementing"
 
     def test_discussing_with_question_goal(self) -> None:
-        from scripts.hooks.PreCompact_handoff_capture import detect_lifecycle_phase
+        from scripts.hooks.PreCompact_snapshot_capture import detect_lifecycle_phase
 
         result = detect_lifecycle_phase(
             blockers=[],
@@ -96,7 +96,7 @@ class TestDetectLifecyclePhase:
         assert result == "discussing"
 
     def test_implementing_with_task_mode_override(self) -> None:
-        from scripts.hooks.PreCompact_handoff_capture import detect_lifecycle_phase
+        from scripts.hooks.PreCompact_snapshot_capture import detect_lifecycle_phase
 
         # task_mode=implement + active_files -> implementing (not discussing)
         result = detect_lifecycle_phase(
@@ -109,7 +109,7 @@ class TestDetectLifecyclePhase:
         assert result == "implementing"
 
     def test_discussing_no_signals(self) -> None:
-        from scripts.hooks.PreCompact_handoff_capture import detect_lifecycle_phase
+        from scripts.hooks.PreCompact_snapshot_capture import detect_lifecycle_phase
 
         # No pending ops, no question mark, no task_mode override -> discussing
         result = detect_lifecycle_phase(
@@ -126,19 +126,19 @@ class TestDetectTaskMode:
     """Test detect_task_mode() body is intact."""
 
     def test_create_mode(self) -> None:
-        from scripts.hooks.PreCompact_handoff_capture import detect_task_mode
+        from scripts.hooks.PreCompact_snapshot_capture import detect_task_mode
 
         result = detect_task_mode("Create a new ADR", [])
         assert result == "create"
 
     def test_implement_mode(self) -> None:
-        from scripts.hooks.PreCompact_handoff_capture import detect_task_mode
+        from scripts.hooks.PreCompact_snapshot_capture import detect_task_mode
 
         result = detect_task_mode("Fix the bug in foo.py", [])
         assert result == "implement"
 
     def test_none_mode(self) -> None:
-        from scripts.hooks.PreCompact_handoff_capture import detect_task_mode
+        from scripts.hooks.PreCompact_snapshot_capture import detect_task_mode
 
         result = detect_task_mode("Look at this", [])
         assert result == "none"
@@ -194,7 +194,7 @@ class TestRestoreMessageLifecycleDirective:
             decision_refs=[],
             evidence_refs=[],
             transcript_path=str(
-                PACKAGE_ROOT / "scripts" / "hooks" / "__lib" / "handoff_v2.py"
+                PACKAGE_ROOT / "scripts" / "hooks" / "__lib" / "snapshot_v2.py"
             ),
             message_intent="instruction",
             **kwargs,
@@ -224,20 +224,20 @@ class TestAccumulator:
     """Test handoff accumulator PostToolUse module."""
 
     def test_run_returns_empty_dict(self) -> None:
-        from scripts.hooks.__lib.handoff_accumulator import run
+        from scripts.hooks.__lib.snapshot_accumulator import run
 
         result = run({"tool_name": "Read", "tool_input": {"file_path": "test.py"}})
         assert result == {}
 
     def test_run_no_error_on_failure(self) -> None:
-        from scripts.hooks.__lib.handoff_accumulator import run
+        from scripts.hooks.__lib.snapshot_accumulator import run
 
         # Should never raise
         result = run({"bad": "data"})
         assert isinstance(result, dict)
 
     def test_append_creates_file(self, tmp_path: Path) -> None:
-        from scripts.hooks.__lib.handoff_accumulator import _append_event
+        from scripts.hooks.__lib.snapshot_accumulator import _append_event
 
         accum_path = tmp_path / "test_accumulated.jsonl"
         _append_event(accum_path, {"type": "file_edit", "path": "foo.py", "ts": "now"})
@@ -246,13 +246,13 @@ class TestAccumulator:
         assert data["type"] == "file_edit"
 
     def test_read_last_phase_default(self, tmp_path: Path) -> None:
-        from scripts.hooks.__lib.handoff_accumulator import _read_last_phase
+        from scripts.hooks.__lib.snapshot_accumulator import _read_last_phase
 
         phase = _read_last_phase(tmp_path / "nonexistent.jsonl")
         assert phase == "implementing"
 
     def test_read_last_phase_from_jsonl(self, tmp_path: Path) -> None:
-        from scripts.hooks.__lib.handoff_accumulator import (
+        from scripts.hooks.__lib.snapshot_accumulator import (
             _append_event,
             _read_last_phase,
         )
@@ -271,20 +271,20 @@ class TestAccumulator:
         assert _read_last_phase(accum_path) == "planning"
 
     def test_phase_transition_approved_to_implementing(self) -> None:
-        from scripts.hooks.__lib.handoff_accumulator import _detect_phase_transition
+        from scripts.hooks.__lib.snapshot_accumulator import _detect_phase_transition
 
         result = _detect_phase_transition("Edit", {}, "approved")
         assert result == "implementing"
 
     def test_no_transition_from_implementing(self) -> None:
-        from scripts.hooks.__lib.handoff_accumulator import _detect_phase_transition
+        from scripts.hooks.__lib.snapshot_accumulator import _detect_phase_transition
 
         result = _detect_phase_transition("Edit", {}, "implementing")
         assert result is None
 
 
 # ---------------------------------------------------------------------------
-# CHANGE-006: handoff_files accumulated state methods
+# CHANGE-006: snapshot_files accumulated state methods
 # ---------------------------------------------------------------------------
 
 
@@ -292,13 +292,13 @@ class TestHandoffFilesAccumulatedState:
     """Test read_accumulated_state() and truncate_accumulated_state()."""
 
     def test_read_missing_file(self, tmp_path: Path) -> None:
-        from scripts.hooks.__lib.handoff_files import HandoffFileStorage
+        from scripts.hooks.__lib.snapshot_files import SnapshotFileStorage
 
-        storage = HandoffFileStorage(tmp_path, "test_term")
+        storage = SnapshotFileStorage(tmp_path, "test_term")
         assert storage.read_accumulated_state() == []
 
     def test_read_valid_jsonl(self, tmp_path: Path) -> None:
-        from scripts.hooks.__lib.handoff_files import HandoffFileStorage
+        from scripts.hooks.__lib.snapshot_files import SnapshotFileStorage
 
         handoff_dir = tmp_path / ".claude" / "state" / "handoff"
         handoff_dir.mkdir(parents=True, exist_ok=True)
@@ -309,13 +309,13 @@ class TestHandoffFilesAccumulatedState:
             encoding="utf-8",
         )
 
-        storage = HandoffFileStorage(tmp_path, "test_term")
+        storage = SnapshotFileStorage(tmp_path, "test_term")
         events = storage.read_accumulated_state()
         assert len(events) == 2
         assert events[1]["to"] == "planning"
 
     def test_read_corrupt_line_skipped(self, tmp_path: Path) -> None:
-        from scripts.hooks.__lib.handoff_files import HandoffFileStorage
+        from scripts.hooks.__lib.snapshot_files import SnapshotFileStorage
 
         handoff_dir = tmp_path / ".claude" / "state" / "handoff"
         handoff_dir.mkdir(parents=True, exist_ok=True)
@@ -327,26 +327,26 @@ class TestHandoffFilesAccumulatedState:
             encoding="utf-8",
         )
 
-        storage = HandoffFileStorage(tmp_path, "test_term")
+        storage = SnapshotFileStorage(tmp_path, "test_term")
         events = storage.read_accumulated_state()
         assert len(events) == 2  # Corrupt line skipped
 
     def test_truncate_removes_file(self, tmp_path: Path) -> None:
-        from scripts.hooks.__lib.handoff_files import HandoffFileStorage
+        from scripts.hooks.__lib.snapshot_files import SnapshotFileStorage
 
         handoff_dir = tmp_path / ".claude" / "state" / "handoff"
         handoff_dir.mkdir(parents=True, exist_ok=True)
         accum_file = handoff_dir / "test_term_accumulated.jsonl"
         accum_file.write_text('{"type":"file_edit"}\n', encoding="utf-8")
 
-        storage = HandoffFileStorage(tmp_path, "test_term")
+        storage = SnapshotFileStorage(tmp_path, "test_term")
         assert storage.truncate_accumulated_state() is True
         assert not accum_file.exists()
 
     def test_truncate_nonexistent_ok(self, tmp_path: Path) -> None:
-        from scripts.hooks.__lib.handoff_files import HandoffFileStorage
+        from scripts.hooks.__lib.snapshot_files import SnapshotFileStorage
 
-        storage = HandoffFileStorage(tmp_path, "test_term")
+        storage = SnapshotFileStorage(tmp_path, "test_term")
         assert storage.truncate_accumulated_state() is True
 
 
@@ -359,7 +359,7 @@ class TestEmptyGoalEdgeCases:
     """TEST-014: Empty goal edge cases for detect_lifecycle_phase."""
 
     def test_empty_string_goal(self) -> None:
-        from scripts.hooks.PreCompact_handoff_capture import detect_lifecycle_phase
+        from scripts.hooks.PreCompact_snapshot_capture import detect_lifecycle_phase
 
         result = detect_lifecycle_phase(
             blockers=[],
@@ -370,7 +370,7 @@ class TestEmptyGoalEdgeCases:
         assert result == "discussing"
 
     def test_whitespace_only_goal(self) -> None:
-        from scripts.hooks.PreCompact_handoff_capture import detect_lifecycle_phase
+        from scripts.hooks.PreCompact_snapshot_capture import detect_lifecycle_phase
 
         result = detect_lifecycle_phase(
             blockers=[],
@@ -381,7 +381,7 @@ class TestEmptyGoalEdgeCases:
         assert result == "discussing"
 
     def test_empty_goal_with_active_files(self) -> None:
-        from scripts.hooks.PreCompact_handoff_capture import detect_lifecycle_phase
+        from scripts.hooks.PreCompact_snapshot_capture import detect_lifecycle_phase
 
         # Empty goal + task_mode implement + active files → implementing
         result = detect_lifecycle_phase(
@@ -399,7 +399,7 @@ class TestInterspersedCorruptLines:
     """TEST-015: Read accumulated state with interspersed valid/corrupt lines."""
 
     def test_read_mixed_valid_corrupt(self, tmp_path: Path) -> None:
-        from scripts.hooks.__lib.handoff_files import HandoffFileStorage
+        from scripts.hooks.__lib.snapshot_files import SnapshotFileStorage
 
         handoff_dir = tmp_path / ".claude" / "state" / "handoff"
         handoff_dir.mkdir(parents=True, exist_ok=True)
@@ -413,7 +413,7 @@ class TestInterspersedCorruptLines:
             encoding="utf-8",
         )
 
-        storage = HandoffFileStorage(tmp_path, "test_term")
+        storage = SnapshotFileStorage(tmp_path, "test_term")
         events = storage.read_accumulated_state()
         assert len(events) == 3
         # Verify corrupt lines were skipped
@@ -444,7 +444,7 @@ class TestAccumulatorConcurrentAppends:
     def test_concurrent_appends_no_corruption(self, tmp_path: Path) -> None:
         import threading
 
-        from scripts.hooks.__lib.handoff_accumulator import _append_event
+        from scripts.hooks.__lib.snapshot_accumulator import _append_event
 
         accum_path = tmp_path / "concurrent_test.jsonl"
         errors: list[str] = []
@@ -495,7 +495,7 @@ class TestAccumulatedPhasePreference:
     """Accumulated JSONL phase preferred over detect_lifecycle_phase() inference."""
 
     def test_accumulated_phase_overrides_inference(self, tmp_path: Path) -> None:
-        from scripts.hooks.__lib.handoff_files import HandoffFileStorage
+        from scripts.hooks.__lib.snapshot_files import SnapshotFileStorage
 
         handoff_dir = tmp_path / ".claude" / "state" / "handoff"
         handoff_dir.mkdir(parents=True, exist_ok=True)
@@ -506,7 +506,7 @@ class TestAccumulatedPhasePreference:
             encoding="utf-8",
         )
 
-        storage = HandoffFileStorage(tmp_path, "test_term")
+        storage = SnapshotFileStorage(tmp_path, "test_term")
         events = storage.read_accumulated_state()
 
         # Find last phase_transition
@@ -521,9 +521,9 @@ class TestAccumulatedPhasePreference:
     def test_no_accumulated_events_falls_back_to_implementing(
         self, tmp_path: Path
     ) -> None:
-        from scripts.hooks.__lib.handoff_files import HandoffFileStorage
+        from scripts.hooks.__lib.snapshot_files import SnapshotFileStorage
 
-        storage = HandoffFileStorage(tmp_path, "no_events_term")
+        storage = SnapshotFileStorage(tmp_path, "no_events_term")
         events = storage.read_accumulated_state()
         assert events == []
 
