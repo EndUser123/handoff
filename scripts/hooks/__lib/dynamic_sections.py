@@ -14,7 +14,7 @@ from typing import Any
 
 # AIR Gap state file path
 _AIR_GAPS_KEY = "air_gap_context"
-_STATE_DIR = Path(os.environ.get("CLAUDE_PROJECT_ROOT", "P:/")) / ".claude" / "state"
+_STATE_DIR = Path(os.environ.get("CLAUDE_PROJECT_ROOT", "P:\\\\\\")) / ".claude" / "state"
 
 
 def _get_session_id_from_env() -> str:

@@ -32,7 +32,7 @@ def _pending_snapshot() -> dict:
         next_step="Continue",
         decision_refs=[],
         evidence_refs=[],
-        transcript_path="P:/fake/transcript.jsonl",
+        transcript_path="P:\\\\\\fake/transcript.jsonl",
         message_intent="instruction",
     )
     # Override with a fake path for testing (validation happens in save_handoff)

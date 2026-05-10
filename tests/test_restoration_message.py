@@ -20,7 +20,7 @@ def _sample_payload():
         progress_percent=65,
         progress_state="in_progress",
         blockers=[],
-        active_files=["P:/packages/handoff/core/hooks/SessionStart_handoff_restore.py"],
+        active_files=["P:\\\\\\packages/handoff/core/hooks/SessionStart_handoff_restore.py"],
         pending_operations=[
             {
                 "type": "edit",
@@ -31,7 +31,7 @@ def _sample_payload():
         next_step="Run the focused restore tests.",
         decision_refs=["dec_1"],
         evidence_refs=["ev_1"],
-        transcript_path="P:/tmp/transcript.jsonl",
+        transcript_path="P:\\\\\\tmp/transcript.jsonl",
         message_intent="instruction",
     )
     return build_envelope(
@@ -52,7 +52,7 @@ def _sample_payload():
                 "id": "ev_1",
                 "type": "transcript",
                 "label": "compact transcript",
-                "path": "P:/tmp/transcript.jsonl",
+                "path": "P:\\\\\\tmp/transcript.jsonl",
             }
         ],
     )

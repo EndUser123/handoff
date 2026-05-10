@@ -34,7 +34,7 @@ class TestIsMetaInstructionSkillDefinitions:
 
     def test_skill_definition_detected_as_meta(self) -> None:
         """Skill definitions starting with 'Base directory for this skill:' should be filtered."""
-        skill_definition = """Base directory for this skill: P:/packages/handoff
+        skill_definition = """Base directory for this skill: P:\\\\\\packages/handoff
 
 # Handoff Skill
 
@@ -47,8 +47,8 @@ This skill provides...
         """Various skill definition formats should be filtered."""
         variations = [
             "Base directory for this skill: /some/path",
-            "Base directory for this skill: P:\\some\\path",
-            "Base directory for this skill: P:/some/path\n\n# Skill content",
+            "Base directory for this skill: P:\\\\\\\some\\path",
+            "Base directory for this skill: P:\\\\\\some/path\n\n# Skill content",
         ]
         for variation in variations:
             assert is_meta_instruction(variation) is True, (
@@ -79,7 +79,7 @@ class TestBuildDecisionsSkillFilter:
 
         # Create mock transcript with skill definition containing decision keywords
         # The skill definition appears as a "user" message in the transcript
-        skill_definition_content = """Base directory for this skill: P:/some/path
+        skill_definition_content = """Base directory for this skill: P:\\\\\\some/path
 
 # Test Skill
 
@@ -107,14 +107,14 @@ class TestGoalExtractionSkillFilter:
         """When falling back to last user message, skill definitions should be filtered."""
         # The fix should apply is_meta_instruction() to fallback_goal
         skill_definition = (
-            "Base directory for this skill: P:/packages/handoff\n\n# Content..."
+            "Base directory for this skill: P:\\\\\\packages/handoff\n\n# Content..."
         )
         assert is_meta_instruction(skill_definition) is True
 
     def test_skill_definition_in_goal_replaced_with_context(self) -> None:
         """If goal looks like skill definition, it should be replaced."""
         # This tests the existing behavior at lines 311-313
-        goal = "Base directory for this skill: P:/some/path\n\n# Skill content"
+        goal = "Base directory for this skill: P:\\\\\\some/path\n\n# Skill content"
         assert goal.lower().startswith("base directory for this skill:")
 
 
@@ -127,7 +127,7 @@ class TestRegressionSkillCapture:
 
     def test_skill_definition_not_captured_as_goal(self) -> None:
         """Skill definitions should never become the goal."""
-        skill_definition = """Base directory for this skill: P:/packages/handoff
+        skill_definition = """Base directory for this skill: P:\\\\\\packages/handoff
 
 # Handoff Skill - Session Context Preservation
 
@@ -139,7 +139,7 @@ class TestRegressionSkillCapture:
     def test_skill_constraints_not_captured_as_decisions(self) -> None:
         """Skill definition constraints should NOT appear in decision_register."""
         # Skill definitions often contain "must", "do not", "never" patterns
-        skill_with_constraints = """Base directory for this skill: P:/packages/handoff
+        skill_with_constraints = """Base directory for this skill: P:\\\\\\packages/handoff
 
 ## Constraints
 - You must preserve context across compaction

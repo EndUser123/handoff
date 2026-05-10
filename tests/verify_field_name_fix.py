@@ -17,8 +17,8 @@ def test_field_access():
     # Simulate Claude Code hook input (snake_case as per logs)
     hook_input = {
         "session_id": "test-session",
-        "transcript_path": "P:/test_transcript.jsonl",  # snake_case
-        "cwd": "P:/",
+        "transcript_path": "P:\\\\\\test_transcript.jsonl",  # snake_case
+        "cwd": "P:\\\\\\",
         "hook_event_name": "PreCompact",
         "trigger": "auto",
     }
@@ -27,7 +27,7 @@ def test_field_access():
     transcript_path = hook_input.get("transcript_path")
 
     print(f"✓ transcript_path extracted: {transcript_path}")
-    assert transcript_path == "P:/test_transcript.jsonl", "Field name mismatch!"
+    assert transcript_path == "P:\\\\\\test_transcript.jsonl", "Field name mismatch!"
 
     # Test that old camelCase would fail
     old_style = hook_input.get("transcriptPath")

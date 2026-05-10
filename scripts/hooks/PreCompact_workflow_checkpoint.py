@@ -8,7 +8,7 @@ Runs BEFORE compaction erases context:
 3. Checkpoint is read by Stop hook on post-compaction resume
 
 Checkpoint is written to:
-  P:/.claude/state/skill_execution_{terminal_id}/compaction_checkpoint.json
+  P:\\\\\\.claude/state/skill_execution_{terminal_id}/compaction_checkpoint.json
 
 This ensures the workflow phase machine state survives compaction.
 """
@@ -23,7 +23,7 @@ from pathlib import Path
 
 # Add skill_guard to path for skill_execution_state import
 _HOOKS_DIR = Path(__file__).resolve().parent
-_SKILL_GUARD_SRC = Path("P:/packages/skill-guard/src")
+_SKILL_GUARD_SRC = Path("P:\\\\\\packages/skill-guard/src")
 if str(_SKILL_GUARD_SRC) in sys.path or str(_HOOKS_DIR) in sys.path:
     pass
 else:
@@ -60,7 +60,7 @@ def _sanitize_terminal_id(terminal_id: str) -> str:
 def _get_state_dir(terminal_id: str) -> Path:
     """Get the state directory for this terminal."""
     sanitized = _sanitize_terminal_id(terminal_id)
-    state_dir = Path("P:/.claude/state") / f"skill_execution_{sanitized}"
+    state_dir = Path("P:\\\\\\.claude/state") / f"skill_execution_{sanitized}"
     state_dir.mkdir(parents=True, exist_ok=True)
     return state_dir
 

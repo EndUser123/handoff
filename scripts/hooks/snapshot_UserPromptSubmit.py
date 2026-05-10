@@ -38,30 +38,10 @@ from UserPromptSubmit_modules.registry import register_hook
 # ---------------------------------------------------------------------------
 
 
-def _locate_hooks_state_dir() -> Path:
-    """Return the hooks state directory regardless of whether this file is
-    invoked directly or via a symlink from .claude/hooks/.
+def _locate_hooks_state_dir(terminal_id: str) -> Path:
+    """Return the canonical state directory for hooks in the artifacts root."""
+    return Path("P:/.claude/.artifacts") / terminal_id / "snapshot"
 
-    PreCompact writes markers to ``<project_root>/.claude/hooks/state/``.
-    We must read from the same location.  Walking up from cwd is reliable
-    because Claude Code always runs hooks with cwd = project root.
-    """
-    # Walk up from cwd (= project root when run by Claude Code)
-    cwd = Path.cwd()
-    candidate = cwd / ".claude" / "hooks" / "state"
-    if candidate.parent.is_dir():
-        return candidate
-    # Fallback: walk ancestor dirs
-    for parent in cwd.parents:
-        candidate = parent / ".claude" / "hooks" / "state"
-        if candidate.parent.is_dir():
-            return candidate
-    # Last resort: hooks dir relative to this file (works when run directly
-    # from within the hooks tree)
-    return Path(__file__).resolve().parents[3] / ".claude" / "hooks" / "state"
-
-
-STATE_DIR = _locate_hooks_state_dir()
 
 _MARKER_PREFIX = "compaction_marker_"
 _SMOKE_PREFIX = "restore_smoke_"
@@ -79,19 +59,21 @@ _ENABLED_ENV = "COMPACTION_RECOVERY_ENABLED"
 
 def _get_terminal_id(context: HookContext) -> str:
     """Extract terminal ID from hook context."""
-    return (
+    # Priority: context data -> env var -> "default"
+    tid = (
         context.data.get("terminal_id")
         or context.data.get("terminalId")
         or context.data.get("CLAUDE_TERMINAL_ID")
         or os.environ.get("CLAUDE_TERMINAL_ID")
         or "default"
     )
+    return str(tid).strip()
 
 
 def _marker_path(terminal_id: str) -> Path:
     """Return path to the compaction marker file for this terminal."""
     safe_id = re.sub(r"[^a-zA-Z0-9_.\-]+", "_", str(terminal_id))
-    return STATE_DIR / f"{_MARKER_PREFIX}{safe_id}.json"
+    return _locate_hooks_state_dir(terminal_id) / f"{_MARKER_PREFIX}{safe_id}.json"
 
 
 def _load_marker(terminal_id: str) -> dict | None:
@@ -124,7 +106,7 @@ def _clear_marker(terminal_id: str) -> None:
 def _smoke_path(terminal_id: str) -> Path:
     """Return path to the restore-smoke marker file for this terminal."""
     safe_id = re.sub(r"[^a-zA-Z0-9_.\-]+", "_", str(terminal_id))
-    return STATE_DIR / f"{_SMOKE_PREFIX}{safe_id}.json"
+    return _locate_hooks_state_dir(terminal_id) / f"{_SMOKE_PREFIX}{safe_id}.json"
 
 
 def write_restore_smoke_marker(terminal_id: str, session_id: str) -> None:
@@ -212,7 +194,6 @@ def _build_recovery_message(envelope: dict) -> str:
     """Format a concise restoration context block from a Handoff V2 envelope."""
     # Delegate to shared compact formatter for contract consistency.
     # Both SessionStart and UPS paths now emit the same <compact-restore> block.
-    # Richer transcript context is captured via conversation_summary (P1).
     try:
         import importlib
         snapshot_v2 = importlib.import_module("scripts.hooks.__lib.snapshot_v2")

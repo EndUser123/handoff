@@ -19,7 +19,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 # Resolve paths explicitly — this file lives in packages/handoff/scripts/hooks/
-CLAUDE_DIR = Path("P:/.claude")
+CLAUDE_DIR = Path("P:\\\\\\.claude")
 STATE_DIR = CLAUDE_DIR / "state" / "session_tldr"
 
 # Import terminal_id resolver from hook_base (centralized source of truth)
@@ -181,10 +181,37 @@ def _format_tldr_output(summary: str | None, *, last_user_message: str | None = 
     return output
 
 
+def run(data: dict) -> dict | None:
+    """Read and format the prior session TLDR.
+
+    Args:
+        data: JSON hook input from Claude Code.
+
+    Returns:
+        Dict following the Claude Code hook protocol (None for plain-text output).
+    """
+    terminal_id = _resolve_terminal_id(data)
+    summary_path = _get_state_path(terminal_id)
+    session_start_path = _get_session_start_path(terminal_id)
+
+    # Always write session start timestamp
+    _write_session_start(session_start_path)
+
+    # Read prior summary
+    prior_summary = _read_prior_summary(summary_path)
+
+    # Extract verbatim last user message for disambiguation
+    last_user_message = extract_last_user_message(data)
+
+    # Format output as plain text for VISIBLE DISPLAY
+    tldr_text = _format_tldr_output(prior_summary, last_user_message=last_user_message)
+    print(tldr_text, end="")
+    return None
+
+
 def main() -> int:
     raw = sys.stdin.read().strip()
     if not raw:
-        # No input — use empty dict
         data: dict = {}
     else:
         try:
@@ -192,20 +219,7 @@ def main() -> int:
         except json.JSONDecodeError:
             data = {}
 
-    terminal_id = _resolve_terminal_id(data)
-    summary_path = _get_state_path(terminal_id)
-    session_start_path = _get_session_start_path(terminal_id)
-
-    # Always write session start timestamp (overwrites on resume)
-    _write_session_start(session_start_path)
-
-    # Read prior summary
-    prior_summary = _read_prior_summary(summary_path)
-
-    # Format output as plain text for VISIBLE DISPLAY (not silent injection)
-    # The hook system passes non-JSON stdout lines through as visible context
-    tldr_text = _format_tldr_output(prior_summary)
-    print(tldr_text, end="")
+    run(data)
     return 0
 
 

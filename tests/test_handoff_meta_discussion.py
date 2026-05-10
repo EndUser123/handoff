@@ -53,7 +53,7 @@ class TestIsMetaDiscussion:
 
     def test_skill_definition_detected(self):
         """Skill definitions should still be filtered."""
-        skill_def = "Base directory for this skill: P:/packages/handoff"
+        skill_def = "Base directory for this skill: P:\\\\\\packages/handoff"
         assert is_meta_discussion(skill_def) is True
 
     def test_meta_instruction_also_detected(self):

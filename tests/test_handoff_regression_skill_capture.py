@@ -61,7 +61,7 @@ class TestRegressionSkillDefinitionCaptureBug:
         """
         # Simulate the bug scenario: skill definition with decision-like keywords
         # appearing in transcript as "user" message
-        large_skill_definition = """Base directory for this skill: P:/packages/handoff
+        large_skill_definition = """Base directory for this skill: P:\\\\\\packages/handoff
 
 # Handoff Skill - Session Context Preservation
 
@@ -138,7 +138,7 @@ Invoke via /handoff or automatic compact.
                 "type": "user",
                 "message": {
                     "content": [
-                        "Base directory for this skill: P:/packages/handoff\n\n"
+                        "Base directory for this skill: P:\\\\\\packages/handoff\n\n"
                         "# Skill\n\n"
                         "## Constraints\n"
                         "- You must always validate input\n"
@@ -205,7 +205,7 @@ Invoke via /handoff or automatic compact.
                 "type": "user",
                 "message": {
                     "content": [
-                        "Base directory for this skill: P:/packages/handoff\n\n"
+                        "Base directory for this skill: P:\\\\\\packages/handoff\n\n"
                         "# Handoff Skill\n\n"
                         "[... skill content ...]"
                     ]
@@ -279,7 +279,7 @@ Invoke via /handoff or automatic compact.
                 "type": "user",
                 "message": {
                     "content": [
-                        "Base directory for this skill: P:/packages/handoff\n\n"
+                        "Base directory for this skill: P:\\\\\\packages/handoff\n\n"
                         "# Handoff Skill\n\n"
                         "[... injected by Claude Code ...]"
                     ]
@@ -326,13 +326,13 @@ class TestRegressionSkillDefinitionEdgeCases:
             {
                 "type": "user",
                 "message": {
-                    "content": ["Base directory for this skill: P:/skill1\n\n# Skill 1"]
+                    "content": ["Base directory for this skill: P:\\\\\\skill1\n\n# Skill 1"]
                 },
             },
             {
                 "type": "user",
                 "message": {
-                    "content": ["Base directory for this skill: P:/skill2\n\n# Skill 2"]
+                    "content": ["Base directory for this skill: P:\\\\\\skill2\n\n# Skill 2"]
                 },
             },
             {
@@ -364,7 +364,7 @@ class TestRegressionSkillDefinitionEdgeCases:
                         },
                         {
                             "type": "text",
-                            "text": "Base directory for this skill: P:/packages/handoff\n\n# Skill content",
+                            "text": "Base directory for this skill: P:\\\\\\packages/handoff\n\n# Skill content",
                         },
                     ]
                 },

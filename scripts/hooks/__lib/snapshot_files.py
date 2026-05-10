@@ -26,9 +26,9 @@ from scripts.hooks.__lib.snapshot_v2 import (
 logger = logging.getLogger(__name__)
 
 # Configure logging for snapshot file operations
-# Logs will be written to .claude/logs/snapshot_files.log
+# Logs will be written to P:\\\\\\.claude/.artifacts/snapshot/logs/snapshot_files.log
 _log_file_path = (
-    Path(__file__).resolve().parents[3] / ".claude" / "logs" / "snapshot_files.log"
+    Path.cwd() / ".claude" / ".artifacts" / "snapshot" / "logs" / "snapshot_files.log"
 )
 _log_file_path.parent.mkdir(parents=True, exist_ok=True)
 if not logger.handlers:
@@ -49,7 +49,9 @@ class SnapshotFileStorage:
         self._validate_terminal_id(terminal_id)
         self.project_root = project_root
         self.terminal_id = terminal_id
-        self.handoff_dir = project_root / ".claude" / "state" / "handoff"
+        # Canonical artifacts root (matching global identity system)
+        artifacts_root = Path("P:/.claude/.artifacts")
+        self.handoff_dir = artifacts_root / terminal_id / "snapshot"
         self.handoff_file = self.handoff_dir / f"{terminal_id}_handoff.json"
         self._in_load = False
 
@@ -489,40 +491,5 @@ class SnapshotFileStorage:
             if self.handoff_file.exists():
                 self.handoff_file.unlink()
             return True
-        except Exception as exc:
-            logger.error("[HandoffFileStorage] Failed to delete handoff: %s", exc)
-            return False
-
-    def load_summary(self) -> str | None:
-        """Load the Haiku summary sidecar if it exists.
-
-        Returns:
-            Summary text if sidecar exists and is non-empty, None otherwise.
-        """
-        sidecar = self.handoff_file.with_suffix(".summary.md")
-        if not sidecar.exists():
-            return None
-        try:
-            text = sidecar.read_text(encoding="utf-8").strip()
-            return text if text else None
         except OSError:
-            return None
-
-
-def load_summary_for_envelope(envelope_path: Path) -> str | None:
-    """Load Haiku summary sidecar for a specific envelope path.
-
-    Args:
-        envelope_path: Path to the handoff JSON envelope file.
-
-    Returns:
-        Summary text if sidecar exists and is non-empty, None otherwise.
-    """
-    sidecar = envelope_path.with_suffix(".summary.md")
-    if not sidecar.exists():
-        return None
-    try:
-        text = sidecar.read_text(encoding="utf-8").strip()
-        return text if text else None
-    except OSError:
-        return None
+            return False

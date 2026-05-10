@@ -6,11 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/PreCompact_snapshot_capture.py\""
-          },
-          {
-            "type": "command",
-            "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/PreCompact_workflow_checkpoint.py\""
+            "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/snapshot_PreCompact.py\""
           }
         ]
       }
@@ -21,22 +17,19 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/SessionStart_snapshot_restore.py\""
-          },
-          {
-            "type": "command",
-            "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/SessionStart_tldr.py\""
+            "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/snapshot_SessionStart.py\""
           }
         ]
       }
     ],
+
     "SessionEnd": [
       {
         "matcher": ".*",
         "hooks": [
           {
             "type": "command",
-            "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/SessionEnd_tldr.py\""
+            "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/snapshot_SessionEnd_tldr.py\""
           }
         ]
       }
@@ -47,7 +40,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/userpromptsubmit_task_injector.py\"",
+            "command": "python \"$CLAUDE_PLUGIN_ROOT/scripts/hooks/snapshot_UserPromptSubmit.py\"",
             "timeout": 30
           }
         ]

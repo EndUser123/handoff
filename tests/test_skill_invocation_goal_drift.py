@@ -69,7 +69,7 @@ class TestRestoreMessageSkillWarning:
             "blockers": [],
             "active_files": [],
             "pending_operations": pending_operations,
-            "n_1_transcript_path": "P:/tmp/transcript.jsonl",
+            "n_1_transcript_path": "P:\\\\\\tmp/transcript.jsonl",
             "n_2_transcript_path": None,
         }
         }

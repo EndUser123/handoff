@@ -20,7 +20,7 @@ import sys
 from pathlib import Path
 
 # Add __lib to path for commitment_tracker import
-_CLAUDE_HOOKS_LIB = Path("P:/.claude/hooks/__lib")
+_CLAUDE_HOOKS_LIB = Path("P:\\\\\\.claude/hooks/__lib")
 if str(_CLAUDE_HOOKS_LIB) not in sys.path:
     sys.path.insert(0, str(_CLAUDE_HOOKS_LIB))
 
@@ -34,29 +34,26 @@ _ENABLED = os.environ.get("PROACTIVE_COMMITMENT_TRACKER_ENABLED", "").lower() in
 )
 
 
-def main() -> None:
-    """Main entry point for PreCompact router."""
+def run(data: dict) -> dict | None:
+    """Save commitment checkpoint before compaction.
+
+    Args:
+        data: JSON hook input from Claude Code.
+
+    Returns:
+        Dict following the Claude Code hook protocol (None for silent success).
+    """
     if not _ENABLED:
-        sys.exit(0)
-
-    raw_input = sys.stdin.read().strip()
-    if not raw_input:
-        sys.exit(0)
-
-    try:
-        raw_input = raw_input.lstrip("\ufeff")
-        data = json.loads(raw_input)
-    except json.JSONDecodeError:
-        sys.exit(0)
+        return None
 
     try:
         terminal_id = _extract_terminal_id(data)
         if not terminal_id:
-            sys.exit(0)
+            return None
 
         transcript = _extract_transcript(data)
         if not transcript:
-            sys.exit(0)
+            return None
 
         session_id = _extract_session_id(data)
 
@@ -76,8 +73,23 @@ def main() -> None:
     except Exception as exc:
         import logging
         logging.getLogger(__name__).warning("PreCompact commitment tracker failed: %s", exc)
-        pass
 
+    return None
+
+
+def main() -> None:
+    """CLI entry point."""
+    raw_input = sys.stdin.read().strip()
+    if not raw_input:
+        sys.exit(0)
+
+    try:
+        raw_input = raw_input.lstrip("\ufeff")
+        data = json.loads(raw_input)
+    except json.JSONDecodeError:
+        sys.exit(0)
+
+    run(data)
     sys.exit(0)
 
 

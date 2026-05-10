@@ -26,7 +26,7 @@ def _payload():
         next_step="Verify checksum output",
         decision_refs=[],
         evidence_refs=["ev_1"],
-        transcript_path="P:/tmp/transcript.jsonl",
+        transcript_path="P:\\\\\\tmp/transcript.jsonl",
         message_intent="instruction",
     )
     return build_envelope(
@@ -37,7 +37,7 @@ def _payload():
                 "id": "ev_1",
                 "type": "transcript",
                 "label": "transcript",
-                "path": "P:/tmp/transcript.jsonl",
+                "path": "P:\\\\\\tmp/transcript.jsonl",
             }
         ],
     )

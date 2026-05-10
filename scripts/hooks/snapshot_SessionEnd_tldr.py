@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 # Resolve paths explicitly — this file lives in packages/handoff/scripts/hooks/
-CLAUDE_DIR = Path("P:/.claude")
+CLAUDE_DIR = Path("P:\\\\\\.claude")
 STATE_DIR = CLAUDE_DIR / "state" / "session_tldr"
 
 # Import terminal_id resolver from hook_base (centralized source of truth)

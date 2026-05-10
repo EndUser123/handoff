@@ -10,7 +10,6 @@ import os
 import re
 import subprocess
 import sys
-import tempfile
 import time
 from datetime import UTC, datetime
 from pathlib import Path
@@ -19,9 +18,9 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 # Configure logging to ensure diagnostic output is captured
-# Logs will be written to .claude/logs/handoff_capture.log
+# Logs will be written to P:\\\\\\.claude/.artifacts/snapshot/logs/handoff_capture.log
 _log_file_path = (
-    Path(__file__).resolve().parents[2] / ".claude" / "logs" / "handoff_capture.log"
+    Path.cwd() / ".claude" / ".artifacts" / "snapshot" / "logs" / "handoff_capture.log"
 )
 _log_file_path.parent.mkdir(parents=True, exist_ok=True)
 _handler = RotatingFileHandler(
@@ -575,22 +574,26 @@ def _estimate_progress(
     return 0
 
 
-def main() -> None:
-    """Capture the current session into a V2 handoff envelope."""
+def run(input_data: dict[str, Any]) -> dict[str, Any]:
+    """Capture the current session into a V2 handoff envelope.
+
+    Args:
+        input_data: JSON hook input from Claude Code.
+
+    Returns:
+        Dict following the Claude Code hook protocol.
+    """
     try:
-        input_data = _read_hook_input()
         validate_hook_input(input_data, hook_type="PreCompact")
         transcript_path = input_data.get("transcript_path")
         if not transcript_path:
             raise ValueError("PreCompact hook requires transcript_path")
 
-        terminal_id = resolve_terminal_key(input_data.get("terminal_id"))
+        terminal_id = resolve_terminal_key(
+            input_data.get("terminal_id"), input_data.get("session_id")
+        )
 
         # CRITICAL: For snapshot package, detect project root with testing support
-        # Priority: 1) SNAPSHOT_PROJECT_ROOT env var (for testing), 2) walk up from cwd to .claude
-        # Use walk-up from cwd instead of raw Path.cwd() because Claude Code may invoke
-        # PreCompact from a skill subdirectory (e.g. P:/.claude/skills/s/) where cwd would
-        # be that subdirectory. The walk-up finds the actual project root containing .claude.
         env_project_root = os.environ.get("SNAPSHOT_PROJECT_ROOT")
         if env_project_root:
             project_root = Path(env_project_root)
@@ -613,12 +616,9 @@ def main() -> None:
             raise SnapshotValidationError(
                 f"Transcript path is not a file: {transcript_path}"
             )
-        # LOGIC-003: Fixed inverted condition - warn when test transcripts are detected
-        # QUAL-005: Changed to ERROR level for test transcript warnings
         if "test" in transcript_file.name.lower():
             logger.error(
-                "[PreCompact V2] Test transcript detected: %s - this may indicate wrong transcript_path",
-                transcript_file.name,
+                "[PreCompact V2] Test transcript detected: %s", transcript_file.name
             )
 
         # Cleanup old handoffs before creating new one
@@ -628,21 +628,8 @@ def main() -> None:
             logger.warning("[PreCompact V2] Cleanup old handoffs failed: %s", exc)
 
         parser = TranscriptParser(transcript_path)
-
-        # Extract active files FIRST — needed for slash-command subject inference below.
         active_files = _extract_active_files(parser)
 
-        # Determine goal: check raw last user message for slash-command intent BEFORE
-        # running the backwards-scanning substantive-message extractor.
-        #
-        # The META_PATTERNS filter in extract_last_substantive_user_message skips slash
-        # commands (e.g., "/review_bundle P:/packages/yt-is") and returns the preceding
-        # substantive message instead — losing the user's actual intent.  We intercept
-        # here so that slash commands are preserved as the goal.
-        #
-        # For commands WITH explicit args the arg IS the subject (e.g., "/review_bundle
-        # P:/packages/yt-is").  For bare commands (e.g., "/review_bundle" with no arg)
-        # the subject must be inferred from the session's active_files.
         goal_origin = "user_message"
         raw_last_user = parser.extract_last_user_message()
         slash_result = _extract_slash_command_goal(raw_last_user, active_files)
@@ -655,39 +642,25 @@ def main() -> None:
                 goal_origin,
             )
         else:
-            # Normal path: backwards-scan for the last substantive user message.
             goal_result = extract_last_substantive_user_message(transcript_path)
             goal = goal_result.get("goal", "Unknown task")
             message_intent = goal_result.get("message_intent", "instruction")
 
-            logger.info(
-                "[PreCompact V2] Goal extraction observability: "
-                f"messages_scanned={goal_result.get('messages_scanned', 0)}, "
-                f"corrections_skipped={goal_result.get('corrections_skipped', 0)}, "
-                f"meta_skipped={goal_result.get('meta_skipped', 0)}, "
-                f"session_boundary={goal_result.get('session_boundary_hit', False)}, "
-                f"topic_shift={goal_result.get('topic_shift_hit', False)}, "
-                f"scan_pattern={goal_result.get('scan_pattern', 'unknown')}, "
-                f"intent={message_intent}"
-            )
+        if not goal or goal == "Unknown task" or is_meta_discussion(goal):
+            fallback_goal = parser.extract_last_user_message()
+            if fallback_goal and is_meta_discussion(fallback_goal):
+                goal = "Continue current task (meta-discussion filtered)"
+            else:
+                goal = fallback_goal or "Unknown task"
+                message_intent = "instruction"
 
-            # Handle fallback for unknown or meta-discussion goals
-            if not goal or goal == "Unknown task" or is_meta_discussion(goal):
-                fallback_goal = parser.extract_last_user_message()
-                if fallback_goal and is_meta_discussion(fallback_goal):
-                    goal = "Continue current task (meta-discussion filtered)"
-                else:
-                    goal = fallback_goal or "Unknown task"
-                    message_intent = "instruction"
-
-        # Check if the last substantive action was a skill invocation
         skill_output = parser.extract_last_skill_output(max_length=800)
-
         skill_name_for_decision = None
         if skill_output:
             skill_name_for_decision = skill_output.get("skill_name", "unknown")
             if goal.lower().startswith("base directory for this skill:"):
                 goal = f"Skill /{skill_name_for_decision} invoked - analyzing results"
+
         pending_operations = _normalize_pending_operations(parser)
         current_task = short_task_name(goal)
         planning_blocker = detect_planning_session(goal, active_files)
@@ -697,17 +670,11 @@ def main() -> None:
         last_assistant_text = _extract_last_assistant_text(parser)
         next_step = _infer_next_step(last_assistant_text, pending_operations, goal)
 
-        # Detect task mode (CREATE vs IMPLEMENT) for handoff envelope
         task_mode = detect_task_mode(goal, active_files)
-        logger.debug("[PreCompact V2] Task mode detected: %s", task_mode)
-
-        # Detect lifecycle phase (discussing/planning/implementing)
-        # Prefer accumulated JSONL state over inference when available
         accumulated_lifecycle_phase = None
         try:
             storage_for_accum = SnapshotFileStorage(project_root, terminal_id)
             accumulated_events = storage_for_accum.read_accumulated_state()
-            # Find the last phase_transition event
             for event in reversed(accumulated_events):
                 if event.get("type") == "phase_transition":
                     accumulated_lifecycle_phase = event.get("to")
@@ -717,33 +684,16 @@ def main() -> None:
 
         if accumulated_lifecycle_phase:
             lifecycle_phase = accumulated_lifecycle_phase
-            logger.info(
-                "[PreCompact V2] Using accumulated lifecycle phase: %s",
-                lifecycle_phase,
-            )
         else:
             lifecycle_phase = detect_lifecycle_phase(
-                blockers,
-                active_files,
-                pending_operations,
-                goal,
-                task_mode,
-            )
-            logger.debug(
-                "[PreCompact V2] Lifecycle phase detected (inferred): %s",
-                lifecycle_phase,
+                blockers, active_files, pending_operations, goal, task_mode
             )
 
-        # Extract preceding context if goal is a clarification message
         preceding_task_context = ""
         if is_clarification_message(goal):
             preceding_msg = extract_preceding_message(transcript_path, goal)
             if preceding_msg:
                 preceding_task_context = preceding_msg
-                logger.info(
-                    "[PreCompact V2] Goal is clarification - captured preceding context: %s...",
-                    preceding_msg[:80],
-                )
 
         evidence_index = _build_evidence_index(
             project_root, transcript_path, active_files
@@ -751,7 +701,6 @@ def main() -> None:
         transcript_evidence_id = evidence_index[0]["id"]
         decision_register = _build_decisions(parser, transcript_evidence_id)
 
-        # Add skill invocation to decision register if one was detected
         if skill_output and skill_name_for_decision:
             skill_decision = {
                 "id": make_decision_id(),
@@ -764,28 +713,24 @@ def main() -> None:
             }
             decision_register.insert(0, skill_decision)
 
-        # Calculate quality score for the handoff using dynamic sections
         quality_score = None
         try:
-            # Map existing handoff data to dynamic sections schema
             dynamic_session_data = {
                 "goal": goal,
                 "active_files": active_files,
                 "decision_register": decision_register,
-                "known_issues": blockers,  # Map blockers to known_issues
-                "final_actions": pending_operations,  # Map pending to actions
+                "known_issues": blockers,
+                "final_actions": pending_operations,
                 "has_errors": any(
                     b.get("type") == "awaiting_approval" for b in blockers
                 ),
             }
             quality_score = calculate_quality_score_dynamic(dynamic_session_data)
-            logger.debug("[PreCompact V2] Quality score (dynamic): %.2f", quality_score)
         except Exception as exc:
             logger.warning(
                 "[PreCompact V2] Dynamic quality score calculation failed: %s", exc
             )
 
-        # Read task state from task tracker for handoff
         tasks_snapshot: list[dict[str, Any]] = []
         try:
             task_tracker_dir = project_root / ".claude" / "state" / "task_tracker"
@@ -793,28 +738,15 @@ def main() -> None:
             if task_file_path.exists():
                 with open(task_file_path, encoding="utf-8") as f:
                     task_data = json.load(f)
-                # Extract tasks list from the task tracker file
                 tasks_snapshot = task_data.get("tasks", {}).get("task_list", [])
-                logger.debug(
-                    "[PreCompact V2] Loaded %d tasks from task tracker",
-                    len(tasks_snapshot),
-                )
         except Exception as exc:
             logger.warning("[PreCompact V2] Failed to read task state: %s", exc)
 
-        # Load the EXISTING terminal handoff to get S_OLD's chain.
-        # At PreCompact time, input_data.transcript_path is S_OLD's path (the session
-        # being compacted). We must read the old handoff to build the session chain.
-        # Pass exclude_session_id to skip S_NEW's own handoff (already written to disk
-        # with a recent mtime; without exclusion load_raw_handoff() returns S_NEW).
         storage = SnapshotFileStorage(project_root, terminal_id)
         old_handoff = storage.load_raw_handoff(
             exclude_session_id=input_data.get("session_id")
         )
         n_2_transcript_path: str | None = None
-        # Build session chain: oldest-first list of session IDs.
-        # Each compaction appends the new session_id to the prior chain,
-        # so the chain survives PreCompact's chain-rewriting behavior.
         session_id = input_data.get("session_id", "")
         session_chain: list[str] = []
         if old_handoff:
@@ -822,18 +754,10 @@ def main() -> None:
             n_2_transcript_path = old_snapshot["n_1_transcript_path"]
             prior_chain = old_snapshot.get("session_chain", [])
             if prior_chain and prior_chain[0] == old_snapshot.get("source_session_id"):
-                # Valid chain (oldest-first): extend it with the new session
                 session_chain = prior_chain + [session_id]
             else:
-                # Chain invalid or empty: start fresh with the old source
                 session_chain = [old_snapshot.get("source_session_id", ""), session_id]
-            logger.info(
-                "[PreCompact V2] Loaded n-2 transcript from old handoff: %s, chain length: %d",
-                n_2_transcript_path,
-                len(session_chain),
-            )
         else:
-            # No prior handoff: this is the first session in this terminal
             session_chain = [session_id]
 
         resume_snapshot = build_resume_snapshot(
@@ -864,7 +788,6 @@ def main() -> None:
             evidence_index=evidence_index,
         )
 
-        # Parallel capture: supplementary environment context (non-fatal)
         try:
             from scripts.hooks.__lib.parallel_capture import capture_all_parallel
 
@@ -872,60 +795,17 @@ def main() -> None:
             env_ctx = {k: v for k, v in env_ctx.items() if v is not None}
             if env_ctx:
                 envelope["environment_context"] = env_ctx
-                logger.info(
-                    "[PreCompact V2] Parallel capture: %s",
-                    list(env_ctx.keys()),
-                )
         except Exception as exc:
             logger.warning(
                 "[PreCompact V2] Parallel capture failed (non-fatal): %s", exc
             )
 
-        # Diagnostic logging before save
-        logger.info(
-            "[PreCompact V2] Attempting to save handoff: terminal=%s, handoff_file=%s",
-            terminal_id,
-            storage.handoff_file,
-        )
-        logger.debug(
-            "[PreCompact V2] Envelope keys: %s",
-            list(envelope.keys()),
-        )
-        logger.debug(
-            "[PreCompact V2] Snapshot keys: %s",
-            list(envelope.get("resume_snapshot", {}).keys()),
-        )
-
         saved_path = storage.save_handoff(envelope)
         if not saved_path:
-            logger.error(
-                "[PreCompact V2] save_handoff returned False: terminal=%s",
-                terminal_id,
-            )
             raise SnapshotValidationError("failed to persist V2 handoff envelope")
 
-        # Verify file was actually created
-        if not saved_path.exists():
-            logger.error(
-                "[PreCompact V2] File does not exist after save: %s",
-                saved_path,
-            )
-            raise SnapshotValidationError(
-                f"handoff file not created after save: {saved_path}"
-            )
-
-        logger.info(
-            "[PreCompact V2] Handoff saved successfully: %s (%d bytes)",
-            saved_path.name,
-            saved_path.stat().st_size,
-        )
-
-        # Session registry: append-only JSONL index for cross-session queries.
-        # handoff_path is a hint — handoff files are cleaned up by retention policy
-        # (cleanup_old_handoffs, 90-day default). Consumers MUST check file existence
-        # before reading. The registry is an index, not a source of truth.
         try:
-            registry_path = Path("P:/.claude/.artifacts/session_registry.jsonl")
+            registry_path = Path("P:\\\\\\.claude/.artifacts/session_registry.jsonl")
             registry_path.parent.mkdir(parents=True, exist_ok=True)
             entry = {
                 "ts": datetime.now(UTC).isoformat(),
@@ -939,50 +819,9 @@ def main() -> None:
             }
             with registry_path.open("a", encoding="utf-8") as rf:
                 rf.write(json.dumps(entry, ensure_ascii=False) + "\n")
-            logger.debug("[PreCompact V2] Session registry entry appended")
         except Exception as exc:
             print(f"session_registry append failed: {exc}", file=sys.stderr)
 
-        # TASK-4: Spawn async Haiku subprocess for conversation_summary
-        # Non-fatal — envelope is already saved; Haiku enrichment is best-effort
-        try:
-            from scripts.hooks.__lib.haiku_prompt import build_haiku_prompt
-
-            sidecar_path = saved_path.with_suffix(".summary.md")
-            prompt_text = build_haiku_prompt(Path(transcript_path))
-            prompt_fd, prompt_file = tempfile.mkstemp(
-                suffix=".prompt", prefix="haiku_"
-            )
-            with os.fdopen(prompt_fd, "w", encoding="utf-8") as _fh:
-                _fh.write(prompt_text)
-            script_path = Path(__file__).parent / "__lib" / "retry_haiku.sh"
-            subprocess.Popen(
-                [
-                    "bash",
-                    str(script_path),
-                    transcript_path,
-                    str(sidecar_path),
-                    prompt_file,
-                ],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                creationflags=getattr(
-                    subprocess, "CREATE_NEW_PROCESS_GROUP", 0
-                )
-                if sys.platform == "win32"
-                else 0,
-                cwd=str(project_root),
-            )
-            logger.info(
-                "[PreCompact V2] Haiku subprocess spawned: %s", sidecar_path
-            )
-        except Exception as exc:
-            logger.warning(
-                "[PreCompact V2] Haiku spawn failed (non-fatal): %s", exc
-            )
-
-        # Write compaction marker so UserPromptSubmit hook can detect intra-session compaction
-        # and inject restoration context on the first prompt after compaction.
         try:
             marker_dir = project_root / ".claude" / "hooks" / "state"
             marker_dir.mkdir(parents=True, exist_ok=True)
@@ -993,13 +832,10 @@ def main() -> None:
             }
             with marker_path.open("w", encoding="utf-8") as fh:
                 json.dump(marker_payload, fh)
-            logger.debug("[PreCompact V2] Compaction marker written: %s", marker_path)
         except Exception as exc:
-            # Marker write failure is non-fatal — handoff is already saved.
-            # UserPromptSubmit will fall back to SessionStart restore.
             logger.warning("[PreCompact V2] Failed to write compaction marker: %s", exc)
 
-        output = {
+        return {
             "decision": "approve",
             "reason": f"Captured Handoff V2 for terminal {terminal_id}",
             "additionalContext": (
@@ -1010,42 +846,41 @@ def main() -> None:
                 f"Pending Operations: {len(pending_operations)}"
             ),
         }
-        print(json.dumps(output, indent=2))
-        sys.exit(0)
     except HookInputError as exc:
-        print(
-            json.dumps(
-                {
-                    "decision": "block",
-                    "reason": f"Handoff V2 capture input validation failed: {exc}",
-                    "additionalContext": f"🚫 Handoff V2 capture rejected invalid hook input: {exc}",
-                },
-                indent=2,
-            )
-        )
-        sys.exit(1)
+        return {
+            "decision": "block",
+            "reason": f"Handoff V2 capture input validation failed: {exc}",
+            "additionalContext": f"🚫 Handoff V2 capture rejected invalid hook input: {exc}",
+        }
     except SnapshotValidationError as exc:
-        print(
-            json.dumps(
-                {
-                    "decision": "block",
-                    "reason": f"Handoff V2 capture validation failed: {exc}",
-                    "additionalContext": f"🚫 Handoff V2 envelope validation failed: {exc}",
-                },
-                indent=2,
-            )
-        )
-        sys.exit(1)
+        return {
+            "decision": "block",
+            "reason": f"Handoff V2 capture validation failed: {exc}",
+            "additionalContext": f"🚫 Handoff V2 envelope validation failed: {exc}",
+        }
     except Exception as exc:
         logger.error("[PreCompact V2] Capture failed: %s", exc, exc_info=True)
+        return {
+            "decision": "block",
+            "reason": f"Handoff V2 capture failed: {exc}",
+            "additionalContext": f"🚫 Handoff V2 capture failed: {exc}",
+        }
+
+
+def main() -> None:
+    """CLI entry point."""
+    try:
+        input_data = _read_hook_input()
+        result = run(input_data)
+        print(json.dumps(result, indent=2))
+        sys.exit(0 if result.get("decision") == "approve" else 1)
+    except Exception as exc:
         print(
             json.dumps(
                 {
                     "decision": "block",
-                    "reason": f"Handoff V2 capture failed: {exc}",
-                    "additionalContext": f"🚫 Handoff V2 capture failed: {exc}",
-                },
-                indent=2,
+                    "reason": f"PreCompact CLI entry point failed: {exc}",
+                }
             )
         )
         sys.exit(1)

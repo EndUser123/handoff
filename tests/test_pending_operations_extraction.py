@@ -335,7 +335,7 @@ class TestPendingOperationsCompletedExclusion:
                         "type": "tool_use",
                         "id": entry_id,
                         "name": "Read",
-                        "input": {"file_path": "P:/.claude/settings.json"},
+                        "input": {"file_path": "P:\\\\\\.claude/settings.json"},
                     }
                 ],
             },

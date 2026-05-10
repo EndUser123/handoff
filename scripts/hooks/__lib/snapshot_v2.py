@@ -591,7 +591,6 @@ def build_resume_snapshot(
     tasks_snapshot: list[dict[str, Any]] | None = None,
     open_questions: list[Any] | None = None,
     goal_origin: str | None = None,  # Source of the goal value (user_message, preceding_message, skill_args_unfiltered)
-    conversation_summary: str | None = None,  # Haiku-compressed session summary
     session_chain: list[str] | None = None,  # Full session chain (oldest-first session IDs)
     last_user_message: str | None = None,  # Verbatim last user message (ADR-006)
 ) -> dict[str, Any]:
@@ -634,8 +633,6 @@ def build_resume_snapshot(
         snapshot["tasks_snapshot"] = tasks_snapshot
     if open_questions is not None:
         snapshot["open_questions"] = open_questions
-    if conversation_summary is not None:
-        snapshot["conversation_summary"] = conversation_summary
     if session_chain is not None:
         snapshot["session_chain"] = session_chain
     if last_user_message is not None:
@@ -770,8 +767,16 @@ def verify_evidence_freshness(
     for item in payload.get("evidence_index", []):
         if not isinstance(item, dict):
             continue
-        if item.get("type") not in {"transcript", "file"}:
+
+        # Skip transcripts: they're append-only conversation logs that naturally grow
+        # between capture and restore. The hash WILL differ — this is expected, not corruption.
+        # Source code and config files are still verified (type == "file").
+        evidence_type = item.get("type")
+        if evidence_type == "transcript":
             continue
+        if evidence_type != "file":
+            continue
+
         recorded_hash = item.get("content_hash")
         if not isinstance(recorded_hash, str) or not recorded_hash:
             continue

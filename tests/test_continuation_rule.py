@@ -167,7 +167,7 @@ def test_restore_message_surfaces_session_identity_work_state_and_questions():
             "progress_percent": 50,
             "next_step": "continue",
             "blockers": [],
-            "active_files": ["P:/workspace/foo.py"],
+            "active_files": ["P:\\\\\\workspace/foo.py"],
             "pending_operations": [{"type": "edit", "target": "foo.py"}],
             "tasks_snapshot": [
                 {"title": "Review handoff", "status": "in_progress"}

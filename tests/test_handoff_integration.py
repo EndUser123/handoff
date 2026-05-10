@@ -72,7 +72,7 @@ def _capture_v2_snapshot(
                 "type": "tool_use",
                 "name": "Edit",
                 "input": {
-                    "file_path": "P:/packages/snapshot/scripts/hooks/SessionStart_snapshot_restore.py"
+                    "file_path": "P:\\\\\\packages/snapshot/scripts/hooks/SessionStart_snapshot_restore.py"
                 },
             },
             {
@@ -81,7 +81,7 @@ def _capture_v2_snapshot(
                     "content": [
                         {
                             "type": "text",
-                            "text": "Decision: keep the restore payload minimal. editing file P:/packages/snapshot/scripts/hooks/SessionStart_snapshot_restore.py and then run targeted tests.",
+                            "text": "Decision: keep the restore payload minimal. editing file P:\\\\\\packages/snapshot/scripts/hooks/SessionStart_snapshot_restore.py and then run targeted tests.",
                         }
                     ]
                 },

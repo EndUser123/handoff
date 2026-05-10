@@ -6,7 +6,7 @@ This tests the envelope expiration logic:
 - Expired envelopes should be deleted from disk
 - Fresh envelopes should be accepted
 
-The injector reads from P:/.claude/state/handoff/{terminal_id}_handoff.json
+The injector reads from P:\\\\\\.claude/state/handoff/{terminal_id}_handoff.json
 matching the format written by PreCompact_handoff_capture.py.
 """
 
